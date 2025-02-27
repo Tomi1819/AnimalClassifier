@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Infrastructure.Data;
+    using AnimalClassifier.Infrastructure.Data.Common;
     using Microsoft.EntityFrameworkCore;
     public static class ServiceCollectionExtension
     {
@@ -10,6 +11,12 @@
 
             services.AddDbContext<AnimalClassifierDbContext>(options =>
                 options.UseSqlServer(connectionString));
+            return services;
+        }
+
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+        {
+            services.AddScoped<IRepository, Repository>();
             return services;
         }
     }
