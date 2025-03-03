@@ -4,6 +4,7 @@ using AnimalClassifier.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AnimalClassifier.Infrastructure.Migrations
 {
     [DbContext(typeof(AnimalClassifierDbContext))]
-    partial class AnimalClassifierDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250303094842_UpdateAnimalRecognitionLog")]
+    partial class UpdateAnimalRecognitionLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
