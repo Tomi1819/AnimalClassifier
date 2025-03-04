@@ -104,8 +104,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     AnimalName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ImagePath = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     DateRecognized = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UserId1 = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -115,12 +114,6 @@ namespace AnimalClassifier.Infrastructure.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_AnimalRecognitionLogs_AspNetUsers_UserId1",
-                        column: x => x.UserId1,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -217,11 +210,6 @@ namespace AnimalClassifier.Infrastructure.Migrations
                 name: "IX_AnimalRecognitionLogs_UserId",
                 table: "AnimalRecognitionLogs",
                 column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AnimalRecognitionLogs_UserId1",
-                table: "AnimalRecognitionLogs",
-                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
