@@ -16,7 +16,7 @@
             builder.Property(a => a.DateRecognized)
                 .IsRequired();
 
-            builder.HasOne<ApplicationUser>()
+            builder.HasOne(a => a.User)
                 .WithMany()
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.NoAction);

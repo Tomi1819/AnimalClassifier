@@ -76,15 +76,9 @@ namespace AnimalClassifier.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("AnimalRecognitionLogs", (string)null);
                 });
@@ -311,16 +305,10 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
             modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalRecognitionLog", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", null)
+                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
