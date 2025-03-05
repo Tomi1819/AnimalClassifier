@@ -1,5 +1,8 @@
 ﻿namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Services;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -20,9 +23,15 @@
             return services;
         }
 
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services,
+            IConfiguration configuration)
         {
             services.AddScoped<IRepository, Repository>();
+            services.AddScoped<IUploadService, UploadService>();
+            services.AddScoped<IAuthService, AuthService>();
+
+            services.Configure<UploadSettings>(configuration.GetSection("Upload"));
+
             return services;
         }
 
@@ -40,7 +49,11 @@
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<AnimalClassifierDbContext>();
 
-           services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+
+            var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>();
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -49,9 +62,9 @@
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = "https://AnimalClassifier.com",
-                        ValidAudience = "https://localhost:44378",
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("mySuperLongSecretKey12345678987654321"))
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
                     };
                 });
 
