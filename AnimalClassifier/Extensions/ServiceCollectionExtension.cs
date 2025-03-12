@@ -29,6 +29,7 @@
             services.AddScoped<IRepository, Repository>();
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddSingleton<IModelService, ModelService>();
 
             services.Configure<UploadSettings>(configuration.GetSection("Upload"));
 
