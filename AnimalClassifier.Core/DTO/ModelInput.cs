@@ -1,7 +1,9 @@
 ﻿namespace AnimalClassifier.Core.DTO
 {
+    using System.Drawing;
+
     public class ModelInput
     {
-        public string ImagePath { get; set; } = string.Empty;
+        public Bitmap? Image { get; set; }
     }
 }
