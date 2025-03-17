@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AnimalClassifier.Infrastructure\AnimalClassifier.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Microsoft.ML" Version="4.0.2" />
+    <PackageReference Include="Microsoft.ML.ImageAnalytics" Version="4.0.2" />
+    <PackageReference Include="Microsoft.ML.TensorFlow" Version="4.0.2" />
+    <PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.3.1" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.13" />
+    <PackageReference Include="TensorFlow.NET" Version="0.20.1" />
+  </ItemGroup>
+
+</Project>

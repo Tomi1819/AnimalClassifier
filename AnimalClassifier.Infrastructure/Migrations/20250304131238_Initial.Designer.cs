@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AnimalClassifier.Infrastructure.Migrations
 {
     [DbContext(typeof(AnimalClassifierDbContext))]
-    [Migration("20250227114324_Initial")]
+    [Migration("20250304131238_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -72,7 +72,8 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
                     b.Property<string>("ImagePath")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -82,7 +83,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AnimalRecognitionLogs");
+                    b.ToTable("AnimalRecognitionLogs", (string)null);
                 });
 
             modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", b =>
@@ -237,10 +238,12 @@ namespace AnimalClassifier.Infrastructure.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -277,10 +280,12 @@ namespace AnimalClassifier.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -306,7 +311,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("User");
