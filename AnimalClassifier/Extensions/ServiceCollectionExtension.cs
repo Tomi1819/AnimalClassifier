@@ -10,6 +10,7 @@
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.IdentityModel.Tokens;
+    using Microsoft.ML;
     using System.Text;
 
     public static class ServiceCollectionExtension
@@ -29,9 +30,10 @@
             services.AddScoped<IRepository, Repository>();
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddSingleton<IModelService, ModelService>();
+            services.AddScoped<IRecognitionService, RecognitionService>();
+            services.AddSingleton<MLContext>();
 
-            services.Configure<UploadSettings>(configuration.GetSection("Upload"));
+            services.Configure<UploadSettings>(configuration.GetSection("FileUploadSettings"));
 
             return services;
         }

@@ -17,8 +17,8 @@
         "Version": 1,
         "Type": "Trial",
         "TrainerName": "ImageClassificationMulti",
-        "Score": 0.96569452791054855,
-        "RuntimeInSeconds": 7735.572,
+        "Score": 0.97267355982274739,
+        "RuntimeInSeconds": 8577.337,
         "Parameter": {
           "_SCHEMA_": "e0 * e1 * e2",
           "e0": {
@@ -47,7 +47,7 @@
       "e2": "MapKeyToValue"
     },
     "Schema": "e0 * e1 * e2",
-    "MetricName": "MacroAccuracy",
+    "MetricName": "MicroAccuracy",
     "ModelFilePath": "C:\\UNI\\Practice\\AnimalClassifier\\AnimalClassifier\\MLModel.mlnet"
   },
   "Type": "TrainingConfig",
@@ -56,8 +56,7 @@
     "Version": 2,
     "Subsampling": false,
     "Type": "ClassificationTrainingOption",
-    "TrainingTime": 2147483647,
-    "OptimizeMetric": "MacroAccuracy",
+    "TrainingTime": 0,
     "ValidationOption": {
       "Version": 0,
       "Type": "TrainValidateSplitValidationOption",

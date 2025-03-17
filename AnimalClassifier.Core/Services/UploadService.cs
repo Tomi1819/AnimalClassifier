@@ -7,18 +7,19 @@
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Options;
-
     public class UploadService : IUploadService
     {
         private readonly IRepository repository;
         private readonly string uploadPath;
+        private readonly IRecognitionService recognitionService;
 
         private const long MaxFileSize = 5 * 1024 * 1024;
 
-        public UploadService(IRepository repository, IOptions<UploadSettings> uploadSettings)
+        public UploadService(IRepository repository, IOptions<UploadSettings> uploadSettings, IRecognitionService recognitionService)
         {
             this.repository = repository;
-            this.uploadPath = uploadSettings.Value.UploadPath;
+            this.uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            this.recognitionService = recognitionService;
         }
 
         public async Task<ImageUploadResult> UploadImageAsync(IFormFile formFile, string userId)
@@ -40,22 +41,30 @@
                 throw new ArgumentException("Invalid file extension. Only .jpg, .jpeg, and .png are allowed.");
             }
 
+            string userFolderPath = PrepareUserUploadDirectory(userId);
             string uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            string filePath = Path.Combine(uploadPath, uniqueFileName);
+            string filePath = Path.Combine(userFolderPath, uniqueFileName);
 
-            if (!Directory.Exists(uploadPath))
+            try
             {
-                Directory.CreateDirectory(uploadPath);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await formFile.CopyToAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new IOException($"Error while saving the file: {ex.Message}", ex);
             }
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await formFile.CopyToAsync(stream);
-            }
+            string predictedLabel = await recognitionService.PredictAnimalAsync(filePath);
+
+            var imagePath = $"/uploads/{userId}/{uniqueFileName}";
 
             var animalRecognitionLog = new AnimalRecognitionLog()
             {
-                ImagePath = $"/uploads/{uniqueFileName}",
+                ImagePath = imagePath,
+                AnimalName = predictedLabel,
                 DateRecognized = DateTime.Now,
                 UserId = userId
             };
@@ -67,12 +76,27 @@
             {
                 ImageId = animalRecognitionLog.Id,
                 ImagePath = animalRecognitionLog.ImagePath,
+                RecognizedAnimal = predictedLabel,
                 DateRecognized = animalRecognitionLog.DateRecognized
             };
         }
+
         public async Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id)
         {
             return await repository.GetRecognitionLogByIdAsync(id);
         }
+
+        private string PrepareUserUploadDirectory(string userId)
+        {
+            string userFolderPath = Path.Combine(uploadPath, userId);
+
+            if (!Directory.Exists(userFolderPath))
+            {
+                Directory.CreateDirectory(userFolderPath);
+            }
+
+            return userFolderPath;
+        }
     }
 }
+

@@ -4,6 +4,7 @@
     {
         public int ImageId { get; set; }
         public string ImagePath { get; set; } = string.Empty;
+        public string RecognizedAnimal { get; set; } = string.Empty;
         public DateTime DateRecognized { get; set; }
     }
 }

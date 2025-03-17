@@ -20,12 +20,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.ML" Version="3.0.1" />
-    <PackageReference Include="Microsoft.ML.Vision" Version="3.0.1" />
-    <PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.16.0" />
+    <PackageReference Include="Microsoft.ML" Version="4.0.2" />
+    <PackageReference Include="Microsoft.ML.TensorFlow" Version="4.0.2" />
+    <PackageReference Include="Microsoft.ML.Vision" Version="4.0.2" />
+    <PackageReference Include="SciSharp.TensorFlow.Redist" Version="2.3.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="7.3.1" />
-    <PackageReference Include="TensorFlow.NET" Version="0.150.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AnimalClassifier.Core\AnimalClassifier.Core.csproj" />
@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="wwwroot\uploads\" />
+    <Folder Include="wwwroot\uploads\280e85f1-fd3a-409a-817b-6a60e6bd8e56\" />
   </ItemGroup>
   <ItemGroup Label="MLModel">
     <None Include="MLModel.mlnet">
