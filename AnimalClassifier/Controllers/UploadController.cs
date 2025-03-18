@@ -1,10 +1,13 @@
 ﻿namespace AnimalClassifier.Controllers
 {
     using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.DTO;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Logging;
+    using System;
+    using System.IO;
     using System.Security.Claims;
     using System.Threading.Tasks;
 
@@ -13,10 +16,12 @@
     public class UploadController : ControllerBase
     {
         private readonly IUploadService uploadService;
+        private readonly ILogger<UploadController> logger;
 
-        public UploadController(IUploadService uploadService)
+        public UploadController(IUploadService uploadService, ILogger<UploadController> logger)
         {
             this.uploadService = uploadService;
+            this.logger = logger;
         }
 
         [HttpPost("image")]
@@ -32,31 +37,54 @@
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
+                logger.LogWarning("Upload attempt without authentication.");
                 return Unauthorized("User is not authenticated.");
             }
 
             try
             {
                 var result = await uploadService.UploadImageAsync(formFile, userId);
-                return CreatedAtAction(nameof(GetRecognitionLogById), new { id = result.ImageId }, result);
+                var resourceUrl = Url.Action(nameof(GetRecognitionLogById), new { id = result.ImageId });
+
+                return Created(resourceUrl, result);
             }
             catch (ArgumentException ex)
             {
+                logger.LogWarning($"Upload failed: {ex.Message}");
                 return BadRequest(ex.Message);
+            }
+            catch (IOException ex)
+            {
+                logger.LogError($"File saving error: {ex.Message}");
+                return StatusCode(500, "Error while saving the file.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Unexpected error during file upload: {ex}");
+                return StatusCode(500, "An unexpected error occurred.");
             }
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<AnimalRecognitionLog>> GetRecognitionLogById(int id)
+        public async Task<ActionResult<ImageUploadResult>> GetRecognitionLogById(int id)
         {
             var recognitionLog = await uploadService.GetRecognitionLogByIdAsync(id);
 
             if (recognitionLog is null)
             {
+                logger.LogWarning($"Recognition log with ID {id} not found.");
                 return NotFound();
             }
 
-            return recognitionLog;
+            var response = new ImageUploadResult
+            {
+                ImageId = recognitionLog.Id,
+                ImagePath = recognitionLog.ImagePath,
+                RecognizedAnimal = recognitionLog.AnimalName,
+                DateRecognized = recognitionLog.DateRecognized
+            };
+
+            return Ok(response);
         }
     }
 }

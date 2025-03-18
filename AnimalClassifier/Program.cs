@@ -2,7 +2,7 @@ using AnimalClassifier.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationDbContex(builder.Configuration);
+builder.Services.AddApplicationDbContext(builder.Configuration);
 
 builder.Services.AddApplicationIdentity(builder.Configuration);
 

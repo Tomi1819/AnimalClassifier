@@ -2,18 +2,15 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using Microsoft.ML;
+    using Microsoft.Extensions.ML;
 
     public class RecognitionService : IRecognitionService
     {
-        private static readonly string modelPath = "C:\\UNI\\Practice\\AnimalClassifier\\AnimalClassifier\\MLModel.mlnet";
-        private readonly PredictionEngine<ImageData, ImagePrediction> predictionEngine;
+        private readonly PredictionEnginePool<ImageData, ImagePrediction> predictionEnginePool;
 
-        public RecognitionService()
+        public RecognitionService(PredictionEnginePool<ImageData, ImagePrediction> predictionEnginePool)
         {
-            var mlContext = new MLContext();
-            var trainedModel = mlContext.Model.Load(modelPath, out var modelInputSchema);
-            this.predictionEngine = mlContext.Model.CreatePredictionEngine<ImageData, ImagePrediction>(trainedModel);
+            this.predictionEnginePool = predictionEnginePool;
         }
 
         public async Task<string> PredictAnimalAsync(string imagePath)
@@ -23,14 +20,16 @@
                 throw new FileNotFoundException("Image not found.");
             }
 
-            var imageBytes = await File.ReadAllBytesAsync(imagePath);
+            await using var stream = File.OpenRead(imagePath);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
 
             var inputData = new ImageData { ImageSource = imageBytes };
 
-            var prediction = await Task.Run(() => predictionEngine.Predict(inputData));
+            var prediction = predictionEnginePool.Predict(inputData);
 
             return prediction.PredictedLabel;
         }
     }
 }
-
