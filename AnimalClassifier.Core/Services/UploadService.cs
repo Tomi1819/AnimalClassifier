@@ -7,65 +7,46 @@
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Options;
+    using System.Text.RegularExpressions;
+
     public class UploadService : IUploadService
     {
         private readonly IRepository repository;
         private readonly string uploadPath;
         private readonly IRecognitionService recognitionService;
+        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png" };
 
         private const long MaxFileSize = 5 * 1024 * 1024;
 
         public UploadService(IRepository repository, IOptions<UploadSettings> uploadSettings, IRecognitionService recognitionService)
         {
             this.repository = repository;
-            this.uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             this.recognitionService = recognitionService;
+            this.uploadPath = Path.Join(uploadSettings.Value.UploadPath ?? "wwwroot/uploads");
         }
 
         public async Task<ImageUploadResult> UploadImageAsync(IFormFile formFile, string userId)
         {
-            if (formFile is null || formFile.Length == 0)
-            {
-                throw new ArgumentException("The file is empty.");
-            }
+            ValidateFile(formFile);
 
-            if (formFile.Length > MaxFileSize)
-            {
-                throw new ArgumentException($"The file size is too large. Maximum allowed size is {MaxFileSize / 1024 / 1024} MB.");
-            }
+            string userFolderPath = await PrepareUserUploadDirectoryAsync(userId);
+            string uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(formFile.FileName).ToLower()}";
+            string filePath = Path.Join(userFolderPath, uniqueFileName);
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-            var extension = Path.GetExtension(formFile.FileName).ToLower();
-            if (!allowedExtensions.Contains(extension))
+            await using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                throw new ArgumentException("Invalid file extension. Only .jpg, .jpeg, and .png are allowed.");
-            }
-
-            string userFolderPath = PrepareUserUploadDirectory(userId);
-            string uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            string filePath = Path.Combine(userFolderPath, uniqueFileName);
-
-            try
-            {
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await formFile.CopyToAsync(stream);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new IOException($"Error while saving the file: {ex.Message}", ex);
+                await formFile.CopyToAsync(stream);
             }
 
             string predictedLabel = await recognitionService.PredictAnimalAsync(filePath);
 
             var imagePath = $"/uploads/{userId}/{uniqueFileName}";
 
-            var animalRecognitionLog = new AnimalRecognitionLog()
+            var animalRecognitionLog = new AnimalRecognitionLog
             {
                 ImagePath = imagePath,
                 AnimalName = predictedLabel,
-                DateRecognized = DateTime.Now,
+                DateRecognized = DateTime.UtcNow,
                 UserId = userId
             };
 
@@ -86,17 +67,41 @@
             return await repository.GetRecognitionLogByIdAsync(id);
         }
 
-        private string PrepareUserUploadDirectory(string userId)
+        private async Task<string> PrepareUserUploadDirectoryAsync(string userId)
         {
-            string userFolderPath = Path.Combine(uploadPath, userId);
+            string userFolderPath = Path.Join(uploadPath, userId);
 
             if (!Directory.Exists(userFolderPath))
             {
-                Directory.CreateDirectory(userFolderPath);
+                await Task.Run(() => Directory.CreateDirectory(userFolderPath));
             }
 
             return userFolderPath;
         }
+
+        private void ValidateFile(IFormFile formFile)
+        {
+            if (formFile == null || formFile.Length == 0)
+            {
+                throw new ArgumentException("The file is empty.");
+            }
+
+            if (formFile.Length > MaxFileSize)
+            {
+                throw new ArgumentException($"The file size is too large. Maximum allowed size is {MaxFileSize / 1024 / 1024} MB.");
+            }
+
+            string extension = Path.GetExtension(formFile.FileName).ToLower();
+            if (!AllowedExtensions.Contains(extension))
+            {
+                throw new ArgumentException("Invalid file extension. Only .jpg, .jpeg, and .png are allowed.");
+            }
+
+            var mimeType = formFile.ContentType;
+            if (!Regex.IsMatch(mimeType, @"^image\/(jpeg|png)$", RegexOptions.IgnoreCase))
+            {
+                throw new ArgumentException("Invalid MIME type. Only image/jpeg and image/png are allowed.");
+            }
+        }
     }
 }
-

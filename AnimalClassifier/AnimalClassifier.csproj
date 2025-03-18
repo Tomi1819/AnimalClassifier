@@ -20,6 +20,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.ML" Version="3.0.1" />
     <PackageReference Include="Microsoft.ML" Version="4.0.2" />
     <PackageReference Include="Microsoft.ML.TensorFlow" Version="4.0.2" />
     <PackageReference Include="Microsoft.ML.Vision" Version="4.0.2" />
@@ -33,7 +34,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="wwwroot\uploads\" />
-    <Folder Include="wwwroot\uploads\280e85f1-fd3a-409a-817b-6a60e6bd8e56\" />
   </ItemGroup>
   <ItemGroup Label="MLModel">
     <None Include="MLModel.mlnet">
