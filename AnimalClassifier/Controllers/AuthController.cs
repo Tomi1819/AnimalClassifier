@@ -35,6 +35,15 @@
             try
             {
                 var response = await authService.LoginAsync(request);
+
+                Response.Cookies.Append("jwt", response.Token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = response.Expiration
+                });
+
                 return Ok(response);
             }
             catch (UnauthorizedAccessException ex)
