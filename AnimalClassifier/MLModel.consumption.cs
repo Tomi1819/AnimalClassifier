@@ -127,5 +127,6 @@ namespace AnimalClassifier
             var predEngine = PredictEngine.Value;
             return predEngine.Predict(input);
         }
+
     }
 }
