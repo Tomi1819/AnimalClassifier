@@ -116,7 +116,7 @@
         {
             if (string.IsNullOrWhiteSpace(fullName))
             {
-                return "Unknown User";
+                return "Unknown user";
             }
 
             var words = fullName.Split(" ", StringSplitOptions.RemoveEmptyEntries)
