@@ -12,8 +12,7 @@
         {
             this.predictionEnginePool = predictionEnginePool;
         }
-
-        public async Task<string> PredictAnimalAsync(string imagePath)
+        public async Task<(string PredictedAnimal, float PredictionScore)> PredictAnimalAsync(string imagePath)
         {
             if (!File.Exists(imagePath))
             {
@@ -29,7 +28,9 @@
 
             var prediction = predictionEnginePool.Predict(inputData);
 
-            return prediction.PredictedLabel;
+            var predictionScore = prediction.Score.Max();
+
+            return (prediction.PredictedLabel, predictionScore);
         }
     }
 }

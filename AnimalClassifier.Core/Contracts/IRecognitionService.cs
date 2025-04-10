@@ -2,6 +2,6 @@
 {
     public interface IRecognitionService
     {
-        Task<string> PredictAnimalAsync(string imagePath);
+        Task<(string PredictedAnimal, float PredictionScore)> PredictAnimalAsync(string imagePath);
     }
 }
