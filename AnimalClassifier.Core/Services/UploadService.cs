@@ -47,7 +47,7 @@
                 await formFile.CopyToAsync(stream);
             }
 
-            string predictedAnimal = await recognitionService.PredictAnimalAsync(fullFilePath);
+            var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalAsync(fullFilePath);
 
             string publicImagePath = $"/uploads/{userId}/{uniqueFileName}";
 
@@ -67,7 +67,8 @@
                 ImageId = log.Id,
                 ImagePath = log.ImagePath,
                 RecognizedAnimal = log.AnimalName,
-                DateRecognized = log.DateRecognized
+                DateRecognized = log.DateRecognized,
+                PredictionScore = predictionScore
             };
         }
 
