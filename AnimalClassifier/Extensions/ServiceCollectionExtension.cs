@@ -3,6 +3,7 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Helpers;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Common;
@@ -37,6 +38,8 @@
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IRecognitionService, RecognitionService>();
+            services.AddScoped<IFileValidator, FileValidator>();
+            services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddSingleton<MLContext>();
 
             services.Configure<UploadSettings>(configuration.GetSection("FileUploadSettings"));
