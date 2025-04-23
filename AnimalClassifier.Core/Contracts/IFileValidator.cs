@@ -3,6 +3,7 @@
     using Microsoft.AspNetCore.Http;
     public interface IFileValidator
     {
-        void Validate(IFormFile file);
+        void ValidateImage(IFormFile file);
+        void ValidateVideo(IFormFile file);
     }
 }

@@ -27,11 +27,11 @@
 
         public async Task<ImageUploadResult> UploadImageAsync(IFormFile formFile, string userId)
         {
-            fileValidator.Validate(formFile);
+            fileValidator.ValidateImage(formFile);
 
             var publicPath = await fileStorageService.SaveFileAsync(formFile, userId);
 
-            var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalAsync(publicPath);
+            var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalFromImageAsync(publicPath);
 
             var log = new AnimalRecognitionLog
             {
@@ -53,7 +53,32 @@
                 PredictionScore = predictionScore
             };
         }
+        public async Task<VideoUploadResult> UploadVideoAsync(IFormFile formFile, string userId)
+        {
+            fileValidator.ValidateVideo(formFile);
 
+            var publicPath = await fileStorageService.SaveFileAsync(formFile, userId);
+
+            var recognitionResults = await recognitionService.PredictAnimalsFromVideoAsync(publicPath);
+
+            var topAnimals = recognitionResults
+                .Where(r => r.PredictionScore >= 0.6f)
+                .GroupBy(r => r.PredictedAnimal)
+                .Where(g => g.Count() >= 2)
+                .Select(g => new AnimalSummary
+                {
+                    Animal = g.Key,
+                    AverageScore = g.Average(x => x.PredictionScore).ToString("0.00")
+                })
+                .OrderByDescending(a => a.AverageScore)
+                .ToList();
+
+            return new VideoUploadResult
+            {
+                TopAnimals = topAnimals,
+                FramesProcessed = recognitionResults.Count
+            };
+        }
         public async Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id)
         {
             return await repository.GetRecognitionLogByIdAsync(id);

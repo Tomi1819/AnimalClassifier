@@ -65,6 +65,46 @@
             }
         }
 
+        [HttpPost("video")]
+        [Consumes("multipart/form-data")]
+        [Authorize]
+        public async Task<IActionResult> UploadVideoAsync([FromForm] IFormFile videoFile)
+        {
+            if (videoFile is null || videoFile.Length == 0)
+            {
+                return BadRequest("The video file is empty.");
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                logger.LogWarning("Video upload attempt without authentication.");
+                return Unauthorized("User is not authenticated.");
+            }
+
+            try
+            {
+                var result = await uploadService.UploadVideoAsync(videoFile, userId);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                logger.LogWarning($"Video upload failed: {ex.Message}");
+                return BadRequest(ex.Message);
+            }
+            catch (IOException ex)
+            {
+                logger.LogError($"Video file saving error: {ex.Message}");
+                return StatusCode(500, "Error while saving the video.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Unexpected error during video upload: {ex}");
+                return StatusCode(500, "An unexpected error occurred.");
+            }
+        }
+
+
         [HttpGet("{id}")]
         public async Task<ActionResult<ImageUploadResult>> GetRecognitionLogById(int id)
         {

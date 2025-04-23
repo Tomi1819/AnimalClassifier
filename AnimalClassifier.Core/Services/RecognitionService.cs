@@ -3,6 +3,8 @@
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using Microsoft.Extensions.ML;
+    using OpenCvSharp;
+    using System;
 
     public class RecognitionService : IRecognitionService
     {
@@ -12,7 +14,7 @@
         {
             this.predictionEnginePool = predictionEnginePool;
         }
-        public async Task<(string PredictedAnimal, float PredictionScore)> PredictAnimalAsync(string imagePath)
+        public async Task<(string PredictedAnimal, float PredictionScore)> PredictAnimalFromImageAsync(string imagePath)
         {
             if (!File.Exists(imagePath))
             {
@@ -31,6 +33,35 @@
             var predictionScore = prediction.Score.Max();
 
             return (prediction.PredictedLabel, predictionScore);
+        }
+
+        public async Task<List<FramePredictionResult>> PredictAnimalsFromVideoAsync(string videoPath)
+        {
+            var results = new List<FramePredictionResult>();
+            using var capture = new VideoCapture(videoPath);
+            int frameRate = (int)capture.Fps;
+
+            for (int i = 0; i < capture.FrameCount; i += frameRate)
+            {
+                capture.PosFrames = i;
+                using var frame = new Mat();
+                capture.Read(frame);
+
+                if (frame.Empty()) continue;
+
+                byte[] frameBytes = frame.ToBytes(".jpg");
+                var input = new ImageData { ImageSource = frameBytes };
+                var prediction = predictionEnginePool.Predict(input);
+
+                results.Add(new FramePredictionResult
+                {
+                    PredictedAnimal = prediction.PredictedLabel,
+                    PredictionScore = prediction.Score.Max(),
+                    Timestamp = TimeSpan.FromSeconds(i / frameRate)
+                });
+
+            }
+            return results;
         }
     }
 }
