@@ -8,5 +8,6 @@
     {
         Task<ImageUploadResult> UploadImageAsync(IFormFile formFile, string userId);
         Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id);
+        Task<VideoUploadResult> UploadVideoAsync(IFormFile formFile, string userId);
     }
 }
