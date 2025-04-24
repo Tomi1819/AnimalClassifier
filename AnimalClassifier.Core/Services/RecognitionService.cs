@@ -51,7 +51,7 @@
 
                 byte[] frameBytes = frame.ToBytes(".jpg");
                 var input = new ImageData { ImageSource = frameBytes };
-                var prediction = predictionEnginePool.Predict(input);
+                var prediction = await Task.Run(() => predictionEnginePool.Predict(input));
 
                 results.Add(new FramePredictionResult
                 {

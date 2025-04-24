@@ -64,7 +64,7 @@
             var topAnimals = recognitionResults
                 .Where(r => r.PredictionScore >= 0.6f)
                 .GroupBy(r => r.PredictedAnimal)
-                .Where(g => g.Count() >= 2)
+                .Where(g => g.Count() >= 3)
                 .Select(g => new AnimalSummary
                 {
                     Animal = g.Key,
