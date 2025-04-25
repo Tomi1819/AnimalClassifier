@@ -5,6 +5,7 @@
     using Microsoft.Extensions.ML;
     using OpenCvSharp;
     using System;
+    using static Constants.MessageConstants;
 
     public class RecognitionService : IRecognitionService
     {
@@ -18,7 +19,7 @@
         {
             if (!File.Exists(imagePath))
             {
-                throw new FileNotFoundException("Image not found.");
+                throw new FileNotFoundException(ImageNotFound);
             }
 
             await using var stream = File.OpenRead(imagePath);
@@ -49,9 +50,15 @@
 
                 if (frame.Empty()) continue;
 
-                byte[] frameBytes = frame.ToBytes(".jpg");
+                byte[] frameBytes = frame.ToBytes(DefaultExtension);
                 var input = new ImageData { ImageSource = frameBytes };
                 var prediction = await Task.Run(() => predictionEnginePool.Predict(input));
+
+
+                if (prediction is null)
+                {
+                    throw new InvalidOperationException(FailedPrediction);
+                }
 
                 results.Add(new FramePredictionResult
                 {

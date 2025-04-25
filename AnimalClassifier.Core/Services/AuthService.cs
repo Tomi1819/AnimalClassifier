@@ -12,6 +12,8 @@
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using static Constants.RoleConstants;
+    using static Constants.MessageConstants;
 
     public class AuthService : IAuthService
     {
@@ -32,7 +34,7 @@
         {
             if (await userManager.FindByEmailAsync(request.Email) != null)
             {
-                throw new InvalidOperationException("This email is already registered.");
+                throw new InvalidOperationException(AlreadyRegisteredEmail);
             }
 
             string processedFullName = ProcessFullName(request.FullName);
@@ -50,15 +52,15 @@
 
             if (!result.Succeeded)
             {
-                throw new InvalidOperationException("User creation failed.");
+                throw new InvalidOperationException(FailedCreation);
             }
 
-            if (!await roleManager.RoleExistsAsync("User"))
+            if (!await roleManager.RoleExistsAsync(User))
             {
-                await roleManager.CreateAsync(new IdentityRole("User"));
+                await roleManager.CreateAsync(new IdentityRole(User));
             }
 
-            await userManager.AddToRoleAsync(user, "User");
+            await userManager.AddToRoleAsync(user, User);
 
             return new RegisterResponse
             {
@@ -73,7 +75,7 @@
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
             {
-                throw new UnauthorizedAccessException("Invalid email or password.");
+                throw new UnauthorizedAccessException(InvalidCredentials);
             }
 
             var authClaims = new List<Claim>
@@ -116,13 +118,13 @@
         {
             if (string.IsNullOrWhiteSpace(fullName))
             {
-                return "Unknown user";
+                return UnknownUser;
             }
 
-            var words = fullName.Split(" ", StringSplitOptions.RemoveEmptyEntries)
+            var words = fullName.Split(Space, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(word => char.ToUpper(word[0]) + word.Substring(1).ToLower());
 
-            return string.Join(" ", words);
+            return string.Join(Space, words);
         }
 
         private string GenerateUserName(string fullName, string email)
@@ -132,10 +134,10 @@
                 return email.Split('@')[0].ToLower();
             }
 
-            var words = fullName.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            var words = fullName.Split(Space, StringSplitOptions.RemoveEmptyEntries);
             string baseUserName = words.Length > 1 ? $"{words[0]}.{words[^1]}" : words[0];
 
-            baseUserName = Regex.Replace(baseUserName, @"[^a-zA-Z0-9._]", "").ToLower();
+            baseUserName = Regex.Replace(baseUserName, UserNamePattern, Space).ToLower();
 
             return baseUserName;
         }
