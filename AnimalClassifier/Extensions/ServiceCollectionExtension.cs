@@ -18,13 +18,15 @@
     using Microsoft.ML;
     using System;
     using System.Text;
+    using static Core.Constants.ConfigConstants;
+    using static Core.Constants.MessageConstants;
 
     public static class ServiceCollectionExtension
     {
         public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            var connectionString = configuration.GetConnectionString(DefaultConnection)
+                ?? throw new InvalidOperationException(MissingConnectionString);
 
             services.AddDbContext<AnimalClassifierDbContext>(options =>
                 options.UseSqlServer(connectionString));
@@ -42,16 +44,18 @@
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddSingleton<MLContext>();
 
-            services.Configure<UploadSettings>(configuration.GetSection("FileUploadSettings"));
+            services.Configure<UploadSettings>(configuration.GetSection(FileUploadSettings));
+            services.Configure<MLModelSettings>(configuration.GetSection(MLModel));
+            services.Configure<JwtSettings>(configuration.GetSection(Jwt));
 
-            var modelPath = configuration["MLModel:Path"];
-            if (string.IsNullOrWhiteSpace(modelPath))
+            var mlModelSettings = configuration.GetSection(MLModel).Get<MLModelSettings>();
+            if (string.IsNullOrWhiteSpace(mlModelSettings?.Path))
             {
-                throw new InvalidOperationException("ML model path is not configured.");
+                throw new InvalidOperationException(MissingMLModelPath);
             }
 
             services.AddPredictionEnginePool<ImageData, ImagePrediction>()
-                .FromFile(modelPath);
+                .FromFile(mlModelSettings.Path);
 
             return services;
         }
@@ -70,13 +74,12 @@
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<AnimalClassifierDbContext>();
 
-            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 
-            var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>();
+            var jwtSettings = configuration.GetSection(Jwt).Get<JwtSettings>();
 
             if (string.IsNullOrEmpty(jwtSettings?.SecretKey))
             {
-                throw new InvalidOperationException("JWT Secret Key is not configured.");
+                throw new InvalidOperationException(MissingJwtSecurityKey);
             }
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
