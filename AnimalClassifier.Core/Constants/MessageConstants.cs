@@ -14,5 +14,10 @@
         public const string ImageNotFound = "Image not found.";
         public const string FailedPrediction = "Prediction failed.";
         public const string DefaultExtension = ".jpg";
+
+        //ServiceCollectionExtension
+        public const string MissingConnectionString = "Connection string 'DefaultConnection' not found.";
+        public const string MissingMLModelPath = "ML model path is not configured.";
+        public const string MissingJwtSecurityKey = "JWT Secret Key is not configured.";
     }
 }
