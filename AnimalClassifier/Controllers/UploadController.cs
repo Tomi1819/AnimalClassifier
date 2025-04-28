@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -34,7 +35,8 @@
                 return BadRequest("The file is empty.");
             }
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.Id();
+
             if (string.IsNullOrEmpty(userId))
             {
                 logger.LogWarning("Upload attempt without authentication.");
@@ -75,7 +77,7 @@
                 return BadRequest("The video file is empty.");
             }
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.Id();
             if (string.IsNullOrEmpty(userId))
             {
                 logger.LogWarning("Video upload attempt without authentication.");
