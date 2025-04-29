@@ -7,3 +7,4 @@ AnimalClassifier is a web application that uses Machine Learning to recognize an
 ✅ RESTful API for integration with external applications 📡
 
 💡 Technologies: .NET 8, ML.NET, EF Core, Identity, JWT
+The UI part [AnimalClassifier.Frontend](https://github.com/Tomi1819/AnimalClassifier.Frontend)
