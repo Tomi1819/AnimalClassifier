@@ -76,7 +76,8 @@
             return new VideoUploadResult
             {
                 TopAnimals = topAnimals,
-                FramesProcessed = recognitionResults.Count
+                FramesProcessed = recognitionResults.Count,
+                VideoPath = publicPath,
             };
         }
         public async Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id)
