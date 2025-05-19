@@ -42,6 +42,7 @@
             services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IFileStorageService, FileStorageService>();
+            services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddSingleton<MLContext>();
 
             services.Configure<UploadSettings>(configuration.GetSection(FileUploadSettings));
