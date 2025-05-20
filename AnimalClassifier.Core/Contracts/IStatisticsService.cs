@@ -5,6 +5,6 @@
     {
         Task<int> GetTotalClassificationAsync();
         Task<int> GetUniqueUserCountAsync();
-        Task<MostCommonAnimal> GetMostCommonAnimalAsync();
+        Task<List<MostCommonAnimal>> GetMostCommonAnimalAsync();
     }
 }
