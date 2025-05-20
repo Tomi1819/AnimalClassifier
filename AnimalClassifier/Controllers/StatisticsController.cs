@@ -7,7 +7,7 @@
 
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class StatisticsController : ControllerBase
     {
         private readonly IStatisticsService statisticsService;

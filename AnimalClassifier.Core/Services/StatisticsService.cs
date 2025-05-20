@@ -13,29 +13,27 @@
             this.repository = repository;
         }
 
-        public async Task<MostCommonAnimal> GetMostCommonAnimalAsync()
+        public async Task<List<MostCommonAnimal>> GetMostCommonAnimalAsync()
         {
             var logs = await repository.GetAllRecognitionLogsAsync();
+
             var mostCommon = logs
                 .GroupBy(l => l.AnimalName)
-                .Select(g => new
+                .Select(g => new MostCommonAnimal
                 {
-                    Animal = g.Key,
+                    AnimalName = g.Key,
                     Count = g.Count()
                 })
-                .OrderByDescending(g => g.Count)
-                .FirstOrDefault();
+                .OrderByDescending(a => a.Count)
+                .Take(3)
+                .ToList();
 
             if (mostCommon is null)
             {
                 return null!;
             }
 
-            return new MostCommonAnimal
-            {
-                AnimalName = mostCommon.Animal,
-                Count = mostCommon.Count
-            };
+            return mostCommon;
         }
 
         public async Task<int> GetTotalClassificationAsync()
