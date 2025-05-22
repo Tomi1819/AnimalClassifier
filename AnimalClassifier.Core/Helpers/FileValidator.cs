@@ -34,6 +34,12 @@
                 throw new ArgumentException("Unsupported video MIME type.");
 
         }
+
+        public bool IsImage(string path)
+        {
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+             return AllowedImageExtensions.Contains(extension);
+        }
         private static void CommonValidate(IFormFile file)
         {
             if (file == null || file.Length == 0)
