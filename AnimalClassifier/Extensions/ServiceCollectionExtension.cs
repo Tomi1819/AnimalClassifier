@@ -19,7 +19,7 @@
     using System;
     using System.Text;
     using static Core.Constants.ConfigConstants;
-    using static Core.Constants.MessageConstants;
+    using static Constants.MessageConstants;
 
     public static class ServiceCollectionExtension
     {
@@ -43,6 +43,7 @@
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
+            services.AddScoped<IAnimalService, AnimalService>();
             services.AddSingleton<MLContext>();
 
             services.Configure<UploadSettings>(configuration.GetSection(FileUploadSettings));
