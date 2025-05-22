@@ -5,5 +5,6 @@
     {
         void ValidateImage(IFormFile file);
         void ValidateVideo(IFormFile file);
+        bool IsImage(string path);
     }
 }
