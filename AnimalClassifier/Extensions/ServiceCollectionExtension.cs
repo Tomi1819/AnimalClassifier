@@ -3,7 +3,6 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Helpers;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Common;
@@ -20,6 +19,7 @@
     using System.Text;
     using static Core.Constants.ConfigConstants;
     using static Constants.MessageConstants;
+    using AnimalClassifier.Core.Services.Helpers;
 
     public static class ServiceCollectionExtension
     {
