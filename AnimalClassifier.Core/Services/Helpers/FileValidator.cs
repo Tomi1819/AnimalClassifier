@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Helpers
+﻿namespace AnimalClassifier.Core.Services.Helpers
 {
     using AnimalClassifier.Core.Contracts;
     using Microsoft.AspNetCore.Http;
@@ -38,7 +38,7 @@
         public bool IsImage(string path)
         {
             var extension = Path.GetExtension(path).ToLowerInvariant();
-             return AllowedImageExtensions.Contains(extension);
+            return AllowedImageExtensions.Contains(extension);
         }
         private static void CommonValidate(IFormFile file)
         {
