@@ -16,7 +16,7 @@
         }
         public async Task<List<AnimalSearchResult>> SearchAnimalByNameAsync(string searchTerm)
         {
-            if (string.IsNullOrWhiteSpace(searchTerm)) 
+            if (string.IsNullOrWhiteSpace(searchTerm))
                 return new List<AnimalSearchResult>();
 
             var logs = await repository.GetAllRecognitionLogsAsync();
@@ -25,7 +25,7 @@
                 .Where(l => l.AnimalName.Contains(searchTerm))
                 .Where(l => fileValidator.IsImage(l.ImagePath))
                 .GroupBy(l => l.AnimalName)
-                .Select(g => new AnimalSearchResult
+                .Select(g => new
                 {
                     AnimalName = g.Key,
                     Count = g.Count(),
@@ -34,10 +34,23 @@
                     .Distinct()
                     .ToList()
                 })
-                .OrderByDescending(r => r.Count)
                 .ToList();
 
-            return filtered;
+            int maxCount = filtered.Max(f => f.Count);
+
+            var results = filtered
+                .Select(r => new AnimalSearchResult
+                {
+                    AnimalName = r.AnimalName,
+                    Count = r.Count,
+                    ImagePaths = r.ImagePaths,
+                    Accuracy = maxCount > 0 ? (float)r.Count / maxCount : 0
+                })
+                .Where(r => r.Accuracy >= 0.7)
+                .OrderByDescending(r => r.Accuracy)
+                .ToList();
+
+            return results;
         }
     }
 }
