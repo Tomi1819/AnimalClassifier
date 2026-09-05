@@ -6,5 +6,7 @@
         public const string FileUploadSettings = "FileUploadSettings";
         public const string MLModel = "MLModel";
         public const string Jwt = "Jwt";
+        public const string CorsAllowedOrigins = "Cors:AllowedOrigins";
+        public const string CorsPolicy = "CorsPolicy";
     }
 }

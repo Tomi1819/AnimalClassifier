@@ -12,6 +12,7 @@
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.ML;
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.ML;
@@ -34,7 +35,7 @@
             return services;
         }
 
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
             services.AddScoped<IRepository, Repository>();
             services.AddScoped<IUploadService, UploadService>();
@@ -46,7 +47,18 @@
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddSingleton<MLContext>();
 
+            var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
+            if (string.IsNullOrWhiteSpace(uploadSettings?.UploadPath))
+            {
+                throw new InvalidOperationException(MissingUploadPath);
+            }
+
             services.Configure<UploadSettings>(configuration.GetSection(FileUploadSettings));
+
+            // Uploads are configured relative to the content root.
+            services.PostConfigure<UploadSettings>(settings =>
+                settings.UploadPath = Path.GetFullPath(settings.UploadPath, environment.ContentRootPath));
+
             services.Configure<MLModelSettings>(configuration.GetSection(MLModel));
             services.Configure<JwtSettings>(configuration.GetSection(Jwt));
 
@@ -58,6 +70,22 @@
 
             services.AddPredictionEnginePool<ImageData, ImagePrediction>()
                 .FromFile(mlModelSettings.Path);
+
+            return services;
+        }
+
+        public static IServiceCollection AddApplicationCors(this IServiceCollection services, IConfiguration configuration)
+        {
+            var allowedOrigins = configuration.GetSection(CorsAllowedOrigins).Get<string[]>()
+                ?? Array.Empty<string>();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy(CorsPolicy, policy => policy
+                    .WithOrigins(allowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader());
+            });
 
             return services;
         }
