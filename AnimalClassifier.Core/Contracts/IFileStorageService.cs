@@ -1,8 +1,10 @@
 ﻿namespace AnimalClassifier.Core.Contracts
 {
+    using AnimalClassifier.Core.DTO;
     using Microsoft.AspNetCore.Http;
+
     public interface IFileStorageService
     {
-        Task<string> SaveFileAsync(IFormFile file, string userId);
+        Task<StoredFileResult> SaveFileAsync(IFormFile file, string userId);
     }
 }

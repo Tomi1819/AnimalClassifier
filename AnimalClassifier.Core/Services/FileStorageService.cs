@@ -2,36 +2,40 @@
 {
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.DTO;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Options;
 
     public class FileStorageService : IFileStorageService
     {
         private readonly string uploadRootPath;
+        private readonly string requestPath;
 
         public FileStorageService(IOptions<UploadSettings> options)
         {
             uploadRootPath = options.Value.UploadPath;
+            requestPath = options.Value.RequestPath;
         }
 
-        public async Task<string> SaveFileAsync(IFormFile file, string userId)
+        public async Task<StoredFileResult> SaveFileAsync(IFormFile file, string userId)
         {
             string userDirectory = Path.Combine(uploadRootPath, userId);
-            if (!Directory.Exists(userDirectory))
-            {
-                Directory.CreateDirectory(userDirectory);
-            }
+            Directory.CreateDirectory(userDirectory);
 
             string extension = Path.GetExtension(file.FileName).ToLower();
             string uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            string fullFilePath = Path.Combine(userDirectory, uniqueFileName);
+            string physicalPath = Path.Combine(userDirectory, uniqueFileName);
 
-            await using (var stream = new FileStream(fullFilePath, FileMode.Create))
+            await using (var stream = new FileStream(physicalPath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
             }
 
-            return $"/uploads/{userId}/{uniqueFileName}";
+            return new StoredFileResult
+            {
+                PhysicalPath = physicalPath,
+                PublicPath = $"{requestPath}/{userId}/{uniqueFileName}"
+            };
         }
     }
 }
