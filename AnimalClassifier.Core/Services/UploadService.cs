@@ -29,13 +29,13 @@
         {
             fileValidator.ValidateImage(formFile);
 
-            var publicPath = await fileStorageService.SaveFileAsync(formFile, userId);
+            var storedFile = await fileStorageService.SaveFileAsync(formFile, userId);
 
-            var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalFromImageAsync(publicPath);
+            var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalFromImageAsync(storedFile.PhysicalPath);
 
             var log = new AnimalRecognitionLog
             {
-                ImagePath = publicPath,
+                ImagePath = storedFile.PublicPath,
                 AnimalName = predictedAnimal,
                 DateRecognized = DateTime.UtcNow,
                 UserId = userId
@@ -57,9 +57,9 @@
         {
             fileValidator.ValidateVideo(formFile);
 
-            var publicPath = await fileStorageService.SaveFileAsync(formFile, userId);
+            var storedFile = await fileStorageService.SaveFileAsync(formFile, userId);
 
-            var recognitionResults = await recognitionService.PredictAnimalsFromVideoAsync(publicPath);
+            var recognitionResults = await recognitionService.PredictAnimalsFromVideoAsync(storedFile.PhysicalPath);
 
             var topAnimals = recognitionResults
                 .Where(r => r.PredictionScore >= 0.6f)
@@ -77,7 +77,7 @@
             {
                 TopAnimals = topAnimals,
                 FramesProcessed = recognitionResults.Count,
-                VideoPath = publicPath,
+                VideoPath = storedFile.PublicPath,
             };
         }
         public async Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id)
