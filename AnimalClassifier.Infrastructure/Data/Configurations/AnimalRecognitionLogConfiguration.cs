@@ -16,6 +16,9 @@
             builder.Property(a => a.DateRecognized)
                 .IsRequired();
 
+            builder.Property(a => a.IsDeleted)
+                .HasDefaultValue(false);
+
             builder.HasOne(a => a.User)
                 .WithMany()
                 .HasForeignKey(a => a.UserId)
