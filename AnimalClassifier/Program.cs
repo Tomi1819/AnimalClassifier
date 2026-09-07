@@ -1,5 +1,5 @@
 using AnimalClassifier.Extensions;
-using Microsoft.Extensions.FileProviders;
+using static AnimalClassifier.Core.Constants.ConfigConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,43 +9,20 @@ builder.Services.AddApplicationIdentity(builder.Configuration);
 
 builder.Services.AddControllers();
 
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
 
-builder.Services.AddApplicationServices(builder.Configuration);
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader());
-});
-
-
-builder.Services.AddSwaggerGen(c =>
-{
-    c.EnableAnnotations();
-});
+builder.Services.AddApplicationCors(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 app.UseHttpsRedirection();
+
+app.UseApplicationUploads();
+
+app.UseCors(CorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowAll");
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider("C:\\Uploads"),
-    RequestPath = "/uploads"
-});
 
 app.MapControllers();
 
