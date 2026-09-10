@@ -1,6 +1,6 @@
 # AnimalClassifier 🐾
 
-**AnimalClassifier** is a machine learning-powered web application designed to recognize animals from uploaded images and videos. Built with .NET 8 and ML.NET, it offers a secure, scalable, and developer-friendly API for classification tasks.
+**AnimalClassifier** is a machine learning-powered web application designed to recognize animals from uploaded images and videos. Built with .NET 10 and ML.NET, it offers a secure, scalable, and developer-friendly API for classification tasks.
 
 ## 🔍 Overview
 
@@ -15,7 +15,7 @@ This application enables users to upload images of animals and receive classific
 
 ## 🛠️ Technologies Used
 
-- **Backend**: .NET 8, ASP.NET Core Web API
+- **Backend**: .NET 10, ASP.NET Core Web API
 - **Machine Learning**: ML.NET
 - **Database**: Entity Framework Core
 - **Authentication**: ASP.NET Identity, JWT
@@ -25,5 +25,5 @@ This application enables users to upload images of animals and receive classific
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or another supported database
