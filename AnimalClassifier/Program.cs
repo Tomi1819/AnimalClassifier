@@ -15,6 +15,8 @@ builder.Services.AddApplicationCors(builder.Configuration);
 
 var app = builder.Build();
 
+await app.SeedRolesAsync();
+
 app.UseHttpsRedirection();
 
 app.UseApplicationUploads();

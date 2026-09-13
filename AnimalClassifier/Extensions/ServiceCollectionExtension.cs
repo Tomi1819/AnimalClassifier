@@ -93,8 +93,9 @@
         public static IServiceCollection AddApplicationIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services
-                .AddDefaultIdentity<ApplicationUser>(options =>
+                .AddIdentityCore<ApplicationUser>(options =>
                 {
+                    options.Stores.MaxLengthForKeys = 128;
                     options.SignIn.RequireConfirmedAccount = false;
                     options.Password.RequireDigit = false;
                     options.Password.RequireLowercase = false;
@@ -102,8 +103,8 @@
                     options.Password.RequireUppercase = false;
                 })
                 .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<AnimalClassifierDbContext>();
-
+                .AddEntityFrameworkStores<AnimalClassifierDbContext>()
+                .AddSignInManager();
 
             var jwtSettings = configuration.GetSection(Jwt).Get<JwtSettings>();
 
@@ -124,6 +125,21 @@
                         ValidIssuer = jwtSettings.Issuer,
                         ValidAudience = jwtSettings.Audience,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
+                    };
+
+                    // A signed token would otherwise stay valid until it expires, so a
+                    // change to the user's access takes effect on their next request.
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = async context =>
+                        {
+                            var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+
+                            if (!await authService.IsSessionValidAsync(context.Principal!))
+                            {
+                                context.Fail(OutdatedToken);
+                            }
+                        }
                     };
                 });
 
