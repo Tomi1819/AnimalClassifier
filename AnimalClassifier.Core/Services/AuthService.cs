@@ -3,6 +3,7 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;
@@ -54,14 +55,8 @@
                 DateRegistered = DateTime.UtcNow
             };
 
-            var result = await userManager.CreateAsync(user, request.Password);
-
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException(string.Join(Space, result.Errors.Select(e => e.Description)));
-            }
-
-            await userManager.AddToRoleAsync(user, User);
+            (await userManager.CreateAsync(user, request.Password)).ThrowIfFailed();
+            (await userManager.AddToRoleAsync(user, User)).ThrowIfFailed();
 
             return new RegisterResponse
             {

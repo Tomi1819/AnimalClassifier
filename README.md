@@ -36,3 +36,11 @@ Register an account, set its email as `Admin:Email`, and restart the backend. On
 cd AnimalClassifier
 dotnet user-secrets set "Admin:Email" "you@example.com"
 ```
+
+### Running the tests
+
+The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb). Each run creates its own database and drops it afterwards.
+
+```bash
+dotnet test
+```
