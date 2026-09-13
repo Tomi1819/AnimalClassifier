@@ -27,3 +27,12 @@ This application enables users to upload images of animals and receive classific
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or another supported database
+
+### First administrator
+
+Register an account, set its email as `Admin:Email`, and restart the backend. On startup that account is made an administrator; sign in again for the role to take effect.
+
+```bash
+cd AnimalClassifier
+dotnet user-secrets set "Admin:Email" "you@example.com"
+```

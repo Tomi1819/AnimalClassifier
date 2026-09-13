@@ -9,24 +9,31 @@
     using Microsoft.IdentityModel.Tokens;
     using System.IdentityModel.Tokens.Jwt;
     using System.Security.Claims;
+    using System.Security.Cryptography;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using static Constants.RoleConstants;
     using static Constants.MessageConstants;
 
     public class AuthService : IAuthService
     {
+        /// <summary>
+        /// Carries a hash of the user's security stamp rather than the stamp
+        /// itself, because anyone holding a token can read it and Identity
+        /// derives one-time codes from the stamp.
+        /// </summary>
+        private const string SecurityStampClaimType = "security_stamp";
+
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly SignInManager<ApplicationUser> signInManager;
         private readonly JwtSettings jwtSettings;
 
         public AuthService(UserManager<ApplicationUser> userManager,
-                           RoleManager<IdentityRole> roleManager,
+                           SignInManager<ApplicationUser> signInManager,
                            IOptions<JwtSettings> jwtOptions)
         {
             this.userManager = userManager;
-            this.roleManager = roleManager;
+            this.signInManager = signInManager;
             this.jwtSettings = jwtOptions.Value;
         }
 
@@ -38,12 +45,11 @@
             }
 
             string processedFullName = ProcessFullName(request.FullName);
-            string generatedUserName = GenerateUserName(request.FullName, request.Email);
 
             var user = new ApplicationUser
             {
                 FullName = processedFullName,
-                UserName = generatedUserName,
+                UserName = request.Email,
                 Email = request.Email,
                 DateRegistered = DateTime.UtcNow
             };
@@ -52,12 +58,7 @@
 
             if (!result.Succeeded)
             {
-                throw new InvalidOperationException(FailedCreation);
-            }
-
-            if (!await roleManager.RoleExistsAsync(User))
-            {
-                await roleManager.CreateAsync(new IdentityRole(User));
+                throw new InvalidOperationException(string.Join(Space, result.Errors.Select(e => e.Description)));
             }
 
             await userManager.AddToRoleAsync(user, User);
@@ -73,7 +74,21 @@
         public async Task<LoginResponse> LoginAsync(LogInRequest request)
         {
             var user = await userManager.FindByEmailAsync(request.Email);
-            if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException(InvalidCredentials);
+            }
+
+            // Unlike checking the password alone, this refuses a locked-out account
+            // and counts a wrong password towards locking it.
+            var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+
+            if (result.IsLockedOut)
+            {
+                throw new UnauthorizedAccessException(LockedOutAccount);
+            }
+
+            if (!result.Succeeded)
             {
                 throw new UnauthorizedAccessException(InvalidCredentials);
             }
@@ -83,7 +98,8 @@
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(SecurityStampClaimType, await GetSecurityStampHashAsync(user))
             };
 
             var userRoles = await userManager.GetRolesAsync(user);
@@ -97,8 +113,23 @@
             return new LoginResponse
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Expiration = token.ValidTo
+                Expiration = token.ValidTo,
+                Roles = userRoles.ToList()
             };
+        }
+
+        public async Task<bool> IsSessionValidAsync(ClaimsPrincipal principal)
+        {
+            var user = await userManager.GetUserAsync(principal);
+
+            return user != null
+                && principal.FindFirstValue(SecurityStampClaimType) == await GetSecurityStampHashAsync(user);
+        }
+
+        private async Task<string> GetSecurityStampHashAsync(ApplicationUser user)
+        {
+            var securityStamp = await userManager.GetSecurityStampAsync(user);
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(securityStamp)));
         }
 
         private JwtSecurityToken GenerateJwtToken(List<Claim> authClaims)
@@ -125,21 +156,6 @@
                                 .Select(word => char.ToUpper(word[0]) + word.Substring(1).ToLower());
 
             return string.Join(Space, words);
-        }
-
-        private string GenerateUserName(string fullName, string email)
-        {
-            if (string.IsNullOrWhiteSpace(fullName))
-            {
-                return email.Split('@')[0].ToLower();
-            }
-
-            var words = fullName.Split(Space, StringSplitOptions.RemoveEmptyEntries);
-            string baseUserName = words.Length > 1 ? $"{words[0]}.{words[^1]}" : words[0];
-
-            baseUserName = Regex.Replace(baseUserName, UserNamePattern, Space).ToLower();
-
-            return baseUserName;
         }
     }
 }

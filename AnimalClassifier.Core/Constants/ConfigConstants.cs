@@ -8,5 +8,6 @@
         public const string Jwt = "Jwt";
         public const string CorsAllowedOrigins = "Cors:AllowedOrigins";
         public const string CorsPolicy = "CorsPolicy";
+        public const string AdminEmail = "Admin:Email";
     }
 }
