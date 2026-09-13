@@ -45,6 +45,7 @@
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddScoped<IAnimalService, AnimalService>();
+            services.AddScoped<IAdminService, AdminService>();
             services.AddSingleton<MLContext>();
 
             var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
