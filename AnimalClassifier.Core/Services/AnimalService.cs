@@ -22,7 +22,7 @@
             var logs = await repository.GetAllRecognitionLogsAsync();
 
             var filtered = logs
-                .Where(l => l.AnimalName.Contains(searchTerm))
+                .Where(l => l.AnimalName.Contains(searchTerm.Trim(), StringComparison.OrdinalIgnoreCase))
                 .Where(l => fileValidator.IsImage(l.ImagePath))
                 .GroupBy(l => l.AnimalName)
                 .Select(g => new
@@ -36,6 +36,9 @@
                 })
                 .ToList();
 
+            if (filtered.Count == 0)
+                return new List<AnimalSearchResult>();
+
             int maxCount = filtered.Max(f => f.Count);
 
             var results = filtered
@@ -44,7 +47,7 @@
                     AnimalName = r.AnimalName,
                     Count = r.Count,
                     ImagePaths = r.ImagePaths,
-                    Accuracy = maxCount > 0 ? (float)r.Count / maxCount : 0
+                    Accuracy = (float)r.Count / maxCount
                 })
                 .Where(r => r.Accuracy >= 0.7)
                 .OrderByDescending(r => r.Accuracy)
