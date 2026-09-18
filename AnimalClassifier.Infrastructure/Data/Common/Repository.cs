@@ -22,6 +22,14 @@
             return await context.AnimalRecognitionLogs.ToListAsync();
         }
 
+        public async Task<IEnumerable<DateTime>> GetRecognitionDatesSinceAsync(DateTime since)
+        {
+            return await context.AnimalRecognitionLogs
+                .Where(l => l.DateRecognized >= since)
+                .Select(l => l.DateRecognized)
+                .ToListAsync();
+        }
+
         public async Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id)
         {
             return await context.AnimalRecognitionLogs.FindAsync(id);

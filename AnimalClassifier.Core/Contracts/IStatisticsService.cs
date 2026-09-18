@@ -6,5 +6,6 @@
         Task<int> GetTotalClassificationAsync();
         Task<int> GetUniqueUserCountAsync();
         Task<List<MostCommonAnimal>> GetMostCommonAnimalAsync();
+        Task<List<DailyRecognitionCount>> GetDailyRecognitionCountsAsync(int days, TimeZoneInfo timeZone);
     }
 }
