@@ -5,6 +5,8 @@
     public interface IRepository
     {
         Task<IEnumerable<AnimalRecognitionLog>> GetAllRecognitionLogsAsync();
+
+        Task<IEnumerable<DateTime>> GetRecognitionDatesSinceAsync(DateTime since);
         Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id);
 
         /// <summary>

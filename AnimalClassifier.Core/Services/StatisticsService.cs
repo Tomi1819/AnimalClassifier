@@ -49,5 +49,26 @@
                 .Distinct()
                 .Count();
         }
+
+        public async Task<List<DailyRecognitionCount>> GetDailyRecognitionCountsAsync(int days, TimeZoneInfo timeZone)
+        {
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
+            var firstDay = today.AddDays(1 - days);
+
+            var dates = await repository.GetRecognitionDatesSinceAsync(DateTime.UtcNow.AddDays(-(days + 1)));
+
+            var counts = dates
+                .GroupBy(date => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(date, timeZone)))
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            return Enumerable.Range(0, days)
+                .Select(offset => firstDay.AddDays(offset))
+                .Select(day => new DailyRecognitionCount
+                {
+                    Date = day,
+                    Count = counts.GetValueOrDefault(day)
+                })
+                .ToList();
+        }
     }
 }
