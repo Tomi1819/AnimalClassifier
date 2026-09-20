@@ -10,6 +10,7 @@ This application enables users to upload images of animals and receive classific
 
 - ✅ Upload images and receive AI-based classification
 - 🔐 Secure user authentication and registration using JWT
+- 🔑 Password reset over email
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
 
@@ -36,6 +37,38 @@ Register an account, set its email as `Admin:Email`, and restart the backend. On
 cd AnimalClassifier
 dotnet user-secrets set "Admin:Email" "you@example.com"
 ```
+
+### Password reset emails
+
+The messages go out over SMTP wherever one is configured. Development may leave it unconfigured, and then writes them to the log instead, so the link is in the console and no mail server is needed. Everywhere else the app refuses to start until `Email:Host` and `Email:SenderEmail` are set.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `Email:Host`, `Email:Port` | The SMTP server. Port 465 is treated as implicit TLS, anything else upgrades with STARTTLS. |
+| `Email:UserName`, `Email:Password` | Credentials, left empty for a server that wants none. |
+| `Email:SenderEmail`, `Email:SenderName` | Who the messages come from. Providers deliver reliably only for a domain they have been given permission to send for. |
+| `Frontend:BaseUrl` | Where the frontend is served from. The emailed links are built from this rather than from the request, whose host header is chosen by its caller. |
+| `Frontend:ResetPasswordPath` | The page that receives the token, which has to match the frontend. |
+| `RateLimiting:PasswordResetPermitLimit`, `RateLimiting:PasswordResetWindowMinutes` | How often one address may ask for a reset. |
+
+The password is a secret, so it belongs in an environment variable rather than in `appsettings.json`:
+
+```bash
+export Email__Password="..."
+```
+
+To watch the real messages while developing, run a local mail catcher such as [Mailpit](https://mailpit.axllent.org/) or [smtp4dev](https://github.com/rnwood/smtp4dev), which accept everything and deliver nothing, and point the app at it. The settings go in user secrets, so that a clone without them still runs:
+
+```bash
+cd AnimalClassifier
+dotnet user-secrets set "Email:Host" "localhost"
+dotnet user-secrets set "Email:Port" "1025"
+dotnet user-secrets set "Email:SenderEmail" "no-reply@animalclassifier.test"
+```
+
+Removing them again, with `dotnet user-secrets remove "Email:Host"`, puts the links back in the log.
+
+A link stays valid for an hour, is spent once it is used, and changing a password ends every session that account had open.
 
 ### Running the tests
 
