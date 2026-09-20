@@ -12,5 +12,19 @@
         /// an error reaching the caller would answer that same question.
         /// </summary>
         Task ForgotPasswordAsync(ForgotPasswordRequest request);
+
+        /// <summary>
+        /// Sets the new password, if the token belongs to that account and has
+        /// not expired. Succeeding changes the account's security stamp, which
+        /// ends every session opened with the old password and leaves the link
+        /// itself spent.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// When the link is not one this account can use, or when the new
+        /// password fails the rules. The message explains which, except that
+        /// an unknown address and an unusable token are deliberately told
+        /// apart by nothing.
+        /// </exception>
+        Task ResetPasswordAsync(ResetPasswordRequest request);
     }
 }
