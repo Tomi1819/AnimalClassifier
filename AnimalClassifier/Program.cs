@@ -13,6 +13,8 @@ builder.Services.AddApplicationServices(builder.Configuration, builder.Environme
 
 builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
 
+builder.Services.AddApplicationRateLimiting(builder.Configuration);
+
 builder.Services.AddApplicationCors(builder.Configuration);
 
 var app = builder.Build();
@@ -24,6 +26,8 @@ app.UseHttpsRedirection();
 app.UseApplicationUploads();
 
 app.UseCors(CorsPolicy);
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

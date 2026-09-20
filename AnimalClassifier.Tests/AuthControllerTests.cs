@@ -1,10 +1,12 @@
 ﻿namespace AnimalClassifier.Tests
 {
     using AnimalClassifier.Core.DTO;
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
+    using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
 
     public class AuthControllerTests : IClassFixture<ApiFactory>
@@ -64,6 +66,26 @@
 
             Assert.Equal(known.StatusCode, unknown.StatusCode);
             Assert.Equal(await known.Content.ReadAsStringAsync(), await unknown.Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// The endpoint mails whichever address it is handed, so asking it
+        /// repeatedly must stop working before an inbox fills up.
+        /// </summary>
+        [Fact]
+        public async Task ForgotPassword_BeyondTheLimit_IsRefused()
+        {
+            using var limited = factory.WithWebHostBuilder(builder =>
+                builder.UseSetting($"{RateLimiting}:PasswordResetPermitLimit", "1"));
+
+            var client = limited.CreateClient();
+            var request = new ForgotPasswordRequest { Email = UniqueEmail() };
+
+            var allowed = await client.PostAsJsonAsync(ForgotPasswordPath, request);
+            var refused = await client.PostAsJsonAsync(ForgotPasswordPath, request);
+
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
         }
 
         [Fact]
