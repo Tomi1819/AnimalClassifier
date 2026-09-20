@@ -1,10 +1,14 @@
 ﻿namespace AnimalClassifier.Tests
 {
+    using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Infrastructure.Data;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Testing;
+    using Microsoft.AspNetCore.TestHost;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Diagnostics;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using static AnimalClassifier.Core.Constants.ConfigConstants;
 
@@ -14,6 +18,11 @@
     /// </summary>
     public class ApiFactory : WebApplicationFactory<Program>
     {
+        /// <summary>
+        /// Every message the app tried to send during the test run.
+        /// </summary>
+        public RecordingEmailSender Emails { get; } = new();
+
         private readonly string connectionString =
             $@"Server=(localdb)\MSSQLLocalDB;Database=AnimalClassifierTests_{Guid.NewGuid():N};Trusted_Connection=True;TrustServerCertificate=True;";
 
@@ -29,6 +38,15 @@
             // nothing here ever connects to the host they name.
             builder.UseSetting($"{Email}:Host", "localhost");
             builder.UseSetting($"{Email}:SenderEmail", "tests@animalclassifier.local");
+            builder.UseSetting($"{Frontend}:BaseUrl", "https://frontend.test");
+
+            // Whatever the app sends is kept here rather than sent, which is
+            // also what stops a test run from mailing anyone.
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IEmailSender>();
+                services.AddSingleton<IEmailSender>(Emails);
+            });
         }
 
         protected override IHost CreateHost(IHostBuilder builder)
