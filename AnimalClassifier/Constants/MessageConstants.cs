@@ -9,6 +9,7 @@
         //AuthController
         public const string PasswordResetEmailSent = "If that address has an account, a reset link is on its way.";
         public const string PasswordChanged = "Your password has been changed. Please sign in.";
+        public const string TooManyRequests = "Too many attempts. Please wait a few minutes and try again.";
 
         //StatisticsController
         public const string UnknownTimeZone = "The time zone is not recognized.";

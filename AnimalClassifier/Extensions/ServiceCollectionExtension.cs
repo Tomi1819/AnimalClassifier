@@ -8,7 +8,9 @@
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,7 @@
     using Microsoft.ML;
     using System;
     using System.Text;
+    using System.Threading.RateLimiting;
     using static Core.Constants.ConfigConstants;
     using static Core.Constants.SecurityConstants;
     using static Constants.MessageConstants;
@@ -25,6 +28,12 @@
 
     public static class ServiceCollectionExtension
     {
+        /// <summary>
+        /// Stands in for the address of a caller the server cannot see one for,
+        /// who then shares a window with every other such caller.
+        /// </summary>
+        private const string UnknownClient = "unknown";
+
         public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString(DefaultConnection)
@@ -113,6 +122,45 @@
             }
 
             services.AddScoped<IEmailSender, SmtpEmailSender>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Caps how often one caller may ask for a password reset. The two
+        /// endpoints send mail to an address the caller picks and hand out
+        /// attempts at a token, neither of which should be available without
+        /// limit.
+        /// </summary>
+        public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services, IConfiguration configuration)
+        {
+            var rateLimitSettings = configuration.GetSection(RateLimiting).Get<RateLimitSettings>()
+                ?? new RateLimitSettings();
+
+            services.AddRateLimiter(options =>
+            {
+                options.AddPolicy<string>(PasswordResetPolicy, context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        // Callers sharing an address share a window. Counting
+                        // them all as one instead would let a single caller
+                        // spend everybody's attempts.
+                        context.Connection.RemoteIpAddress?.ToString() ?? UnknownClient,
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = rateLimitSettings.PasswordResetPermitLimit,
+                            Window = TimeSpan.FromMinutes(rateLimitSettings.PasswordResetWindowMinutes)
+                        }));
+
+                // Otherwise the refusal arrives as a bare status the frontend
+                // has nothing to show for.
+                options.OnRejected = async (context, cancellationToken) =>
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(
+                        new { message = TooManyRequests }, cancellationToken);
+                };
+            });
 
             return services;
         }

@@ -40,6 +40,11 @@
             builder.UseSetting($"{Email}:SenderEmail", "tests@animalclassifier.local");
             builder.UseSetting($"{Frontend}:BaseUrl", "https://frontend.test");
 
+            // Requests from a test carry no client address, so all of them
+            // share one rate limiting window and the deployed limit would
+            // throttle the suite. The test that covers the limit sets its own.
+            builder.UseSetting($"{RateLimiting}:PasswordResetPermitLimit", "1000");
+
             // Whatever the app sends is kept here rather than sent, which is
             // also what stops a test run from mailing anyone.
             builder.ConfigureTestServices(services =>

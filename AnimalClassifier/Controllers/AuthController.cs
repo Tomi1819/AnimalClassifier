@@ -3,7 +3,9 @@
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
     using static Constants.MessageConstants;
+    using static Core.Constants.ConfigConstants;
 
     [Route("api/[controller]")]
     [ApiController]
@@ -47,6 +49,7 @@
         }
 
         [HttpPost("forgot-password")]
+        [EnableRateLimiting(PasswordResetPolicy)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             await passwordResetService.ForgotPasswordAsync(request);
@@ -57,6 +60,7 @@
         }
 
         [HttpPost("reset-password")]
+        [EnableRateLimiting(PasswordResetPolicy)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             try
