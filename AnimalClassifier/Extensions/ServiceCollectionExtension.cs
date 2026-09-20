@@ -83,6 +83,37 @@
             return services;
         }
 
+        /// <summary>
+        /// Registers whichever email sender suits the environment: development
+        /// logs the messages instead of sending them, while everywhere else
+        /// mail goes out over SMTP and the settings for it have to be there.
+        /// </summary>
+        public static IServiceCollection AddApplicationEmail(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+        {
+            services.Configure<EmailSettings>(configuration.GetSection(Email));
+
+            if (environment.IsDevelopment())
+            {
+                services.AddScoped<IEmailSender, LoggingEmailSender>();
+
+                return services;
+            }
+
+            var emailSettings = configuration.GetSection(Email).Get<EmailSettings>();
+
+            // Without these two, mail fails one password reset at a time, long
+            // after deployment. Refusing to start says so immediately instead.
+            if (string.IsNullOrWhiteSpace(emailSettings?.Host)
+                || string.IsNullOrWhiteSpace(emailSettings.SenderEmail))
+            {
+                throw new InvalidOperationException(MissingEmailSettings);
+            }
+
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
+
+            return services;
+        }
+
         public static IServiceCollection AddApplicationCors(this IServiceCollection services, IConfiguration configuration)
         {
             var allowedOrigins = configuration.GetSection(CorsAllowedOrigins).Get<string[]>()
