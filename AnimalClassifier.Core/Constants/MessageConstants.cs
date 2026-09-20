@@ -15,6 +15,9 @@
         public const string UserAlreadyLocked = "The user is already locked.";
         public const string UserNotLocked = "The user is not locked.";
 
+        //PasswordResetService
+        public const string InvalidPasswordResetLink = "This link is no longer valid. Please ask for a new one.";
+
         //RecognitionService
         public const string ImageNotFound = "Image not found.";
         public const string FailedPrediction = "Prediction failed.";

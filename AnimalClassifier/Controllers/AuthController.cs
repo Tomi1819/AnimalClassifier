@@ -55,5 +55,19 @@
             // account, so that nobody can use this to learn who is registered.
             return Ok(new { message = PasswordResetEmailSent });
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                await passwordResetService.ResetPasswordAsync(request);
+                return Ok(new { message = PasswordChanged });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }
