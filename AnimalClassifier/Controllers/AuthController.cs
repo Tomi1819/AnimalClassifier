@@ -3,16 +3,21 @@
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
+    using static Constants.MessageConstants;
+    using static Core.Constants.ConfigConstants;
 
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService authService;
+        private readonly IPasswordResetService passwordResetService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IPasswordResetService passwordResetService)
         {
             this.authService = authService;
+            this.passwordResetService = passwordResetService;
         }
 
         [HttpPost("register")]
@@ -40,6 +45,32 @@
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        [EnableRateLimiting(PasswordResetPolicy)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            await passwordResetService.ForgotPasswordAsync(request);
+
+            // Deliberately the same answer whether or not the address has an
+            // account, so that nobody can use this to learn who is registered.
+            return Ok(new { message = PasswordResetEmailSent });
+        }
+
+        [HttpPost("reset-password")]
+        [EnableRateLimiting(PasswordResetPolicy)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                await passwordResetService.ResetPasswordAsync(request);
+                return Ok(new { message = PasswordChanged });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
