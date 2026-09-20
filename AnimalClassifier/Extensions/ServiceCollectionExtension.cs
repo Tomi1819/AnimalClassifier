@@ -96,32 +96,33 @@
         }
 
         /// <summary>
-        /// Registers whichever email sender suits the environment: development
-        /// logs the messages instead of sending them, while everywhere else
-        /// mail goes out over SMTP and the settings for it have to be there.
+        /// Registers the SMTP sender wherever a server is configured for it,
+        /// which is how development points at a local one. Development alone
+        /// may leave it unconfigured, and then logs the messages instead, so
+        /// that a fresh clone runs without credentials of any kind.
         /// </summary>
         public static IServiceCollection AddApplicationEmail(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
             services.Configure<EmailSettings>(configuration.GetSection(Email));
 
-            if (environment.IsDevelopment())
+            var emailSettings = configuration.GetSection(Email).Get<EmailSettings>();
+
+            if (!string.IsNullOrWhiteSpace(emailSettings?.Host)
+                && !string.IsNullOrWhiteSpace(emailSettings.SenderEmail))
             {
-                services.AddScoped<IEmailSender, LoggingEmailSender>();
+                services.AddScoped<IEmailSender, SmtpEmailSender>();
 
                 return services;
             }
 
-            var emailSettings = configuration.GetSection(Email).Get<EmailSettings>();
-
-            // Without these two, mail fails one password reset at a time, long
-            // after deployment. Refusing to start says so immediately instead.
-            if (string.IsNullOrWhiteSpace(emailSettings?.Host)
-                || string.IsNullOrWhiteSpace(emailSettings.SenderEmail))
+            // Anywhere else, mail would fail one password reset at a time and
+            // long after deployment. Refusing to start says so immediately.
+            if (!environment.IsDevelopment())
             {
                 throw new InvalidOperationException(MissingEmailSettings);
             }
 
-            services.AddScoped<IEmailSender, SmtpEmailSender>();
+            services.AddScoped<IEmailSender, LoggingEmailSender>();
 
             return services;
         }
