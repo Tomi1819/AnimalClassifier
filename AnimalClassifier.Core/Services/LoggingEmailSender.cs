@@ -5,9 +5,9 @@
 
     /// <summary>
     /// Writes messages to the log instead of sending them, so that working on
-    /// the app needs neither an SMTP server nor credentials. Whatever is mailed
-    /// this way, a password reset link included, is then readable by anyone who
-    /// can read the log, which is why this is registered in development only.
+    /// the app needs no SMTP server. A password reset link mailed this way is
+    /// readable by anyone who can read the log, which is why nothing registers
+    /// this outside development.
     /// </summary>
     public class LoggingEmailSender : IEmailSender
     {
@@ -20,8 +20,8 @@
 
         public Task SendAsync(string recipient, string subject, string htmlBody)
         {
-            logger.LogInformation("Email to {Recipient}, \"{Subject}\":{NewLine}{Body}",
-                recipient, subject, Environment.NewLine, htmlBody);
+            logger.LogInformation("Email to {Recipient}, \"{Subject}\":\n{Body}",
+                recipient, subject, htmlBody);
 
             return Task.CompletedTask;
         }

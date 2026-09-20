@@ -26,10 +26,6 @@
         public bool AnySentTo(string recipient) =>
             messages.Any(message => message.Recipient == recipient);
 
-        /// <summary>
-        /// The one link in the most recent message to that address, or null if
-        /// nothing was sent there.
-        /// </summary>
         public string? LinkSentTo(string recipient)
         {
             var body = messages.Where(message => message.Recipient == recipient)

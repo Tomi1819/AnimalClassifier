@@ -28,10 +28,6 @@
 
     public static class ServiceCollectionExtension
     {
-        /// <summary>
-        /// Stands in for the address of a caller the server cannot see one for,
-        /// who then shares a window with every other such caller.
-        /// </summary>
         private const string UnknownClient = "unknown";
 
         public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
@@ -128,10 +124,9 @@
         }
 
         /// <summary>
-        /// Caps how often one caller may ask for a password reset. The two
-        /// endpoints send mail to an address the caller picks and hand out
-        /// attempts at a token, neither of which should be available without
-        /// limit.
+        /// Caps how often one caller may ask for a password reset, since the
+        /// endpoints mail an address the caller picks and hand out attempts at
+        /// a token.
         /// </summary>
         public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services, IConfiguration configuration)
         {

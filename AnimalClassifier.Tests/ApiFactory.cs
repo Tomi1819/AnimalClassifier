@@ -18,9 +18,6 @@
     /// </summary>
     public class ApiFactory : WebApplicationFactory<Program>
     {
-        /// <summary>
-        /// Every message the app tried to send during the test run.
-        /// </summary>
         public RecordingEmailSender Emails { get; } = new();
 
         private readonly string connectionString =

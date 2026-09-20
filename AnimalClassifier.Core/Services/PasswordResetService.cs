@@ -20,10 +20,6 @@
         private const string EmailParameter = "email";
         private const string TokenParameter = "token";
 
-        /// <summary>
-        /// What Identity calls a token it will not accept, as opposed to the
-        /// errors it raises about the new password itself.
-        /// </summary>
         private static readonly string InvalidTokenCode = new IdentityErrorDescriber().InvalidToken().Code;
 
         private readonly UserManager<ApplicationUser> userManager;
@@ -94,10 +90,8 @@
             result.ThrowIfFailed();
         }
 
-        /// <summary>
-        /// The token travels in a query string, and the form Identity hands it
-        /// over in contains characters that would not survive the journey.
-        /// </summary>
+        // The token travels in a query string, and the form Identity hands it
+        // over in contains characters that would not survive the journey.
         private string BuildResetLink(string email, string token)
         {
             var query = QueryString.Create(new Dictionary<string, string?>
