@@ -14,6 +14,7 @@
         public const string MissingMLModelPath = "ML model path is not configured.";
         public const string MissingJwtSecurityKey = "JWT Secret Key is not configured.";
         public const string MissingUploadPath = "File upload path is not configured.";
+        public const string MissingEmailSettings = "Email host and sender address are not configured.";
         public const string OutdatedToken = "The token no longer matches the account.";
     }
 }

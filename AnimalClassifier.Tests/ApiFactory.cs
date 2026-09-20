@@ -24,6 +24,11 @@
             builder.UseEnvironment("Testing");
             builder.UseSetting($"ConnectionStrings:{DefaultConnection}", connectionString);
             builder.UseSetting($"{Jwt}:SecretKey", "TEST-ONLY-SIGNING-KEY-NOT-FOR-PRODUCTION-USE");
+
+            // The app refuses to start outside Development without these, and
+            // nothing here ever connects to the host they name.
+            builder.UseSetting($"{Email}:Host", "localhost");
+            builder.UseSetting($"{Email}:SenderEmail", "tests@animalclassifier.local");
         }
 
         protected override IHost CreateHost(IHostBuilder builder)

@@ -11,6 +11,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
 
+builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
+
 builder.Services.AddApplicationCors(builder.Configuration);
 
 var app = builder.Build();
