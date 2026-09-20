@@ -40,7 +40,7 @@ dotnet user-secrets set "Admin:Email" "you@example.com"
 
 ### Password reset emails
 
-In development the reset emails are written to the log instead of being sent, so the link is in the console and no mail server is needed. Everywhere else the messages go out over SMTP, and the app refuses to start until `Email:Host` and `Email:SenderEmail` are configured.
+The messages go out over SMTP wherever one is configured. Development may leave it unconfigured, and then writes them to the log instead, so the link is in the console and no mail server is needed. Everywhere else the app refuses to start until `Email:Host` and `Email:SenderEmail` are set.
 
 | Setting | Meaning |
 | ------- | ------- |
@@ -56,6 +56,17 @@ The password is a secret, so it belongs in an environment variable rather than i
 ```bash
 export Email__Password="..."
 ```
+
+To watch the real messages while developing, run a local mail catcher such as [Mailpit](https://mailpit.axllent.org/) or [smtp4dev](https://github.com/rnwood/smtp4dev), which accept everything and deliver nothing, and point the app at it. The settings go in user secrets, so that a clone without them still runs:
+
+```bash
+cd AnimalClassifier
+dotnet user-secrets set "Email:Host" "localhost"
+dotnet user-secrets set "Email:Port" "1025"
+dotnet user-secrets set "Email:SenderEmail" "no-reply@animalclassifier.test"
+```
+
+Removing them again, with `dotnet user-secrets remove "Email:Host"`, puts the links back in the log.
 
 A link stays valid for an hour, is spent once it is used, and changing a password ends every session that account had open.
 
