@@ -2,10 +2,6 @@
 {
     using System.Net;
 
-    /// <summary>
-    /// The wording of the password reset email, kept apart from the service
-    /// that sends it so that the two change for different reasons.
-    /// </summary>
     public static class PasswordResetEmail
     {
         public const string Subject = "Reset your Animal Classifier password";

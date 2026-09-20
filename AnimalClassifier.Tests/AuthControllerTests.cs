@@ -52,10 +52,6 @@
             Assert.False(factory.Emails.AnySentTo(unknown));
         }
 
-        /// <summary>
-        /// The whole point of the endpoint's answer: it must not become a way
-        /// of asking which addresses are registered.
-        /// </summary>
         [Fact]
         public async Task ForgotPassword_AnswersKnownAndUnknownAddressesAlike()
         {
@@ -68,10 +64,6 @@
             Assert.Equal(await known.Content.ReadAsStringAsync(), await unknown.Content.ReadAsStringAsync());
         }
 
-        /// <summary>
-        /// The endpoint mails whichever address it is handed, so asking it
-        /// repeatedly must stop working before an inbox fills up.
-        /// </summary>
         [Fact]
         public async Task ForgotPassword_BeyondTheLimit_IsRefused()
         {
@@ -101,10 +93,6 @@
             Assert.Equal(HttpStatusCode.Unauthorized, (await LogInAsync(account.Email, Password)).StatusCode);
         }
 
-        /// <summary>
-        /// Whoever knew the old password may be the reason for the reset, so
-        /// the sessions they are holding have to end with it.
-        /// </summary>
         [Fact]
         public async Task ResetPassword_EndsTheSessionsOpenedWithTheOldPassword()
         {
@@ -155,10 +143,8 @@
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
         }
 
-        /// <summary>
-        /// A password the rules refuse is the one failure the user can act on,
-        /// so it must not arrive dressed as a broken link.
-        /// </summary>
+        // A password the rules refuse is the one failure the user can act on,
+        // so it must not arrive dressed as a broken link.
         [Fact]
         public async Task ResetPassword_WithATooShortPassword_SaysSo()
         {

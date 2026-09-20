@@ -18,10 +18,6 @@
         /// </summary>
         public string Password { get; set; } = string.Empty;
 
-        /// <summary>
-        /// The address the messages come from. Providers deliver reliably only
-        /// for a domain they have been given permission to send for.
-        /// </summary>
         public string SenderEmail { get; set; } = string.Empty;
 
         public string SenderName { get; set; } = string.Empty;
