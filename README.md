@@ -10,6 +10,7 @@ This application enables users to upload images of animals and receive classific
 
 - ✅ Upload images and receive AI-based classification
 - 🔐 Secure user authentication and registration using JWT
+- 🔑 Password reset over email
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
 
@@ -36,6 +37,27 @@ Register an account, set its email as `Admin:Email`, and restart the backend. On
 cd AnimalClassifier
 dotnet user-secrets set "Admin:Email" "you@example.com"
 ```
+
+### Password reset emails
+
+In development the reset emails are written to the log instead of being sent, so the link is in the console and no mail server is needed. Everywhere else the messages go out over SMTP, and the app refuses to start until `Email:Host` and `Email:SenderEmail` are configured.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `Email:Host`, `Email:Port` | The SMTP server. Port 465 is treated as implicit TLS, anything else upgrades with STARTTLS. |
+| `Email:UserName`, `Email:Password` | Credentials, left empty for a server that wants none. |
+| `Email:SenderEmail`, `Email:SenderName` | Who the messages come from. Providers deliver reliably only for a domain they have been given permission to send for. |
+| `Frontend:BaseUrl` | Where the frontend is served from. The emailed links are built from this rather than from the request, whose host header is chosen by its caller. |
+| `Frontend:ResetPasswordPath` | The page that receives the token, which has to match the frontend. |
+| `RateLimiting:PasswordResetPermitLimit`, `RateLimiting:PasswordResetWindowMinutes` | How often one address may ask for a reset. |
+
+The password is a secret, so it belongs in an environment variable rather than in `appsettings.json`:
+
+```bash
+export Email__Password="..."
+```
+
+A link stays valid for an hour, is spent once it is used, and changing a password ends every session that account had open.
 
 ### Running the tests
 
