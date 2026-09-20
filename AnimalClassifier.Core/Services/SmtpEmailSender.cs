@@ -7,17 +7,18 @@
     using Microsoft.Extensions.Options;
     using MimeKit;
 
-    /// <summary>
-    /// Sends mail through an SMTP server. Which provider actually delivers it
-    /// is a matter of configuration, so changing providers changes no code.
-    /// </summary>
     public class SmtpEmailSender : IEmailSender
     {
-        /// <summary>
-        /// The port that expects TLS from the first byte, rather than the
-        /// upgrade mid-conversation that every other port uses.
-        /// </summary>
+        // The port that expects TLS from the first byte, rather than the
+        // upgrade mid-conversation that every other port uses.
         private const int ImplicitTlsPort = 465;
+
+        /// <summary>
+        /// A caller waits out this whole conversation, so a server that has
+        /// stopped answering must not hold the request for MailKit's own two
+        /// minutes.
+        /// </summary>
+        private const int TimeoutMilliseconds = 15_000;
 
         private readonly EmailSettings settings;
 
@@ -34,7 +35,7 @@
             message.Subject = subject;
             message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
 
-            using var client = new SmtpClient();
+            using var client = new SmtpClient { Timeout = TimeoutMilliseconds };
 
             await client.ConnectAsync(settings.Host, settings.Port, SocketOptionsFor(settings.Port));
 
