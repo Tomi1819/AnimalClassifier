@@ -49,6 +49,7 @@
             services.AddScoped<IRepository, Repository>();
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
             services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IFileStorageService, FileStorageService>();
