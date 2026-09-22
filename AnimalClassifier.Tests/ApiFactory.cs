@@ -20,6 +20,12 @@
     /// </summary>
     public class ApiFactory : WebApplicationFactory<Program>
     {
+        /// <summary>
+        /// The domain passkeys are expected to bind to, which is the
+        /// frontend's rather than the API's.
+        /// </summary>
+        public const string FrontendDomain = "frontend.test";
+
         public RecordingEmailSender Emails { get; } = new();
 
         private readonly string connectionString =
@@ -37,7 +43,7 @@
             // nothing here ever connects to the host they name.
             builder.UseSetting($"{Email}:Host", "localhost");
             builder.UseSetting($"{Email}:SenderEmail", "tests@animalclassifier.local");
-            builder.UseSetting($"{Frontend}:BaseUrl", "https://frontend.test");
+            builder.UseSetting($"{Frontend}:BaseUrl", $"https://{FrontendDomain}");
 
             // Requests from a test carry no client address, so all of them
             // share one rate limiting window and the deployed limit would
