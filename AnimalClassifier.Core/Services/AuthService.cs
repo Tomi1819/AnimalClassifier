@@ -1,41 +1,29 @@
-﻿namespace AnimalClassifier.Core.Services
+namespace AnimalClassifier.Core.Services
 {
-    using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Extensions;
+    using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
-    using Microsoft.Extensions.Options;
-    using Microsoft.IdentityModel.Tokens;
-    using System.IdentityModel.Tokens.Jwt;
     using System.Security.Claims;
-    using System.Security.Cryptography;
-    using System.Text;
     using System.Threading.Tasks;
     using static Constants.RoleConstants;
     using static Constants.MessageConstants;
 
     public class AuthService : IAuthService
     {
-        /// <summary>
-        /// Carries a hash of the user's security stamp rather than the stamp
-        /// itself, because anyone holding a token can read it and Identity
-        /// derives one-time codes from the stamp.
-        /// </summary>
-        private const string SecurityStampClaimType = "security_stamp";
-
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
-        private readonly JwtSettings jwtSettings;
+        private readonly IAccessTokenIssuer tokenIssuer;
 
         public AuthService(UserManager<ApplicationUser> userManager,
                            SignInManager<ApplicationUser> signInManager,
-                           IOptions<JwtSettings> jwtOptions)
+                           IAccessTokenIssuer tokenIssuer)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
-            this.jwtSettings = jwtOptions.Value;
+            this.tokenIssuer = tokenIssuer;
         }
 
         public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
@@ -88,29 +76,7 @@
                 throw new UnauthorizedAccessException(InvalidCredentials);
             }
 
-            var authClaims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(SecurityStampClaimType, await GetSecurityStampHashAsync(user))
-            };
-
-            var userRoles = await userManager.GetRolesAsync(user);
-            foreach (var userRole in userRoles)
-            {
-                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-            }
-
-            var token = GenerateJwtToken(authClaims);
-
-            return new LoginResponse
-            {
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Expiration = token.ValidTo,
-                Roles = userRoles.ToList()
-            };
+            return await tokenIssuer.IssueAsync(user);
         }
 
         public async Task<bool> IsSessionValidAsync(ClaimsPrincipal principal)
@@ -118,26 +84,8 @@
             var user = await userManager.GetUserAsync(principal);
 
             return user != null
-                && principal.FindFirstValue(SecurityStampClaimType) == await GetSecurityStampHashAsync(user);
-        }
-
-        private async Task<string> GetSecurityStampHashAsync(ApplicationUser user)
-        {
-            var securityStamp = await userManager.GetSecurityStampAsync(user);
-            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(securityStamp)));
-        }
-
-        private JwtSecurityToken GenerateJwtToken(List<Claim> authClaims)
-        {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey));
-
-            return new JwtSecurityToken(
-                issuer: jwtSettings.Issuer,
-                audience: jwtSettings.Audience,
-                expires: DateTime.UtcNow.AddHours(jwtSettings.ExpirationHours),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-            );
+                && principal.FindFirstValue(SecurityStampClaim.Type)
+                    == SecurityStampClaim.From(await userManager.GetSecurityStampAsync(user));
         }
 
         private string ProcessFullName(string fullName)
