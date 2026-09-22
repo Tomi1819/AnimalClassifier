@@ -192,8 +192,8 @@
         /// </summary>
         public static IServiceCollection AddApplicationPasskeys(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<PasskeySettings>(configuration.GetSection(Passkey));
-
+            // Read once and folded into IdentityPasskeyOptions below, which is
+            // the form everything downstream asks for.
             var passkeySettings = configuration.GetSection(Passkey).Get<PasskeySettings>();
             var frontendSettings = configuration.GetSection(Frontend).Get<FrontendSettings>();
 
