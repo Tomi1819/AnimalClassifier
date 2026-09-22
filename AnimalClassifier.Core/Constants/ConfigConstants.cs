@@ -8,6 +8,7 @@
         public const string Jwt = "Jwt";
         public const string Email = "Email";
         public const string Frontend = "Frontend";
+        public const string Passkey = "Passkey";
         public const string CorsAllowedOrigins = "Cors:AllowedOrigins";
         public const string CorsPolicy = "CorsPolicy";
         public const string RateLimiting = "RateLimiting";
