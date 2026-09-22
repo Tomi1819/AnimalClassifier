@@ -220,6 +220,26 @@ namespace AnimalClassifier.Tests
             Assert.Empty(await ReadPasskeysAsync(client));
         }
 
+        /// <summary>
+        /// The id is the only thing naming a passkey, so knowing one must not
+        /// be enough to take somebody else's away from them.
+        /// </summary>
+        [Fact]
+        public async Task Remove_SomebodyElsesPasskey_IsNotFound()
+        {
+            using var app = factory.WithPasskeyHandler(new StubPasskeyHandler());
+
+            var owner = await SignInAsync(await RegisterAsync(), app);
+            await RegisterPasskeyAsync(owner, await RequestOptionsAsync(owner), "Laptop");
+            var passkey = Assert.Single(await ReadPasskeysAsync(owner));
+
+            var stranger = await SignInAsync(await RegisterAsync(), app);
+            var response = await stranger.DeleteAsync($"{PasskeyPath}/{passkey.Id}");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Single(await ReadPasskeysAsync(owner));
+        }
+
         [Fact]
         public async Task Remove_AnUnknownPasskey_IsNotFound()
         {
