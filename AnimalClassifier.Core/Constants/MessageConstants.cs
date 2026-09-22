@@ -18,6 +18,9 @@
         //PasswordResetService
         public const string InvalidPasswordResetLink = "This link is no longer valid. Please ask for a new one.";
 
+        //PasskeyService
+        public const string ExpiredPasskeyCeremony = "This passkey request is no longer valid. Please try again.";
+
         //RecognitionService
         public const string ImageNotFound = "Image not found.";
         public const string FailedPrediction = "Prediction failed.";
