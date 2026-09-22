@@ -46,6 +46,38 @@ namespace AnimalClassifier.Tests
             Assert.False(string.IsNullOrWhiteSpace(options.State));
         }
 
+        /// <summary>
+        /// A passkey is offered back only to the domain it was made for, and
+        /// the browser takes that to be the one showing the page. Binding them
+        /// to this API instead would leave the frontend unable to use any of
+        /// them.
+        /// </summary>
+        [Fact]
+        public async Task Options_BindThePasskeyToTheFrontendDomain()
+        {
+            var client = await SignInAsync(await RegisterAsync());
+
+            var options = await RequestOptionsAsync(client);
+
+            Assert.Equal(ApiFactory.FrontendDomain, options.Options!["rp"]!["id"]!.GetValue<string>());
+        }
+
+        /// <summary>
+        /// Signing in offers no account to start from, so the browser has to
+        /// be holding credentials it can list without being told which.
+        /// </summary>
+        [Fact]
+        public async Task Options_AskForADiscoverableCredential()
+        {
+            var client = await SignInAsync(await RegisterAsync());
+
+            var options = await RequestOptionsAsync(client);
+
+            Assert.Equal(
+                "required",
+                options.Options!["authenticatorSelection"]!["residentKey"]!.GetValue<string>());
+        }
+
         [Fact]
         public async Task Passkeys_ForANewAccount_AreEmpty()
         {
