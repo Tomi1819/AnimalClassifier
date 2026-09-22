@@ -11,6 +11,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
 
+builder.Services.AddApplicationPasskeys(builder.Configuration);
+
 builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
 
 builder.Services.AddApplicationRateLimiting(builder.Configuration);

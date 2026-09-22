@@ -13,11 +13,15 @@
     {
         private readonly IAuthService authService;
         private readonly IPasswordResetService passwordResetService;
+        private readonly IPasskeyService passkeyService;
 
-        public AuthController(IAuthService authService, IPasswordResetService passwordResetService)
+        public AuthController(IAuthService authService,
+                              IPasswordResetService passwordResetService,
+                              IPasskeyService passkeyService)
         {
             this.authService = authService;
             this.passwordResetService = passwordResetService;
+            this.passkeyService = passkeyService;
         }
 
         [HttpPost("register")]
@@ -45,6 +49,34 @@
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// The options for signing in with a passkey. Anonymous, and it takes
+        /// nothing: no address is named, so this tells a caller nothing about
+        /// who has an account or which of them use passkeys.
+        /// </summary>
+        [HttpPost("passkey/options")]
+        public async Task<IActionResult> PasskeyOptions()
+        {
+            return Ok(await passkeyService.CreateLoginOptionsAsync(HttpContext));
+        }
+
+        [HttpPost("passkey/login")]
+        public async Task<IActionResult> PasskeyLogin([FromBody] PasskeyCredentialRequest request)
+        {
+            try
+            {
+                return Ok(await passkeyService.LoginAsync(request, HttpContext));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 

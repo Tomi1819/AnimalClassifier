@@ -10,6 +10,7 @@ This application enables users to upload images of animals and receive classific
 
 - ✅ Upload images and receive AI-based classification
 - 🔐 Secure user authentication and registration using JWT
+- 🗝️ Passkey sign-in, alongside the password
 - 🔑 Password reset over email
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
@@ -37,6 +38,39 @@ Register an account, set its email as `Admin:Email`, and restart the backend. On
 cd AnimalClassifier
 dotnet user-secrets set "Admin:Email" "you@example.com"
 ```
+
+### Passkeys
+
+A passkey signs a user in with their device instead of their password. Passwords
+stay, because an account whose only passkey was on a lost phone would otherwise
+have no way back in, and the reset email remains that way back.
+
+A passkey is bound to the domain the browser shows the user, which is the
+frontend's rather than this API's. The relying party id is therefore taken from
+the host in `Frontend:BaseUrl`, and `Passkey:ServerDomain` overrides it.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `Passkey:ServerDomain` | The domain passkeys are bound to. Left empty, the host from `Frontend:BaseUrl`, which is right whenever the frontend is served from one domain. |
+
+The two have to sit under one domain. A frontend on `app.example.com` and an API
+on `api.example.com` share `example.com`, which is then the setting; unrelated
+domains share nothing, and passkeys cannot be used at all. Credentials do not
+carry across, so one registered against a development domain will not work
+against a deployed one.
+
+Browsers only offer passkeys in a secure context. `localhost` counts as one, so
+development needs nothing; everywhere else means HTTPS.
+
+The schema keeps passkeys from version 3 onwards, which the `AddPasskeys`
+migration moves to. An existing database needs it applied:
+
+```bash
+dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
+```
+
+It also narrows `AspNetUsers.PhoneNumber` to 256 characters, a column nothing
+here writes to.
 
 ### Password reset emails
 

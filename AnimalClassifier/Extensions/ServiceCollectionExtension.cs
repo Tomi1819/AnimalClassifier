@@ -30,6 +30,9 @@
     {
         private const string UnknownClient = "unknown";
 
+        // The WebAuthn value asking the authenticator for a discoverable credential.
+        private const string RequiredResidentKey = "required";
+
         public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString(DefaultConnection)
@@ -46,6 +49,8 @@
             services.AddScoped<IRepository, Repository>();
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
+            services.AddSingleton<IPasskeyStateProtector, PasskeyStateProtector>();
             services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IFileStorageService, FileStorageService>();
@@ -53,6 +58,7 @@
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IPasswordResetService, PasswordResetService>();
+            services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddSingleton<MLContext>();
 
             var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
@@ -177,12 +183,57 @@
             return services;
         }
 
+        /// <summary>
+        /// Points passkeys at the domain the browser shows the user. That is the
+        /// frontend's domain rather than this API's, because an authenticator
+        /// binds a credential to the page that asked for it and will not offer it
+        /// anywhere else. Splitting the two across unrelated domains leaves no
+        /// domain that covers both, and passkeys cannot be used at all.
+        /// </summary>
+        public static IServiceCollection AddApplicationPasskeys(this IServiceCollection services, IConfiguration configuration)
+        {
+            // Read once and folded into IdentityPasskeyOptions below, which is
+            // the form everything downstream asks for.
+            var passkeySettings = configuration.GetSection(Passkey).Get<PasskeySettings>();
+            var frontendSettings = configuration.GetSection(Frontend).Get<FrontendSettings>();
+
+            var serverDomain = string.IsNullOrWhiteSpace(passkeySettings?.ServerDomain)
+                ? ReadHost(frontendSettings?.BaseUrl)
+                : passkeySettings.ServerDomain;
+
+            if (string.IsNullOrWhiteSpace(serverDomain))
+            {
+                throw new InvalidOperationException(InvalidPasskeyServerDomain);
+            }
+
+            services.Configure<IdentityPasskeyOptions>(options =>
+            {
+                // Left to the host header, this would be whatever a caller put
+                // there, and a passkey could be bound to a domain of their
+                // choosing.
+                options.ServerDomain = serverDomain;
+
+                // Signing in without first naming an account needs the
+                // credential to be discoverable, which is what the browser
+                // offers an account picker from.
+                options.ResidentKeyRequirement = RequiredResidentKey;
+            });
+
+            return services;
+        }
+
+        private static string? ReadHost(string? url) =>
+            Uri.TryCreate(url, UriKind.Absolute, out var parsed) ? parsed.Host : null;
+
         public static IServiceCollection AddApplicationIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services
                 .AddIdentityCore<ApplicationUser>(options =>
                 {
                     options.Stores.MaxLengthForKeys = 128;
+                    // Passkeys are stored from this version of the schema onwards;
+                    // below it Identity refuses to keep them at all.
+                    options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
                     options.SignIn.RequireConfirmedAccount = false;
                     options.Password.RequireDigit = false;
                     options.Password.RequireLowercase = false;
