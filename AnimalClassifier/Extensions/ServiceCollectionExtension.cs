@@ -183,6 +183,9 @@
                 .AddIdentityCore<ApplicationUser>(options =>
                 {
                     options.Stores.MaxLengthForKeys = 128;
+                    // Passkeys are stored from this version of the schema onwards;
+                    // below it Identity refuses to keep them at all.
+                    options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
                     options.SignIn.RequireConfirmedAccount = false;
                     options.Password.RequireDigit = false;
                     options.Password.RequireLowercase = false;
