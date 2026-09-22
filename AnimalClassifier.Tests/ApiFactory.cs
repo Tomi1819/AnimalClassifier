@@ -2,7 +2,9 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Infrastructure.Data;
+    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.AspNetCore.TestHost;
     using Microsoft.EntityFrameworkCore;
@@ -50,6 +52,17 @@
                 services.AddSingleton<IEmailSender>(Emails);
             });
         }
+
+        /// <summary>
+        /// The same app with an authenticator standing in for the real one, so
+        /// that a test can get past the cryptography to what surrounds it.
+        /// </summary>
+        public WebApplicationFactory<Program> WithPasskeyHandler(StubPasskeyHandler handler) =>
+            WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IPasskeyHandler<ApplicationUser>>();
+                services.AddSingleton<IPasskeyHandler<ApplicationUser>>(handler);
+            }));
 
         protected override IHost CreateHost(IHostBuilder builder)
         {
