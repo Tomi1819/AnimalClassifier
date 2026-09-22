@@ -58,6 +58,7 @@
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IPasswordResetService, PasswordResetService>();
+            services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddSingleton<MLContext>();
 
             var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
