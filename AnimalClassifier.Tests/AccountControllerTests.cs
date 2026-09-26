@@ -90,14 +90,27 @@ namespace AnimalClassifier.Tests
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
 
-            for (var attempt = 0; attempt < MaxFailedAccessAttempts(); attempt++)
-            {
-                await ChangePasswordAsync(client, WrongPassword, NewPassword);
-            }
+            await GuessUntilLockedOutAsync(client);
 
             var response = await LogInAsync(account.Email, Password);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
+        }
+
+        // Otherwise the lockout would stop nothing: guessing would carry on
+        // here until the right password got through.
+        [Fact]
+        public async Task ChangePassword_WhileLocked_RefusesEvenTheRightPassword()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            await GuessUntilLockedOutAsync(client);
+
+            var response = await ChangePasswordAsync(client, Password, NewPassword);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
         }
 
@@ -113,8 +126,16 @@ namespace AnimalClassifier.Tests
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
         }
 
-        private int MaxFailedAccessAttempts() =>
-            factory.Services.GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
+        private async Task GuessUntilLockedOutAsync(HttpClient client)
+        {
+            var maxFailedAccessAttempts = factory.Services
+                .GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
+
+            for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
+            {
+                await ChangePasswordAsync(client, WrongPassword, NewPassword);
+            }
+        }
 
         private static Task<HttpResponseMessage> ChangePasswordAsync(HttpClient client, string currentPassword, string newPassword) =>
             client.PostAsJsonAsync(ChangePasswordPath, new ChangePasswordRequest
