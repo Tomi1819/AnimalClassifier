@@ -12,6 +12,7 @@ This application enables users to upload images of animals and receive classific
 - 🔐 Secure user authentication and registration using JWT
 - 🗝️ Passkey sign-in, alongside the password
 - 🔑 Password reset over email
+- 🔄 Password changes for a signed-in user
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
 
@@ -71,6 +72,16 @@ dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
 
 It also narrows `AspNetUsers.PhoneNumber` to 256 characters, a column nothing
 here writes to.
+
+### Changing a password
+
+`POST /api/account/change-password` takes the current password and the new one.
+A wrong current password counts towards a lockout, the same as a failed sign-in,
+so an unattended session cannot be used to guess it.
+
+The change ends every session the account had open, the caller's included, so
+the answer carries a new token in the same shape as a sign-in. A client that
+keeps it stays signed in; everywhere else has to sign in again.
 
 ### Password reset emails
 
