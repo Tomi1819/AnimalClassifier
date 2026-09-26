@@ -15,6 +15,7 @@ namespace AnimalClassifier.Tests
         private const string NewPassword = "secret2";
         private const string WrongPassword = "not-the-password";
         private const string ChangePasswordPath = "/api/account/change-password";
+        private const string SignOutOtherSessionsPath = "/api/account/sign-out-other-sessions";
         private const string HistoryPath = "/api/upload/history";
 
         private readonly ApiFactory factory;
@@ -126,6 +127,62 @@ namespace AnimalClassifier.Tests
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
         }
 
+        [Fact]
+        public async Task SignOutOtherSessions_WithoutSigningIn_IsRefused()
+        {
+            var response = await SignOutOtherSessionsAsync(factory.CreateClient());
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task SignOutOtherSessions_EndsTheOtherSessions()
+        {
+            var account = await RegisterAsync();
+            var elsewhere = await SignInAsync(account.Email, Password);
+            var client = await SignInAsync(account.Email, Password);
+
+            (await SignOutOtherSessionsAsync(client)).EnsureSuccessStatusCode();
+
+            Assert.Equal(HttpStatusCode.Unauthorized, (await elsewhere.GetAsync(HistoryPath)).StatusCode);
+        }
+
+        // The caller's old token goes with the rest, which is why the answer
+        // carries a new one.
+        [Fact]
+        public async Task SignOutOtherSessions_EndsTheCallersOldToken()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            (await SignOutOtherSessionsAsync(client)).EnsureSuccessStatusCode();
+
+            Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(HistoryPath)).StatusCode);
+        }
+
+        [Fact]
+        public async Task SignOutOtherSessions_AnswersWithATokenThatKeepsTheCallerSignedIn()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await SignOutOtherSessionsAsync(client);
+            var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+            Assert.Equal(HttpStatusCode.OK, (await WithToken(login!.Token).GetAsync(HistoryPath)).StatusCode);
+        }
+
+        [Fact]
+        public async Task SignOutOtherSessions_LeavesThePasswordAsItWas()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            (await SignOutOtherSessionsAsync(client)).EnsureSuccessStatusCode();
+
+            Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
+        }
+
         private async Task GuessUntilLockedOutAsync(HttpClient client)
         {
             var maxFailedAccessAttempts = factory.Services
@@ -143,6 +200,9 @@ namespace AnimalClassifier.Tests
                 CurrentPassword = currentPassword,
                 NewPassword = newPassword
             });
+
+        private static Task<HttpResponseMessage> SignOutOtherSessionsAsync(HttpClient client) =>
+            client.PostAsync(SignOutOtherSessionsPath, content: null);
 
         private Task<HttpResponseMessage> LogInAsync(string email, string password) =>
             factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest
