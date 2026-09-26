@@ -31,6 +31,14 @@ namespace AnimalClassifier.Controllers
         public Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request) =>
             RunAsync(async () => Ok(await accountService.ChangePasswordAsync(User.Id()!, request)));
 
+        /// <summary>
+        /// Answers with a new token for the same reason: the caller's session
+        /// ends along with the others, and carries on with this one.
+        /// </summary>
+        [HttpPost("sign-out-other-sessions")]
+        public Task<IActionResult> SignOutOtherSessions() =>
+            RunAsync(async () => Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!)));
+
         private static async Task<IActionResult> RunAsync(Func<Task<IActionResult>> action)
         {
             try
