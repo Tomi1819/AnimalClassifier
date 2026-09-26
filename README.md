@@ -13,6 +13,7 @@ This application enables users to upload images of animals and receive classific
 - 🗝️ Passkey sign-in, alongside the password
 - 🔑 Password reset over email
 - 🔄 Password changes for a signed-in user
+- 🚪 Signing out of every other device
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
 
@@ -82,6 +83,19 @@ so an unattended session cannot be used to guess it.
 The change ends every session the account had open, the caller's included, so
 the answer carries a new token in the same shape as a sign-in. A client that
 keeps it stays signed in; everywhere else has to sign in again.
+
+### Signing out other devices
+
+`POST /api/account/sign-out-other-sessions` changes the account's security
+stamp, which every request's token is checked against, so every session ends on
+its next request. That covers tokens a user cannot reach any other way, such as
+one copied off a lost device; signing out in a browser only forgets its own
+copy. As with a password change, the answer carries a new token so the caller
+stays signed in.
+
+Passkeys are left alone, since they are ways in rather than sessions. Password
+reset links still waiting to be used stop working, because Identity ties them to
+the stamp too.
 
 ### Password reset emails
 
