@@ -21,5 +21,14 @@ namespace AnimalClassifier.Core.Contracts
         /// password fails the rules.
         /// </exception>
         Task<LoginResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request);
+
+        /// <summary>
+        /// Ends every session the account has by changing its security stamp,
+        /// which every token is checked against. That includes tokens nobody
+        /// can sign out any other way, such as one copied off a device. The
+        /// caller's own session is issued afresh, so only the others end.
+        /// </summary>
+        /// <returns>The token the caller's session continues with.</returns>
+        Task<LoginResponse> SignOutOtherSessionsAsync(string userId);
     }
 }

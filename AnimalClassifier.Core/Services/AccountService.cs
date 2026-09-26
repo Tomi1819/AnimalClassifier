@@ -24,8 +24,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task<LoginResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request)
         {
-            var user = await userManager.FindByIdAsync(userId)
-                ?? throw new KeyNotFoundException(UserNotFound);
+            var user = await FindUserAsync(userId);
 
             await ConfirmPasswordAsync(user, request.CurrentPassword);
 
@@ -33,6 +32,18 @@ namespace AnimalClassifier.Core.Services
 
             return await tokenIssuer.IssueAsync(user);
         }
+
+        public async Task<LoginResponse> SignOutOtherSessionsAsync(string userId)
+        {
+            var user = await FindUserAsync(userId);
+
+            (await userManager.UpdateSecurityStampAsync(user)).ThrowIfFailed();
+
+            return await tokenIssuer.IssueAsync(user);
+        }
+
+        private async Task<ApplicationUser> FindUserAsync(string userId) =>
+            await userManager.FindByIdAsync(userId) ?? throw new KeyNotFoundException(UserNotFound);
 
         // Checked apart from the change itself, which would only report a
         // mismatch, so that a wrong guess is counted towards a lockout.
