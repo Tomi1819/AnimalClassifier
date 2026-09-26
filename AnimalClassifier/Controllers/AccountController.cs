@@ -28,21 +28,25 @@ namespace AnimalClassifier.Controllers
         /// account had, the caller's included.
         /// </summary>
         [HttpPost("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        public Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request) =>
+            RunAsync(async () => Ok(await accountService.ChangePasswordAsync(User.Id()!, request)));
+
+        private static async Task<IActionResult> RunAsync(Func<Task<IActionResult>> action)
         {
             try
             {
-                return Ok(await accountService.ChangePasswordAsync(User.Id()!, request));
+                return await action();
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return new NotFoundObjectResult(new { message = ex.Message });
             }
-            // A wrong current password is a bad request rather than a 401,
-            // which would tell the frontend that the session itself had ended.
+            // A refusal, such as a wrong current password, is a bad request
+            // rather than a 401, which would tell the frontend that the session
+            // itself had ended.
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return new BadRequestObjectResult(new { message = ex.Message });
             }
         }
     }
