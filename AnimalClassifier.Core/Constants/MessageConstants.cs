@@ -18,6 +18,9 @@
         //PasswordResetService
         public const string InvalidPasswordResetLink = "This link is no longer valid. Please ask for a new one.";
 
+        //AccountService
+        public const string IncorrectCurrentPassword = "The current password is incorrect.";
+
         //PasskeyService
         public const string ExpiredPasskeyCeremony = "This passkey request is no longer valid. Please try again.";
         public const string RejectedPasskey = "This passkey could not be registered. Please try again.";
