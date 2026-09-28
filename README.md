@@ -14,6 +14,7 @@ This application enables users to upload images of animals and receive classific
 - 🔑 Password reset over email
 - 🔄 Password changes for a signed-in user
 - 🚪 Signing out of every other device
+- ✏️ Changing the name an account goes by
 - 🗑️ Deleting an account, along with everything it uploaded
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
@@ -74,6 +75,21 @@ dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
 
 It also narrows `AspNetUsers.PhoneNumber` to 256 characters, a column nothing
 here writes to.
+
+### The profile and the name
+
+`GET /api/account` answers with the account's name, email and registration
+date. The token carries only the email, so this is where a client reads the
+rest.
+
+`PUT /api/account/name` takes `{ fullName }` and answers with the profile as it
+now stands. The name is kept as typed apart from its spacing, so a name such as
+"McDonald" can be put right; registration still capitalises each word. A blank
+name, or one over 100 characters, is a bad request. Sessions carry on, since
+the name plays no part in signing in.
+
+Passkeys registered before the change keep the old name on the user's device,
+where it was stored when they were created.
 
 ### Changing a password
 
