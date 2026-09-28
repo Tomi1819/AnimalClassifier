@@ -8,6 +8,26 @@ namespace AnimalClassifier.Core.Contracts
     public interface IAccountService
     {
         /// <summary>
+        /// The account's name, email and registration date. The token carries
+        /// only the email, so this is where a page reads the rest.
+        /// </summary>
+        Task<AccountProfile> GetProfileAsync(string userId);
+
+        /// <summary>
+        /// Sets the name the account goes by. It is kept as typed apart from
+        /// its spacing, so that a name such as "McDonald" can be put right.
+        /// Sessions carry on, since the name is not part of signing in.
+        ///
+        /// Passkeys already registered keep the name they were created with,
+        /// as that copy lives on the user's device.
+        /// </summary>
+        /// <returns>The profile with the new name.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// When the name is blank or too long.
+        /// </exception>
+        Task<AccountProfile> ChangeNameAsync(string userId, ChangeNameRequest request);
+
+        /// <summary>
         /// Sets a new password once the current one has been confirmed. A wrong
         /// current password counts towards locking the account, the same as a
         /// failed sign-in, so a session left open cannot be used to guess it.
