@@ -30,5 +30,20 @@ namespace AnimalClassifier.Core.Contracts
         /// </summary>
         /// <returns>The token the caller's session continues with.</returns>
         Task<LoginResponse> SignOutOtherSessionsAsync(string userId);
+
+        /// <summary>
+        /// Deletes the account once its password has been confirmed, along with
+        /// its recognitions, uploads and passkeys. The admin audit log keeps its
+        /// entries, naming a deleted user in the account's place. Every session
+        /// ends with it, since a token is only good for an account that exists.
+        ///
+        /// An administrator is refused, so that there is always someone left to
+        /// manage the site; another administrator has to revoke the role first.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// When the password is wrong, the account is locked, or it belongs to
+        /// an administrator.
+        /// </exception>
+        Task DeleteAccountAsync(string userId, DeleteAccountRequest request);
     }
 }

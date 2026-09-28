@@ -21,6 +21,7 @@
 
         //AccountService
         public const string IncorrectCurrentPassword = "The current password is incorrect.";
+        public const string AdministratorAccountDeletion = "Administrators cannot delete their account. Another administrator has to revoke the role first.";
 
         //PasskeyService
         public const string ExpiredPasskeyCeremony = "This passkey request is no longer valid. Please try again.";
