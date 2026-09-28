@@ -59,6 +59,13 @@
             return logs.Count;
         }
 
+        public async Task DeleteRecognitionLogsForUserAsync(string userId)
+        {
+            await context.AnimalRecognitionLogs
+                .Where(l => l.UserId == userId)
+                .ExecuteDeleteAsync();
+        }
+
         public async Task<(IEnumerable<ApplicationUser> Users, int TotalCount)> GetUsersAsync(string? search, int page, int pageSize)
         {
             var users = context.Users.AsQueryable();
@@ -104,6 +111,17 @@
                 .ToListAsync();
 
             return (logs, totalCount);
+        }
+
+        public async Task DetachUserFromAdminAuditLogsAsync(string userId)
+        {
+            await context.AdminAuditLogs
+                .Where(l => l.AdminId == userId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(l => l.AdminId, (string?)null));
+
+            await context.AdminAuditLogs
+                .Where(l => l.UserId == userId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(l => l.UserId, (string?)null));
         }
 
         public async Task<IDbContextTransaction> BeginTransactionAsync()
