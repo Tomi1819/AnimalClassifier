@@ -39,6 +39,17 @@ namespace AnimalClassifier.Controllers
         public Task<IActionResult> SignOutOtherSessions() =>
             RunAsync(async () => Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!)));
 
+        /// <summary>
+        /// Nothing is answered, as there is no session left to carry on with.
+        /// </summary>
+        [HttpDelete]
+        public Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request) =>
+            RunAsync(async () =>
+            {
+                await accountService.DeleteAccountAsync(User.Id()!, request);
+                return NoContent();
+            });
+
         private static async Task<IActionResult> RunAsync(Func<Task<IActionResult>> action)
         {
             try
