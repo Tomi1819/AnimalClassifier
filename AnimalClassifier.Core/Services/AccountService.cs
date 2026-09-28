@@ -11,6 +11,8 @@ namespace AnimalClassifier.Core.Services
 
     public class AccountService : IAccountService
     {
+        private const int FullNameMaxLength = 100;
+
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IAccessTokenIssuer tokenIssuer;
@@ -28,6 +30,19 @@ namespace AnimalClassifier.Core.Services
             this.tokenIssuer = tokenIssuer;
             this.repository = repository;
             this.fileStorageService = fileStorageService;
+        }
+
+        public async Task<AccountProfile> GetProfileAsync(string userId) =>
+            ToProfile(await FindUserAsync(userId));
+
+        public async Task<AccountProfile> ChangeNameAsync(string userId, ChangeNameRequest request)
+        {
+            var user = await FindUserAsync(userId);
+
+            user.FullName = TidyFullName(request.FullName);
+            (await userManager.UpdateAsync(user)).ThrowIfFailed();
+
+            return ToProfile(user);
         }
 
         public async Task<LoginResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request)
@@ -96,5 +111,32 @@ namespace AnimalClassifier.Core.Services
                 throw new InvalidOperationException(IncorrectCurrentPassword);
             }
         }
+
+        // Unlike at registration, the letters are left as typed; only the
+        // spacing around and between the words is tidied.
+        private static string TidyFullName(string fullName)
+        {
+            var words = fullName.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            var tidied = string.Join(Space, words);
+
+            if (tidied.Length == 0)
+            {
+                throw new InvalidOperationException(EmptyFullName);
+            }
+
+            if (tidied.Length > FullNameMaxLength)
+            {
+                throw new InvalidOperationException(string.Format(FullNameTooLong, FullNameMaxLength));
+            }
+
+            return tidied;
+        }
+
+        private static AccountProfile ToProfile(ApplicationUser user) => new()
+        {
+            FullName = user.FullName,
+            Email = user.Email ?? string.Empty,
+            DateRegistered = user.DateRegistered
+        };
     }
 }
