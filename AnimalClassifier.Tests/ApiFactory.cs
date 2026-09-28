@@ -31,12 +31,18 @@
         private readonly string connectionString =
             $@"Server=(localdb)\MSSQLLocalDB;Database=AnimalClassifierTests_{Guid.NewGuid():N};Trusted_Connection=True;TrustServerCertificate=True;";
 
+        private readonly string uploadPath =
+            Path.Combine(Path.GetTempPath(), $"AnimalClassifierTests_{Guid.NewGuid():N}");
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             // Outside Development nothing else supplies these settings, so the
             // tests can never reach the development database.
             builder.UseEnvironment("Testing");
             builder.UseSetting($"ConnectionStrings:{DefaultConnection}", connectionString);
+
+            // Kept apart from the app's own uploads, and removed with the database.
+            builder.UseSetting($"{FileUploadSettings}:UploadPath", uploadPath);
             builder.UseSetting($"{Jwt}:SecretKey", "TEST-ONLY-SIGNING-KEY-NOT-FOR-PRODUCTION-USE");
 
             // The app refuses to start outside Development without these, and
@@ -85,6 +91,11 @@
 
             await using var context = CreateContext();
             await context.Database.EnsureDeletedAsync();
+
+            if (Directory.Exists(uploadPath))
+            {
+                Directory.Delete(uploadPath, recursive: true);
+            }
         }
 
         // Built without the app's Identity options, so its model differs from
