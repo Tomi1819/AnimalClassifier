@@ -14,6 +14,7 @@ This application enables users to upload images of animals and receive classific
 - 🔑 Password reset over email
 - 🔄 Password changes for a signed-in user
 - 🚪 Signing out of every other device
+- 🗑️ Deleting an account, along with everything it uploaded
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
 
@@ -96,6 +97,24 @@ stays signed in.
 Passkeys are left alone, since they are ways in rather than sessions. Password
 reset links still waiting to be used stop working, because Identity ties them to
 the stamp too.
+
+### Deleting an account
+
+`DELETE /api/account` takes the account's password, which counts towards a
+lockout like any other check of it, and answers `204 No Content`. The account
+goes at once, with nothing to undo, and every session goes with it.
+
+Its recognitions are removed, cleared ones included, so they leave the
+statistics and search pages too; its uploaded files and passkeys go as well.
+The admin audit log keeps its entries, showing `Deleted user` where the account
+was named, so the log still covers everything that was done.
+
+An administrator cannot delete their account, which keeps someone able to
+manage the site. Another administrator has to revoke the role first.
+
+Leaving an entry's account empty needs the `AllowDeletedAccountsInAuditLog`
+migration. An existing database needs it applied, with the same
+`dotnet ef database update` as above.
 
 ### Password reset emails
 
