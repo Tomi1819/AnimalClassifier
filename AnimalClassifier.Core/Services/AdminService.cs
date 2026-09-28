@@ -76,8 +76,8 @@
                 {
                     Action = log.Action.ToString(),
                     DatePerformed = log.DatePerformed,
-                    AdminEmail = log.Admin.Email ?? string.Empty,
-                    UserEmail = log.User.Email ?? string.Empty
+                    AdminEmail = DescribeAccount(log.Admin),
+                    UserEmail = DescribeAccount(log.User)
                 }).ToList(),
                 Page = page,
                 PageSize = PageSize,
@@ -114,5 +114,9 @@
 
             await transaction.CommitAsync();
         }
+
+        // An entry outlives the accounts it names, which are gone once deleted.
+        private static string DescribeAccount(ApplicationUser? account) =>
+            account is null ? DeletedUser : account.Email ?? string.Empty;
     }
 }
