@@ -21,6 +21,14 @@
         /// which read every log, are unchanged.
         /// </summary>
         Task<int> ClearRecognitionLogsForUserAsync(string userId);
+
+        /// <summary>
+        /// Removes every recognition one user made, cleared ones included, so
+        /// that they leave the statistics and search pages as well. Unlike
+        /// clearing, this cannot be undone, and is meant for an account that is
+        /// itself going.
+        /// </summary>
+        Task DeleteRecognitionLogsForUserAsync(string userId);
         Task AddRecognitionLogAsync(AnimalRecognitionLog animalRecognitionLog);
 
         /// <summary>
@@ -40,6 +48,13 @@
         /// One page of the audit log, most recent first, with the total number of entries.
         /// </summary>
         Task<(IEnumerable<AdminAuditLog> Logs, int TotalCount)> GetAdminAuditLogsAsync(int page, int pageSize);
+
+        /// <summary>
+        /// Takes one user out of the audit log, whether they made a change or
+        /// had one made to them, so that their account can be deleted. The
+        /// entries stay, naming nobody in that place.
+        /// </summary>
+        Task DetachUserFromAdminAuditLogsAsync(string userId);
         Task<IDbContextTransaction> BeginTransactionAsync();
         Task SaveChangesAsync();
     }
