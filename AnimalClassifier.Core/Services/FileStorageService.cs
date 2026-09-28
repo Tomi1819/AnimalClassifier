@@ -37,5 +37,19 @@
                 PublicPath = $"{requestPath}/{userId}/{uniqueFileName}"
             };
         }
+
+        public void DeleteUserFiles(string userId)
+        {
+            // An empty id would name the upload root itself, and with it every
+            // user's files.
+            ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+            string userDirectory = Path.Combine(uploadRootPath, userId);
+
+            if (Directory.Exists(userDirectory))
+            {
+                Directory.Delete(userDirectory, recursive: true);
+            }
+        }
     }
 }
