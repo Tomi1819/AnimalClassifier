@@ -20,6 +20,7 @@ namespace AnimalClassifier.Tests
         private const string NewPassword = "secret2";
         private const string WrongPassword = "not-the-password";
         private const string AccountPath = "/api/account";
+        private const string ChangeNamePath = "/api/account/name";
         private const string ChangePasswordPath = "/api/account/change-password";
         private const string SignOutOtherSessionsPath = "/api/account/sign-out-other-sessions";
         private const string HistoryPath = "/api/upload/history";
@@ -29,6 +30,88 @@ namespace AnimalClassifier.Tests
         public AccountControllerTests(ApiFactory factory)
         {
             this.factory = factory;
+        }
+
+        [Fact]
+        public async Task GetProfile_WithoutSigningIn_IsRefused()
+        {
+            var response = await factory.CreateClient().GetAsync(AccountPath);
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetProfile_ReturnsTheAccountsDetails()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var profile = await client.GetFromJsonAsync<AccountProfile>(AccountPath);
+
+            Assert.Equal(account.FullName, profile!.FullName);
+            Assert.Equal(account.Email, profile.Email);
+        }
+
+        [Fact]
+        public async Task ChangeName_WithoutSigningIn_IsRefused()
+        {
+            var response = await ChangeNameAsync(factory.CreateClient(), "Jane Goodall");
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        // The letters stay as typed, which registration would have turned into
+        // "Mcdonald"; only the spacing is tidied.
+        [Fact]
+        public async Task ChangeName_KeepsTheLettersAsTyped()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await ChangeNameAsync(client, "  Jane   McDonald ");
+            var profile = await response.Content.ReadFromJsonAsync<AccountProfile>();
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("Jane McDonald", profile!.FullName);
+            Assert.Equal("Jane McDonald", (await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.FullName);
+        }
+
+        [Fact]
+        public async Task ChangeName_KeepsTheSessionGoing()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            (await ChangeNameAsync(client, "Jane Goodall")).EnsureSuccessStatusCode();
+
+            Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(HistoryPath)).StatusCode);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task ChangeName_ToABlankName_IsABadRequest(string blankName)
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await ChangeNameAsync(client, blankName);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(EmptyFullName, await response.Content.ReadAsStringAsync());
+            Assert.Equal(account.FullName, (await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.FullName);
+        }
+
+        [Fact]
+        public async Task ChangeName_ToATooLongName_IsABadRequest()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await ChangeNameAsync(client, new string('a', 101));
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(account.FullName, (await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.FullName);
         }
 
         [Fact]
@@ -323,6 +406,9 @@ namespace AnimalClassifier.Tests
                 await ChangePasswordAsync(client, WrongPassword, NewPassword);
             }
         }
+
+        private static Task<HttpResponseMessage> ChangeNameAsync(HttpClient client, string fullName) =>
+            client.PutAsJsonAsync(ChangeNamePath, new ChangeNameRequest { FullName = fullName });
 
         private static Task<HttpResponseMessage> ChangePasswordAsync(HttpClient client, string currentPassword, string newPassword) =>
             client.PostAsJsonAsync(ChangePasswordPath, new ChangePasswordRequest
