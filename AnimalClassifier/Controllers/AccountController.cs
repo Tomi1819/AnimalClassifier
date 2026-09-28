@@ -23,6 +23,14 @@ namespace AnimalClassifier.Controllers
             this.accountService = accountService;
         }
 
+        [HttpGet]
+        public Task<IActionResult> GetProfile() =>
+            RunAsync(async () => Ok(await accountService.GetProfileAsync(User.Id()!)));
+
+        [HttpPut("name")]
+        public Task<IActionResult> ChangeName([FromBody] ChangeNameRequest request) =>
+            RunAsync(async () => Ok(await accountService.ChangeNameAsync(User.Id()!, request)));
+
         /// <summary>
         /// Answers with a new token, because the change ends every session the
         /// account had, the caller's included.
