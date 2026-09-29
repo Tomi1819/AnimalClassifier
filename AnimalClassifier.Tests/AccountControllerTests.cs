@@ -13,6 +13,7 @@ namespace AnimalClassifier.Tests
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.RoleConstants;
+    using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
 
     public class AccountControllerTests : IClassFixture<ApiFactory>
     {
@@ -217,6 +218,28 @@ namespace AnimalClassifier.Tests
         }
 
         [Fact]
+        public async Task ChangePassword_EmailsASecurityAlert()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            (await ChangePasswordAsync(client, Password, NewPassword)).EnsureSuccessStatusCode();
+
+            Assert.Contains(PasswordChangedSubject, factory.Emails.SubjectsSentTo(account.Email));
+        }
+
+        [Fact]
+        public async Task ChangePassword_ThatIsRefused_EmailsNothing()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            await ChangePasswordAsync(client, WrongPassword, NewPassword);
+
+            Assert.False(factory.Emails.AnySentTo(account.Email));
+        }
+
+        [Fact]
         public async Task ChangePassword_WithATooShortPassword_IsRefused()
         {
             var account = await RegisterAsync();
@@ -271,6 +294,17 @@ namespace AnimalClassifier.Tests
             var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
             Assert.Equal(HttpStatusCode.OK, (await WithToken(login!.Token).GetAsync(HistoryPath)).StatusCode);
+        }
+
+        [Fact]
+        public async Task SignOutOtherSessions_EmailsASecurityAlert()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            (await SignOutOtherSessionsAsync(client)).EnsureSuccessStatusCode();
+
+            Assert.Contains(OtherSessionsSignedOutSubject, factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]

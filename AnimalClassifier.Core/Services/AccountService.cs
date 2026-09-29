@@ -17,18 +17,21 @@ namespace AnimalClassifier.Core.Services
         private readonly IAccessTokenIssuer tokenIssuer;
         private readonly IRepository repository;
         private readonly IFileStorageService fileStorageService;
+        private readonly ISecurityAlertSender securityAlertSender;
 
         public AccountService(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
                               IAccessTokenIssuer tokenIssuer,
                               IRepository repository,
-                              IFileStorageService fileStorageService)
+                              IFileStorageService fileStorageService,
+                              ISecurityAlertSender securityAlertSender)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.tokenIssuer = tokenIssuer;
             this.repository = repository;
             this.fileStorageService = fileStorageService;
+            this.securityAlertSender = securityAlertSender;
         }
 
         public async Task<AccountProfile> GetProfileAsync(string userId) =>
@@ -51,6 +54,7 @@ namespace AnimalClassifier.Core.Services
             await ConfirmPasswordAsync(user, request.CurrentPassword);
 
             (await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword)).ThrowIfFailed();
+            await securityAlertSender.PasswordChangedAsync(user);
 
             return await tokenIssuer.IssueAsync(user);
         }
@@ -60,6 +64,7 @@ namespace AnimalClassifier.Core.Services
             var user = await FindUserAsync(userId);
 
             (await userManager.UpdateSecurityStampAsync(user)).ThrowIfFailed();
+            await securityAlertSender.OtherSessionsSignedOutAsync(user);
 
             return await tokenIssuer.IssueAsync(user);
         }
