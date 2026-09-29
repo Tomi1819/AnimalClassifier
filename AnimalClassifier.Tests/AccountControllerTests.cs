@@ -52,6 +52,18 @@ namespace AnimalClassifier.Tests
             Assert.Equal(account.Email, profile.Email);
         }
 
+        // Without its "Z", a browser would read the date as local time.
+        [Fact]
+        public async Task GetProfile_SendsTheRegistrationDateAsUtc()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var profile = await client.GetFromJsonAsync<AccountProfile>(AccountPath);
+
+            Assert.Equal(DateTimeKind.Utc, profile!.DateRegistered.Kind);
+        }
+
         [Fact]
         public async Task ChangeName_WithoutSigningIn_IsRefused()
         {
