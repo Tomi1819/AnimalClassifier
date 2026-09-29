@@ -18,16 +18,19 @@ namespace AnimalClassifier.Core.Services
         private readonly IPasskeyHandler<ApplicationUser> passkeyHandler;
         private readonly IPasskeyStateProtector stateProtector;
         private readonly IAccessTokenIssuer tokenIssuer;
+        private readonly ISecurityAlertSender securityAlertSender;
 
         public PasskeyService(UserManager<ApplicationUser> userManager,
                               IPasskeyHandler<ApplicationUser> passkeyHandler,
                               IPasskeyStateProtector stateProtector,
-                              IAccessTokenIssuer tokenIssuer)
+                              IAccessTokenIssuer tokenIssuer,
+                              ISecurityAlertSender securityAlertSender)
         {
             this.userManager = userManager;
             this.passkeyHandler = passkeyHandler;
             this.stateProtector = stateProtector;
             this.tokenIssuer = tokenIssuer;
+            this.securityAlertSender = securityAlertSender;
         }
 
         public async Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, HttpContext httpContext)
@@ -67,9 +70,11 @@ namespace AnimalClassifier.Core.Services
             }
 
             var passkey = result.Passkey;
-            passkey.Name = string.IsNullOrWhiteSpace(request.Name) ? UnnamedPasskey : request.Name.Trim();
+            var name = string.IsNullOrWhiteSpace(request.Name) ? UnnamedPasskey : request.Name.Trim();
+            passkey.Name = name;
 
             (await userManager.AddOrUpdatePasskeyAsync(user, passkey)).ThrowIfFailed();
+            await securityAlertSender.PasskeyAddedAsync(user, name);
 
             return ToSummary(passkey);
         }
@@ -132,12 +137,11 @@ namespace AnimalClassifier.Core.Services
 
             // Scoped to the owner, so that knowing an id is not enough to take
             // somebody else's passkey away from them.
-            if (await userManager.GetPasskeyAsync(user, credentialId) is null)
-            {
-                throw new KeyNotFoundException(PasskeyNotFound);
-            }
+            var passkey = await userManager.GetPasskeyAsync(user, credentialId)
+                ?? throw new KeyNotFoundException(PasskeyNotFound);
 
             (await userManager.RemovePasskeyAsync(user, credentialId)).ThrowIfFailed();
+            await securityAlertSender.PasskeyRemovedAsync(user, passkey.Name ?? UnnamedPasskey);
         }
 
         private async Task<ApplicationUser> FindUserAsync(string userId) =>
