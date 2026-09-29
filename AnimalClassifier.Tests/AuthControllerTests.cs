@@ -8,6 +8,7 @@
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
+    using static AnimalClassifier.Core.Constants.ValidationConstants;
 
     public class AuthControllerTests : IClassFixture<ApiFactory>
     {
@@ -22,6 +23,20 @@
         public AuthControllerTests(ApiFactory factory)
         {
             this.factory = factory;
+        }
+
+        [Fact]
+        public async Task Register_WithATooLongName_IsABadRequest()
+        {
+            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
+            {
+                FullName = new string('a', FullNameMaxLength + 1),
+                Email = UniqueEmail(),
+                Password = Password
+            });
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(string.Format(FullNameTooLong, FullNameMaxLength), await response.Content.ReadAsStringAsync());
         }
 
         [Fact]

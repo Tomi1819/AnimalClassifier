@@ -10,6 +10,7 @@ namespace AnimalClassifier.Core.Services
     using System.Threading.Tasks;
     using static Constants.RoleConstants;
     using static Constants.MessageConstants;
+    using static Constants.ValidationConstants;
 
     public class AuthService : IAuthService
     {
@@ -97,8 +98,16 @@ namespace AnimalClassifier.Core.Services
 
             var words = fullName.Split(Space, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(word => char.ToUpper(word[0]) + word.Substring(1).ToLower());
+            var processed = string.Join(Space, words);
 
-            return string.Join(Space, words);
+            // The same limit as changing the name later, so that an account
+            // can always save the name it already has.
+            if (processed.Length > FullNameMaxLength)
+            {
+                throw new InvalidOperationException(string.Format(FullNameTooLong, FullNameMaxLength));
+            }
+
+            return processed;
         }
     }
 }
