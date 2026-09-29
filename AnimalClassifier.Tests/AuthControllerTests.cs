@@ -9,6 +9,7 @@
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.ValidationConstants;
+    using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
 
     public class AuthControllerTests : IClassFixture<ApiFactory>
     {
@@ -119,6 +120,17 @@
             (await ResetPasswordAsync(account.Email, token, NewPassword)).EnsureSuccessStatusCode();
 
             Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.GetAsync(HistoryPath)).StatusCode);
+        }
+
+        [Fact]
+        public async Task ResetPassword_EmailsASecurityAlert()
+        {
+            var account = await RegisterAsync();
+            var token = await RequestResetTokenAsync(account.Email);
+
+            (await ResetPasswordAsync(account.Email, token, NewPassword)).EnsureSuccessStatusCode();
+
+            Assert.Contains(PasswordChangedSubject, factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]

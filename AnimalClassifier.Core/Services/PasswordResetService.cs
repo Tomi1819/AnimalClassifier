@@ -24,16 +24,19 @@
 
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IEmailSender emailSender;
+        private readonly ISecurityAlertSender securityAlertSender;
         private readonly FrontendSettings frontendSettings;
         private readonly ILogger<PasswordResetService> logger;
 
         public PasswordResetService(UserManager<ApplicationUser> userManager,
                                     IEmailSender emailSender,
+                                    ISecurityAlertSender securityAlertSender,
                                     IOptions<FrontendSettings> frontendOptions,
                                     ILogger<PasswordResetService> logger)
         {
             this.userManager = userManager;
             this.emailSender = emailSender;
+            this.securityAlertSender = securityAlertSender;
             this.frontendSettings = frontendOptions.Value;
             this.logger = logger;
         }
@@ -88,6 +91,8 @@
             // Anything else is the new password failing the rules, which the
             // user can do something about once they are told what went wrong.
             result.ThrowIfFailed();
+
+            await securityAlertSender.PasswordChangedAsync(user);
         }
 
         // The token travels in a query string, and the form Identity hands it
