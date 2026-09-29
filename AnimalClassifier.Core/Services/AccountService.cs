@@ -8,11 +8,10 @@ namespace AnimalClassifier.Core.Services
     using Microsoft.AspNetCore.Identity;
     using static Constants.MessageConstants;
     using static Constants.RoleConstants;
+    using static Constants.ValidationConstants;
 
     public class AccountService : IAccountService
     {
-        private const int FullNameMaxLength = 100;
-
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IAccessTokenIssuer tokenIssuer;
