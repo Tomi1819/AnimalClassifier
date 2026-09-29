@@ -136,6 +136,19 @@ Leaving an entry's account empty needs the `AllowDeletedAccountsInAuditLog`
 migration. An existing database needs it applied, with the same
 `dotnet ef database update` as above.
 
+### Security alerts
+
+The account's owner is emailed whenever its password is changed or reset, a
+passkey is added or removed, or its other devices are signed out, so that
+someone else doing it does not go unnoticed. Each email says what happened and
+how to take the account back if it was not them. None of them carries a link,
+so a genuine alert never looks like the phishing it warns about.
+
+An alert goes out once the change has been made. A mail server that fails to
+send it is logged rather than reported, since an error would tell the user that
+a change which went through had not. The alerts use the same email settings as
+password resets, below.
+
 ### Password reset emails
 
 The messages go out over SMTP wherever one is configured. Development may leave it unconfigured, and then writes them to the log instead, so the link is in the console and no mail server is needed. Everywhere else the app refuses to start until `Email:Host` and `Email:SenderEmail` are set.
