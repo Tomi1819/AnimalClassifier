@@ -10,6 +10,7 @@ namespace AnimalClassifier.Tests
     using System.Net.Http.Json;
     using System.Text.Json.Nodes;
     using static AnimalClassifier.Core.Constants.MessageConstants;
+    using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
 
     public class PasskeyControllerTests : IClassFixture<ApiFactory>
     {
@@ -98,6 +99,18 @@ namespace AnimalClassifier.Tests
 
             var passkey = Assert.Single(await ReadPasskeysAsync(client));
             Assert.Equal("Laptop", passkey.Name);
+        }
+
+        [Fact]
+        public async Task Register_EmailsASecurityAlert()
+        {
+            using var app = factory.WithPasskeyHandler(new StubPasskeyHandler());
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account, app);
+
+            (await RegisterPasskeyAsync(client, await RequestOptionsAsync(client), "Laptop")).EnsureSuccessStatusCode();
+
+            Assert.Contains(PasskeyAddedSubject, factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]
@@ -218,6 +231,21 @@ namespace AnimalClassifier.Tests
 
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
             Assert.Empty(await ReadPasskeysAsync(client));
+        }
+
+        [Fact]
+        public async Task Remove_EmailsASecurityAlert()
+        {
+            using var app = factory.WithPasskeyHandler(new StubPasskeyHandler());
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account, app);
+
+            await RegisterPasskeyAsync(client, await RequestOptionsAsync(client), "Laptop");
+            var passkey = Assert.Single(await ReadPasskeysAsync(client));
+
+            (await client.DeleteAsync($"{PasskeyPath}/{passkey.Id}")).EnsureSuccessStatusCode();
+
+            Assert.Contains(PasskeyRemovedSubject, factory.Emails.SubjectsSentTo(account.Email));
         }
 
         /// <summary>
