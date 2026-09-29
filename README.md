@@ -85,8 +85,12 @@ rest.
 `PUT /api/account/name` takes `{ fullName }` and answers with the profile as it
 now stands. The name is kept as typed apart from its spacing, so a name such as
 "McDonald" can be put right; registration still capitalises each word. A blank
-name, or one over 100 characters, is a bad request. Sessions carry on, since
-the name plays no part in signing in.
+name, or one over 100 characters, is a bad request. Registration refuses a name
+over 100 characters as well, so an account can always save the name it has.
+Sessions carry on, since the name plays no part in signing in.
+
+Every date the API sends is UTC and ends in `Z`, including the registration
+date here.
 
 Passkeys registered before the change keep the old name on the user's device,
 where it was stored when they were created.
