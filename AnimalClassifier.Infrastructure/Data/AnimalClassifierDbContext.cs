@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Infrastructure.Data
 {
     using AnimalClassifier.Infrastructure.Data.Configurations;
+    using AnimalClassifier.Infrastructure.Data.Converters;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,11 @@
             base.OnModelCreating(builder);
             builder.ApplyConfiguration(new AnimalRecognitionLogConfiguration());
             builder.ApplyConfiguration(new AdminAuditLogConfiguration());
+        }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
         }
 
         public DbSet<AnimalImage> AnimalImages { get; set; } = null!;
