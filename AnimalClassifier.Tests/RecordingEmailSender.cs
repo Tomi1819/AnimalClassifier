@@ -26,6 +26,16 @@
         public bool AnySentTo(string recipient) =>
             messages.Any(message => message.Recipient == recipient);
 
+        public IEnumerable<string> SubjectsSentTo(string recipient) =>
+            messages.Where(message => message.Recipient == recipient)
+                    .Select(message => message.Subject)
+                    .ToList();
+
+        public IEnumerable<string> BodiesSentTo(string recipient) =>
+            messages.Where(message => message.Recipient == recipient)
+                    .Select(message => message.Body)
+                    .ToList();
+
         public string? LinkSentTo(string recipient)
         {
             var body = messages.Where(message => message.Recipient == recipient)

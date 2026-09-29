@@ -58,6 +58,7 @@
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IPasswordResetService, PasswordResetService>();
+            services.AddScoped<ISecurityAlertSender, SecurityAlertSender>();
             services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddSingleton<MLContext>();
