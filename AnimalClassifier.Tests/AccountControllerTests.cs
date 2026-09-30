@@ -5,12 +5,16 @@ namespace AnimalClassifier.Tests
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
+    using System.IO.Compression;
     using System.Net;
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
+    using System.Text.Json;
+    using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.RoleConstants;
     using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
@@ -24,7 +28,14 @@ namespace AnimalClassifier.Tests
         private const string ChangeNamePath = "/api/account/name";
         private const string ChangePasswordPath = "/api/account/change-password";
         private const string SignOutOtherSessionsPath = "/api/account/sign-out-other-sessions";
+        private const string ExportPath = "/api/account/export";
         private const string HistoryPath = "/api/upload/history";
+
+        // The archive's layout, which is what a user reading their copy relies on.
+        private const string AccountEntry = "account.json";
+        private const string RecognitionsEntry = "recognitions.json";
+        private const string UploadsFolder = "uploads/";
+        private const string UploadedFileEntry = "uploads/cat.jpg";
 
         private readonly ApiFactory factory;
 
@@ -319,6 +330,135 @@ namespace AnimalClassifier.Tests
         }
 
         [Fact]
+        public async Task ExportData_WithoutSigningIn_IsRefused()
+        {
+            var response = await factory.CreateClient().GetAsync(ExportPath);
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task ExportData_AnswersWithAZipToDownload()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await client.GetAsync(ExportPath);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("application/zip", response.Content.Headers.ContentType?.MediaType);
+            Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+        }
+
+        [Fact]
+        public async Task ExportData_ContainsTheAccount()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            using var archive = await ExportDataAsync(client);
+
+            var exported = await ReadJsonEntryAsync<ExportedAccount>(archive, AccountEntry);
+            Assert.Equal(account.FullName, exported.FullName);
+            Assert.Equal(account.Email, exported.Email);
+        }
+
+        // Cleared recognitions are still kept, and counted by the statistics,
+        // so the copy has to include them to be complete.
+        [Fact]
+        public async Task ExportData_ContainsClearedRecognitionsToo()
+        {
+            var account = await RegisterAsync();
+            await AddRecognitionAsync(account.UserId, isDeleted: false);
+            await AddRecognitionAsync(account.UserId, isDeleted: true);
+            var client = await SignInAsync(account.Email, Password);
+
+            using var archive = await ExportDataAsync(client);
+
+            var recognitions = await ReadJsonEntryAsync<List<ExportedRecognition>>(archive, RecognitionsEntry);
+            Assert.Equal(2, recognitions.Count);
+            Assert.Single(recognitions, r => r.IsCleared);
+        }
+
+        [Fact]
+        public async Task ExportData_ContainsTheUploadedFiles()
+        {
+            var account = await RegisterAsync();
+            var uploadDirectory = await AddUploadAsync(account.UserId);
+            var client = await SignInAsync(account.Email, Password);
+
+            using var archive = await ExportDataAsync(client);
+
+            var entry = archive.GetEntry(UploadedFileEntry);
+            Assert.NotNull(entry);
+            await using var exported = new MemoryStream();
+            await using (var contents = await entry.OpenAsync())
+            {
+                await contents.CopyToAsync(exported);
+            }
+            Assert.Equal(await File.ReadAllBytesAsync(Path.Combine(uploadDirectory, "cat.jpg")), exported.ToArray());
+        }
+
+        [Fact]
+        public async Task ExportData_PointsEachRecognitionAtItsFile()
+        {
+            var account = await RegisterAsync();
+            await AddRecognitionAsync(account.UserId, isDeleted: false);
+            await AddUploadAsync(account.UserId);
+            var client = await SignInAsync(account.Email, Password);
+
+            using var archive = await ExportDataAsync(client);
+
+            var recognition = Assert.Single(await ReadJsonEntryAsync<List<ExportedRecognition>>(archive, RecognitionsEntry));
+            Assert.Equal(UploadedFileEntry, recognition.File);
+            Assert.NotNull(archive.GetEntry(recognition.File));
+        }
+
+        [Fact]
+        public async Task ExportData_LeavesOutOtherAccounts()
+        {
+            var other = await RegisterAsync();
+            await AddRecognitionAsync(other.UserId, isDeleted: false);
+            await AddUploadAsync(other.UserId);
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            using var archive = await ExportDataAsync(client);
+
+            Assert.Empty(await ReadJsonEntryAsync<List<ExportedRecognition>>(archive, RecognitionsEntry));
+            Assert.DoesNotContain(archive.Entries, e => e.FullName.StartsWith(UploadsFolder));
+        }
+
+        [Fact]
+        public async Task ExportData_BeyondTheLimit_IsRefused()
+        {
+            using var limited = WithDataExportLimit(1);
+            var account = await RegisterAsync();
+            var client = await SignInAsync(limited, account.Email);
+
+            var allowed = await client.GetAsync(ExportPath);
+            var refused = await client.GetAsync(ExportPath);
+
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
+        }
+
+        // Kept per account, so that people behind one address, such as a
+        // household or an office, do not use up each other's exports.
+        [Fact]
+        public async Task ExportData_BeyondAnotherAccountsLimit_IsAllowed()
+        {
+            using var limited = WithDataExportLimit(1);
+            var other = await SignInAsync(limited, (await RegisterAsync()).Email);
+            var client = await SignInAsync(limited, (await RegisterAsync()).Email);
+
+            (await other.GetAsync(ExportPath)).EnsureSuccessStatusCode();
+            var response = await client.GetAsync(ExportPath);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
         public async Task DeleteAccount_WithoutSigningIn_IsRefused()
         {
             var response = await DeleteAccountAsync(factory.CreateClient(), Password);
@@ -472,6 +612,38 @@ namespace AnimalClassifier.Tests
             {
                 Content = JsonContent.Create(new DeleteAccountRequest { Password = password })
             });
+
+        private static async Task<ZipArchive> ExportDataAsync(HttpClient client)
+        {
+            var response = await client.GetAsync(ExportPath);
+            response.EnsureSuccessStatusCode();
+
+            return new ZipArchive(await response.Content.ReadAsStreamAsync());
+        }
+
+        private static async Task<T> ReadJsonEntryAsync<T>(ZipArchive archive, string entryName)
+        {
+            await using var entry = await archive.GetEntry(entryName)!.OpenAsync();
+
+            return (await JsonSerializer.DeserializeAsync<T>(entry, JsonSerializerOptions.Web))!;
+        }
+
+        // Lowered, so that a test reaches the limit in one export rather than
+        // several.
+        private WebApplicationFactory<Program> WithDataExportLimit(int permitLimit) =>
+            factory.WithWebHostBuilder(builder =>
+                builder.UseSetting($"{RateLimiting}:DataExportPermitLimit", permitLimit.ToString()));
+
+        // The copy of the app shares the database and the signing key, so the
+        // token the usual one issues is good for it as well.
+        private async Task<HttpClient> SignInAsync(WebApplicationFactory<Program> app, string email)
+        {
+            var client = app.CreateClient();
+            client.DefaultRequestHeaders.Authorization =
+                (await SignInAsync(email, Password)).DefaultRequestHeaders.Authorization;
+
+            return client;
+        }
 
         private async Task MakeAdministratorAsync(string userId)
         {
