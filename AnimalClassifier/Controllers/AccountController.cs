@@ -5,11 +5,14 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.RateLimiting;
+    using System.Net.Mime;
+    using static Core.Constants.ConfigConstants;
 
     /// <summary>
-    /// A signed-in user's changes to their own account. Resetting a forgotten
-    /// password is for someone who cannot sign in, so it lives on the auth
-    /// controller instead.
+    /// A signed-in user's own account: what it holds, and the changes they make
+    /// to it. Resetting a forgotten password is for someone who cannot sign in,
+    /// so it lives on the auth controller instead.
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
@@ -17,10 +20,12 @@ namespace AnimalClassifier.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService accountService;
+        private readonly IDataExportService dataExportService;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(IAccountService accountService, IDataExportService dataExportService)
         {
             this.accountService = accountService;
+            this.dataExportService = dataExportService;
         }
 
         [HttpGet]
@@ -48,6 +53,17 @@ namespace AnimalClassifier.Controllers
             RunAsync(async () => Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!)));
 
         /// <summary>
+        /// Answers with a ZIP archive of everything the account holds, for its
+        /// owner to keep.
+        /// </summary>
+        [HttpGet("export")]
+        [EnableRateLimiting(DataExportPolicy)]
+        public Task<IActionResult> ExportData() =>
+            RunAsync(async () => File(await dataExportService.ExportAsync(User.Id()!),
+                                      MediaTypeNames.Application.Zip,
+                                      ExportFileName()));
+
+        /// <summary>
         /// Nothing is answered, as there is no session left to carry on with.
         /// </summary>
         [HttpDelete]
@@ -57,6 +73,9 @@ namespace AnimalClassifier.Controllers
                 await accountService.DeleteAccountAsync(User.Id()!, request);
                 return NoContent();
             });
+
+        // Dated, so that copies downloaded on different days sit side by side.
+        private static string ExportFileName() => $"animal-classifier-data-{DateTime.UtcNow:yyyy-MM-dd}.zip";
 
         private static async Task<IActionResult> RunAsync(Func<Task<IActionResult>> action)
         {
