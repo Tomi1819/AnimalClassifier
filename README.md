@@ -15,6 +15,7 @@ This application enables users to upload images of animals and receive classific
 - 🔄 Password changes for a signed-in user
 - 🚪 Signing out of every other device
 - ✏️ Changing the name an account goes by
+- 📦 Exporting an account's data, uploads included
 - 🗑️ Deleting an account, along with everything it uploaded
 - 🕓 History tracking of recognized images
 - 🔗 RESTful API for integration with other applications
@@ -117,6 +118,31 @@ stays signed in.
 Passkeys are left alone, since they are ways in rather than sessions. Password
 reset links still waiting to be used stop working, because Identity ties them to
 the stamp too.
+
+### Exporting an account's data
+
+`GET /api/account/export` answers with a ZIP archive of everything the account
+holds, named after the day it was made, such as
+`animal-classifier-data-2026-09-30.zip`:
+
+| Entry | Contents |
+| ----- | -------- |
+| `account.json` | The name, email and registration date, and each passkey's name and the date it was added |
+| `recognitions.json` | Every recognition, most recent first, with the animal, score, date, frames for a video, and the file it was made from |
+| `uploads/` | The images and videos as they were uploaded |
+
+Recognitions cleared from the history are included with `isCleared` set, since
+the statistics still count them. What only serves signing in, such as the
+password hash and the passkeys' credentials, is left out.
+
+The archive is built in a temporary file rather than in memory, as uploaded
+videos can make it large, and the file is deleted once it has been sent. Each
+export reads every file the account uploaded, so one account may make only a
+few in a while; beyond that it is answered `429 Too Many Requests`.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `RateLimiting:DataExportPermitLimit`, `RateLimiting:DataExportWindowMinutes` | How many exports one account may make per window, 3 every 15 minutes unless set. |
 
 ### Deleting an account
 
