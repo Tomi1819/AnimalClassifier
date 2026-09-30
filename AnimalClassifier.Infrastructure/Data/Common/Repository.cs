@@ -43,6 +43,14 @@
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<AnimalRecognitionLog>> GetAllRecognitionLogsForUserAsync(string userId)
+        {
+            return await context.AnimalRecognitionLogs
+                .Where(l => l.UserId == userId)
+                .OrderByDescending(l => l.DateRecognized)
+                .ToListAsync();
+        }
+
         public async Task<int> ClearRecognitionLogsForUserAsync(string userId)
         {
             var logs = await context.AnimalRecognitionLogs

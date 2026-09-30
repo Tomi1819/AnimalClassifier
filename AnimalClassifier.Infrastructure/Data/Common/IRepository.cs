@@ -16,6 +16,12 @@
         Task<IEnumerable<AnimalRecognitionLog>> GetRecognitionLogsForUserAsync(string userId);
 
         /// <summary>
+        /// Every recognition one user made, cleared ones included, most recent
+        /// first.
+        /// </summary>
+        Task<IEnumerable<AnimalRecognitionLog>> GetAllRecognitionLogsForUserAsync(string userId);
+
+        /// <summary>
         /// Marks one user's recognitions as cleared, and returns how many were
         /// affected. Nothing is removed, so the statistics and search pages,
         /// which read every log, are unchanged.
