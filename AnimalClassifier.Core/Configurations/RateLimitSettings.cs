@@ -11,5 +11,14 @@
         public int PasswordResetPermitLimit { get; set; } = 10;
 
         public int PasswordResetWindowMinutes { get; set; } = 15;
+
+        /// <summary>
+        /// How many copies of their data one account may download per window.
+        /// Each reads every file the account uploaded, and nobody needs more
+        /// than one at a time; the rest is room for a download that failed.
+        /// </summary>
+        public int DataExportPermitLimit { get; set; } = 3;
+
+        public int DataExportWindowMinutes { get; set; } = 15;
     }
 }

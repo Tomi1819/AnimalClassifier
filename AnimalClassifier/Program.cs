@@ -29,10 +29,12 @@ app.UseApplicationUploads();
 
 app.UseCors(CorsPolicy);
 
-app.UseRateLimiter();
-
 app.UseAuthentication();
 app.UseAuthorization();
+
+// After authorization, so that a limit kept per account knows whose request it
+// is, and a request refused for want of a session is not counted.
+app.UseRateLimiter();
 
 app.MapControllers();
 
