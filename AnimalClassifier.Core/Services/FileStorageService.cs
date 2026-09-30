@@ -19,7 +19,7 @@
 
         public async Task<StoredFileResult> SaveFileAsync(IFormFile file, string userId)
         {
-            string userDirectory = Path.Combine(uploadRootPath, userId);
+            string userDirectory = GetUserDirectory(userId);
             Directory.CreateDirectory(userDirectory);
 
             string extension = Path.GetExtension(file.FileName).ToLower();
@@ -38,18 +38,32 @@
             };
         }
 
+        public IEnumerable<string> GetUserFiles(string userId)
+        {
+            string userDirectory = GetUserDirectory(userId);
+
+            return Directory.Exists(userDirectory)
+                ? Directory.GetFiles(userDirectory)
+                : [];
+        }
+
         public void DeleteUserFiles(string userId)
         {
-            // An empty id would name the upload root itself, and with it every
-            // user's files.
-            ArgumentException.ThrowIfNullOrWhiteSpace(userId);
-
-            string userDirectory = Path.Combine(uploadRootPath, userId);
+            string userDirectory = GetUserDirectory(userId);
 
             if (Directory.Exists(userDirectory))
             {
                 Directory.Delete(userDirectory, recursive: true);
             }
+        }
+
+        // An empty id would name the upload root itself, and with it every
+        // user's files.
+        private string GetUserDirectory(string userId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+            return Path.Combine(uploadRootPath, userId);
         }
     }
 }
