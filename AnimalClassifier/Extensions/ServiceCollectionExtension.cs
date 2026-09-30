@@ -61,6 +61,7 @@
             services.AddScoped<ISecurityAlertSender, SecurityAlertSender>();
             services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IDataExportService, DataExportService>();
             services.AddSingleton<MLContext>();
 
             var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
