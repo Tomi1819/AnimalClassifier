@@ -6,6 +6,7 @@ namespace AnimalClassifier.Core.Services
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.Extensions.Logging;
     using static Constants.MessageConstants;
     using static Constants.RoleConstants;
     using static Constants.ValidationConstants;
@@ -18,14 +19,17 @@ namespace AnimalClassifier.Core.Services
         private readonly IRepository repository;
         private readonly IFileStorageService fileStorageService;
         private readonly ISecurityAlertSender securityAlertSender;
+        private readonly ILogger<AccountService> logger;
 
         public AccountService(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
                               IAccessTokenIssuer tokenIssuer,
                               IRepository repository,
                               IFileStorageService fileStorageService,
-                              ISecurityAlertSender securityAlertSender)
+                              ISecurityAlertSender securityAlertSender,
+                              ILogger<AccountService> logger)
         {
+            this.logger = logger;
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.tokenIssuer = tokenIssuer;
@@ -93,7 +97,22 @@ namespace AnimalClassifier.Core.Services
 
             // Only once the account is certainly gone, since a rolled back
             // transaction could not bring the files back.
-            fileStorageService.DeleteUserFiles(user.Id);
+            DeleteUploadedFiles(user.Id);
+        }
+
+        // The account is gone by now, so a file that will not go, such as one
+        // still being read, must not turn the answer into a failure. It is
+        // logged for someone to remove by hand.
+        private void DeleteUploadedFiles(string userId)
+        {
+            try
+            {
+                fileStorageService.DeleteUserFiles(userId);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                logger.LogError(exception, "Could not delete the uploaded files of deleted user {UserId}.", userId);
+            }
         }
 
         private async Task<ApplicationUser> FindUserAsync(string userId) =>

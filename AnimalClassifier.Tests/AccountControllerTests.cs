@@ -549,6 +549,25 @@ namespace AnimalClassifier.Tests
             Assert.False(Directory.Exists(uploadDirectory));
         }
 
+        // The account is gone by the time its files are removed, so one that
+        // is still open elsewhere must not be reported as a failed deletion.
+        [Fact]
+        public async Task DeleteAccount_WithAFileThatCannotBeRemoved_StillDeletesIt()
+        {
+            var account = await RegisterAsync();
+            var uploadDirectory = await AddUploadAsync(account.UserId);
+            var client = await SignInAsync(account.Email, Password);
+
+            HttpResponseMessage response;
+            await using (File.Open(Path.Combine(uploadDirectory, "cat.jpg"), FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                response = await DeleteAccountAsync(client, Password);
+            }
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await LogInAsync(account.Email, Password)).StatusCode);
+        }
+
         // Files cannot be brought back the way the database rows can, so a
         // refused request must not touch them.
         [Fact]
