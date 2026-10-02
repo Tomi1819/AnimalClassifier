@@ -37,6 +37,10 @@ namespace AnimalClassifier.Tests
         private const string UploadsFolder = "uploads/";
         private const string UploadedFileEntry = "uploads/cat.jpg";
 
+        // A token keeps its expiry to the second, so two issued within one
+        // would look alike whether or not the lifetime started again.
+        private static readonly TimeSpan LongerThanAnExpirysPrecision = TimeSpan.FromSeconds(1.5);
+
         private readonly ApiFactory factory;
 
         public AccountControllerTests(ApiFactory factory)
@@ -228,6 +232,20 @@ namespace AnimalClassifier.Tests
             Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
         }
 
+        // The password has just been confirmed, which makes this as good as
+        // signing in again.
+        [Fact]
+        public async Task ChangePassword_AnswersWithATokenOfAFullLifetime()
+        {
+            var account = await RegisterAsync();
+            var signedIn = await ReadLoginAsync(await LogInAsync(account.Email, Password));
+
+            await Task.Delay(LongerThanAnExpirysPrecision);
+            var reissued = await ReadLoginAsync(await ChangePasswordAsync(WithToken(signedIn.Token), Password, NewPassword));
+
+            Assert.True(reissued.Expiration > signedIn.Expiration);
+        }
+
         [Fact]
         public async Task ChangePassword_EmailsASecurityAlert()
         {
@@ -305,6 +323,20 @@ namespace AnimalClassifier.Tests
             var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
             Assert.Equal(HttpStatusCode.OK, (await WithToken(login!.Token).GetAsync(HistoryPath)).StatusCode);
+        }
+
+        // No password is asked for, so a full lifetime here would let whoever
+        // holds a token keep it alive for good by trading it in.
+        [Fact]
+        public async Task SignOutOtherSessions_AnswersWithATokenThatRunsOutWhenTheOldOneWould()
+        {
+            var account = await RegisterAsync();
+            var signedIn = await ReadLoginAsync(await LogInAsync(account.Email, Password));
+
+            await Task.Delay(LongerThanAnExpirysPrecision);
+            var reissued = await ReadLoginAsync(await SignOutOtherSessionsAsync(WithToken(signedIn.Token)));
+
+            Assert.Equal(signedIn.Expiration, reissued.Expiration);
         }
 
         [Fact]
@@ -708,13 +740,14 @@ namespace AnimalClassifier.Tests
                 Password = password
             });
 
-        private async Task<HttpClient> SignInAsync(string email, string password)
-        {
-            var response = await LogInAsync(email, password);
-            response.EnsureSuccessStatusCode();
-            var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
+        private async Task<HttpClient> SignInAsync(string email, string password) =>
+            WithToken((await ReadLoginAsync(await LogInAsync(email, password))).Token);
 
-            return WithToken(login!.Token);
+        private static async Task<LoginResponse> ReadLoginAsync(HttpResponseMessage response)
+        {
+            response.EnsureSuccessStatusCode();
+
+            return (await response.Content.ReadFromJsonAsync<LoginResponse>())!;
         }
 
         private HttpClient WithToken(string token)

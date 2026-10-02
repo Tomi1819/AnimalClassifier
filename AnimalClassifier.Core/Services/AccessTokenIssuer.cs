@@ -23,7 +23,13 @@ namespace AnimalClassifier.Core.Services
             this.jwtSettings = jwtOptions.Value;
         }
 
-        public async Task<LoginResponse> IssueAsync(ApplicationUser user)
+        public Task<LoginResponse> IssueAsync(ApplicationUser user) =>
+            CreateAsync(user, DateTime.UtcNow.AddHours(jwtSettings.ExpirationHours));
+
+        public Task<LoginResponse> ReissueAsync(ApplicationUser user, DateTime expiration) =>
+            CreateAsync(user, expiration);
+
+        private async Task<LoginResponse> CreateAsync(ApplicationUser user, DateTime expiration)
         {
             var roles = await userManager.GetRolesAsync(user);
 
@@ -41,7 +47,7 @@ namespace AnimalClassifier.Core.Services
             var token = new JwtSecurityToken(
                 issuer: jwtSettings.Issuer,
                 audience: jwtSettings.Audience,
-                expires: DateTime.UtcNow.AddHours(jwtSettings.ExpirationHours),
+                expires: expiration,
                 claims: claims,
                 signingCredentials: new SigningCredentials(
                     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
