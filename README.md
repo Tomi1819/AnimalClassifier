@@ -130,6 +130,12 @@ where it was stored when they were created.
 A wrong current password counts towards a lockout, the same as a failed sign-in,
 so an unattended session cannot be used to guess it.
 
+A password has to be at least 8 characters long and cannot be the account's
+email, wherever it is set: registration and a password reset hold to the same
+rules. Length is the only rule about what it contains. Changing a password to
+the one the account already has is refused too. An account whose password was
+set before the minimum was raised keeps signing in with it.
+
 The change ends every session the account had open, the caller's included, so
 the answer carries a new token in the same shape as a sign-in. A client that
 keeps it stays signed in; everywhere else has to sign in again.
