@@ -59,6 +59,13 @@ namespace AnimalClassifier.Core.Services
             // mismatch, so that a wrong guess is counted towards a lockout.
             await passwordConfirmer.ConfirmAsync(user, request.CurrentPassword);
 
+            // Only once the current password is confirmed, so the answer says
+            // nothing to someone guessing at it.
+            if (request.NewPassword == request.CurrentPassword)
+            {
+                throw new InvalidOperationException(UnchangedPassword);
+            }
+
             (await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword)).ThrowIfFailed();
             await securityAlertSender.PasswordChangedAsync(user);
 

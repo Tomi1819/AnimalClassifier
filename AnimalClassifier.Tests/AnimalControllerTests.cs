@@ -10,7 +10,7 @@ namespace AnimalClassifier.Tests
 
     public class AnimalControllerTests : IClassFixture<ApiFactory>
     {
-        private const string Password = "secret1";
+        private const string Password = "secret-one";
         private const string SearchPath = "/api/animal/search";
 
         private readonly ApiFactory factory;

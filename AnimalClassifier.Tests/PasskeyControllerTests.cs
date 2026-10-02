@@ -15,7 +15,7 @@ namespace AnimalClassifier.Tests
 
     public class PasskeyControllerTests : IClassFixture<ApiFactory>
     {
-        private const string Password = "secret1";
+        private const string Password = "secret-one";
         private const string WrongPassword = "not-the-password";
         private const string PasskeyPath = "/api/passkey";
         private const string OptionsPath = "/api/passkey/options";

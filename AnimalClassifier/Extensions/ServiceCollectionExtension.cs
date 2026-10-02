@@ -23,6 +23,7 @@
     using System.Threading.RateLimiting;
     using static Core.Constants.ConfigConstants;
     using static Core.Constants.SecurityConstants;
+    using static Core.Constants.ValidationConstants;
     using static Constants.MessageConstants;
     using AnimalClassifier.Core.Services.Helpers;
 
@@ -259,6 +260,11 @@
                     // below it Identity refuses to keep them at all.
                     options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
                     options.SignIn.RequireConfirmedAccount = false;
+
+                    // Length is what makes a password hard to guess. Rules
+                    // about which characters it holds mostly produce the same
+                    // few patterns, so there are none.
+                    options.Password.RequiredLength = PasswordMinLength;
                     options.Password.RequireDigit = false;
                     options.Password.RequireLowercase = false;
                     options.Password.RequireNonAlphanumeric = false;
@@ -267,6 +273,7 @@
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<AnimalClassifierDbContext>()
                 .AddSignInManager()
+                .AddPasswordValidator<EmailAsPasswordValidator>()
                 // Nothing generates the one-time tokens a password reset needs
                 // until these are registered.
                 .AddDefaultTokenProviders();

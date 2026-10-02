@@ -38,7 +38,7 @@ namespace AnimalClassifier.Core.Contracts
         /// <returns>The token the caller's session continues with.</returns>
         /// <exception cref="InvalidOperationException">
         /// When the current password is wrong, the account is locked, or the new
-        /// password fails the rules.
+        /// password fails the rules or is the one the account already has.
         /// </exception>
         Task<LoginResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request);
 

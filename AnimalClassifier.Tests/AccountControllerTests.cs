@@ -17,12 +17,13 @@ namespace AnimalClassifier.Tests
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.RoleConstants;
+    using static AnimalClassifier.Core.Constants.ValidationConstants;
     using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
 
     public class AccountControllerTests : IClassFixture<ApiFactory>
     {
-        private const string Password = "secret1";
-        private const string NewPassword = "secret2";
+        private const string Password = "secret-one";
+        private const string NewPassword = "secret-two";
         private const string WrongPassword = "not-the-password";
         private const string AccountPath = "/api/account";
         private const string ChangeNamePath = "/api/account/name";
@@ -274,10 +275,42 @@ namespace AnimalClassifier.Tests
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
 
-            var response = await ChangePasswordAsync(client, Password, "abc");
+            var response = await ChangePasswordAsync(client, Password, new string('a', PasswordMinLength - 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
+        }
+
+        // Anyone trying to get in already knows the address, which makes it
+        // the first guess.
+        [Fact]
+        public async Task ChangePassword_ToTheAccountsEmail_IsRefused()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await ChangePasswordAsync(client, Password, account.Email);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(PasswordIsEmail, await response.Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
+        }
+
+        // Nothing would have changed, yet every other device would have been
+        // signed out and the owner told their password was new.
+        [Fact]
+        public async Task ChangePassword_ToTheCurrentPassword_IsRefused()
+        {
+            var account = await RegisterAsync();
+            var elsewhere = await SignInAsync(account.Email, Password);
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await ChangePasswordAsync(client, Password, Password);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(UnchangedPassword, await response.Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.OK, (await elsewhere.GetAsync(HistoryPath)).StatusCode);
+            Assert.False(factory.Emails.AnySentTo(account.Email));
         }
 
         [Fact]

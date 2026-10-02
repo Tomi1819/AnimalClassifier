@@ -13,8 +13,8 @@
 
     public class AuthControllerTests : IClassFixture<ApiFactory>
     {
-        private const string Password = "secret1";
-        private const string NewPassword = "secret2";
+        private const string Password = "secret-one";
+        private const string NewPassword = "secret-two";
         private const string LoginPath = "/api/auth/login";
         private const string ForgotPasswordPath = "/api/auth/forgot-password";
         private const string ResetPasswordPath = "/api/auth/reset-password";
@@ -39,6 +39,30 @@
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(string.Format(FullNameTooLong, FullNameMaxLength), await response.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task Register_WithATooShortPassword_IsABadRequest()
+        {
+            var email = UniqueEmail();
+
+            var response = await RegisterAsync(email, new string('a', PasswordMinLength - 1));
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await LogInAsync(email, new string('a', PasswordMinLength - 1))).StatusCode);
+        }
+
+        // Anyone trying to get in already knows the address, which makes it
+        // the first guess, in whatever case it is typed.
+        [Fact]
+        public async Task Register_WithTheEmailAsThePassword_IsABadRequest()
+        {
+            var email = UniqueEmail();
+
+            var response = await RegisterAsync(email, email.ToUpperInvariant());
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(PasswordIsEmail, await response.Content.ReadAsStringAsync());
         }
 
         // A lockout guards only the account a wrong password was tried on,
@@ -180,7 +204,7 @@
             var token = await RequestResetTokenAsync(account.Email);
             (await ResetPasswordAsync(account.Email, token, NewPassword)).EnsureSuccessStatusCode();
 
-            var response = await ResetPasswordAsync(account.Email, token, "secret3");
+            var response = await ResetPasswordAsync(account.Email, token, "secret-three");
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, NewPassword)).StatusCode);
@@ -267,16 +291,19 @@
 
         private async Task<RegisterResponse> RegisterAsync()
         {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = "Test User",
-                Email = UniqueEmail(),
-                Password = Password
-            });
+            var response = await RegisterAsync(UniqueEmail(), Password);
             response.EnsureSuccessStatusCode();
 
             return (await response.Content.ReadFromJsonAsync<RegisterResponse>())!;
         }
+
+        private Task<HttpResponseMessage> RegisterAsync(string email, string password) =>
+            factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
+            {
+                FullName = "Test User",
+                Email = email,
+                Password = password
+            });
 
         private static string UniqueEmail() => $"{Guid.NewGuid():N}@example.test";
     }
