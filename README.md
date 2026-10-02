@@ -67,6 +67,12 @@ against a deployed one.
 Browsers only offer passkeys in a secure context. `localhost` counts as one, so
 development needs nothing; everywhere else means HTTPS.
 
+Adding a passkey asks for the account's password. `POST /api/passkey/options`
+takes `{ password }`, and the state it answers with is what `POST /api/passkey`
+needs to register the passkey. A passkey outlasts the session that adds it, and
+a password change leaves it in place, so a session alone is not enough to add
+one. A wrong password counts towards a lockout, like any other check of it.
+
 The schema keeps passkeys from version 3 onwards, which the `AddPasskeys`
 migration moves to. An existing database needs it applied:
 
