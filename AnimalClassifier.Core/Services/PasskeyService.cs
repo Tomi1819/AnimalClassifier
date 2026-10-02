@@ -39,7 +39,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request, HttpContext httpContext)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
 
             await passwordConfirmer.ConfirmAsync(user, request.Password);
 
@@ -58,7 +58,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task<PasskeySummary> RegisterAsync(string userId, PasskeyRegistrationRequest request, HttpContext httpContext)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
 
             var result = await passkeyHandler.PerformAttestationAsync(new PasskeyAttestationContext
             {
@@ -128,7 +128,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task<IEnumerable<PasskeySummary>> GetPasskeysAsync(string userId)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
             var passkeys = await userManager.GetPasskeysAsync(user);
 
             return passkeys.Select(ToSummary)
@@ -138,7 +138,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task RemoveAsync(string userId, string passkeyId)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
             var credentialId = DecodeId(passkeyId);
 
             // Scoped to the owner, so that knowing an id is not enough to take
@@ -149,9 +149,6 @@ namespace AnimalClassifier.Core.Services
             (await userManager.RemovePasskeyAsync(user, credentialId)).ThrowIfFailed();
             await securityAlertSender.PasskeyRemovedAsync(user, passkey.Name ?? UnnamedPasskey);
         }
-
-        private async Task<ApplicationUser> FindUserAsync(string userId) =>
-            await userManager.FindByIdAsync(userId) ?? throw new NotFoundException(UserNotFound);
 
         // Identity leaves room for a ceremony that needs nothing remembered,
         // which these two are not. Carrying an empty state rather than

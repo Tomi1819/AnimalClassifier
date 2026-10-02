@@ -93,8 +93,7 @@
                 throw new RequestRefusedException(OwnAccountChange);
             }
 
-            var user = await userManager.FindByIdAsync(userId)
-                ?? throw new NotFoundException(UserNotFound);
+            var user = await userManager.GetByIdAsync(userId);
 
             await using var transaction = await repository.BeginTransactionAsync();
 
