@@ -15,6 +15,7 @@
     {
         private const string Password = "secret1";
         private const string NewPassword = "secret2";
+        private const string LoginPath = "/api/auth/login";
         private const string ForgotPasswordPath = "/api/auth/forgot-password";
         private const string ResetPasswordPath = "/api/auth/reset-password";
         private const string HistoryPath = "/api/upload/history";
@@ -38,6 +39,45 @@
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(string.Format(FullNameTooLong, FullNameMaxLength), await response.Content.ReadAsStringAsync());
+        }
+
+        // A lockout guards only the account a wrong password was tried on,
+        // which stops nobody trying a few on every account from one address.
+        [Fact]
+        public async Task Login_BeyondTheLimit_IsRefused()
+        {
+            using var limited = factory.WithWebHostBuilder(builder =>
+                builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1"));
+
+            var account = await RegisterAsync();
+            var client = limited.CreateClient();
+            var request = new LogInRequest { Email = account.Email, Password = Password };
+
+            var allowed = await client.PostAsJsonAsync(LoginPath, request);
+            var refused = await client.PostAsJsonAsync(LoginPath, request);
+
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
+        }
+
+        // An attempt that is turned away never reaches the password check,
+        // so it cannot be used to lock the account either.
+        [Fact]
+        public async Task Login_BeyondTheLimit_DoesNotCountTowardsALockout()
+        {
+            using var limited = factory.WithWebHostBuilder(builder =>
+                builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1"));
+
+            var account = await RegisterAsync();
+            var client = limited.CreateClient();
+            var wrongGuess = new LogInRequest { Email = account.Email, Password = "not-the-password" };
+
+            for (var attempt = 0; attempt < 10; attempt++)
+            {
+                await client.PostAsJsonAsync(LoginPath, wrongGuess);
+            }
+
+            Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
         }
 
         [Fact]
@@ -204,7 +244,7 @@
             });
 
         private Task<HttpResponseMessage> LogInAsync(string email, string password) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest
+            factory.CreateClient().PostAsJsonAsync(LoginPath, new LogInRequest
             {
                 Email = email,
                 Password = password

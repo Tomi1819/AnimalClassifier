@@ -134,10 +134,12 @@
         }
 
         /// <summary>
-        /// Caps how often one caller may ask for a password reset, since the
-        /// endpoints mail an address the caller picks and hand out attempts at
-        /// a token, and how often one account may export its data, since each
-        /// export reads every file the account uploaded.
+        /// Caps how often one caller may try to sign in, since a lockout
+        /// guards only the account a wrong password was tried on; how often
+        /// one may ask for a password reset, since the endpoints mail an
+        /// address the caller picks and hand out attempts at a token; and how
+        /// often one account may export its data, since each export reads
+        /// every file the account uploaded.
         /// </summary>
         public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services, IConfiguration configuration)
         {
@@ -146,17 +148,11 @@
 
             services.AddRateLimiter(options =>
             {
-                options.AddPolicy<string>(PasswordResetPolicy, context =>
-                    RateLimitPartition.GetFixedWindowLimiter(
-                        // Callers sharing an address share a window. Counting
-                        // them all as one instead would let a single caller
-                        // spend everybody's attempts.
-                        context.Connection.RemoteIpAddress?.ToString() ?? UnknownClient,
-                        _ => new FixedWindowRateLimiterOptions
-                        {
-                            PermitLimit = rateLimitSettings.PasswordResetPermitLimit,
-                            Window = TimeSpan.FromMinutes(rateLimitSettings.PasswordResetWindowMinutes)
-                        }));
+                options.AddPolicy<string>(LoginPolicy, context => LimitPerAddress(
+                    context, rateLimitSettings.LoginPermitLimit, rateLimitSettings.LoginWindowMinutes));
+
+                options.AddPolicy<string>(PasswordResetPolicy, context => LimitPerAddress(
+                    context, rateLimitSettings.PasswordResetPermitLimit, rateLimitSettings.PasswordResetWindowMinutes));
 
                 // Counted per account rather than per address, as only a
                 // signed-in user can export, and people sharing an address
@@ -183,6 +179,17 @@
 
             return services;
         }
+
+        // Callers sharing an address share a window. Counting them all as one
+        // instead would let a single caller spend everybody's attempts.
+        private static RateLimitPartition<string> LimitPerAddress(HttpContext context, int permitLimit, int windowMinutes) =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? UnknownClient,
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = TimeSpan.FromMinutes(windowMinutes)
+                });
 
         public static IServiceCollection AddApplicationCors(this IServiceCollection services, IConfiguration configuration)
         {

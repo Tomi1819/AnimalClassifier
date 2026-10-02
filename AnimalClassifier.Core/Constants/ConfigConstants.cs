@@ -12,6 +12,7 @@
         public const string CorsAllowedOrigins = "Cors:AllowedOrigins";
         public const string CorsPolicy = "CorsPolicy";
         public const string RateLimiting = "RateLimiting";
+        public const string LoginPolicy = "LoginPolicy";
         public const string PasswordResetPolicy = "PasswordResetPolicy";
         public const string DataExportPolicy = "DataExportPolicy";
         public const string AdminEmail = "Admin:Email";

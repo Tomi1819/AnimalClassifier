@@ -3,6 +3,16 @@
     public class RateLimitSettings
     {
         /// <summary>
+        /// How many sign-in attempts one address may make per window, right
+        /// or wrong. Wrong passwords already lock the account they are tried
+        /// on; this is what slows one address trying a few on every account,
+        /// or locking the same account again and again.
+        /// </summary>
+        public int LoginPermitLimit { get; set; } = 10;
+
+        public int LoginWindowMinutes { get; set; } = 15;
+
+        /// <summary>
         /// How many password reset requests one caller may make per window.
         /// Asking for a link and using it share the allowance, so it has to
         /// cover a user who needs a second link and then a few attempts at a
