@@ -13,6 +13,17 @@
         public int LoginWindowMinutes { get; set; } = 15;
 
         /// <summary>
+        /// How many times one account's password may be checked from inside
+        /// a session per window, right or wrong: before a password change, a
+        /// new passkey, or the account being deleted. It has to leave room
+        /// for a few typos and a passkey prompt cancelled a few times, and
+        /// still be far too few to guess with.
+        /// </summary>
+        public int PasswordConfirmationPermitLimit { get; set; } = 10;
+
+        public int PasswordConfirmationWindowMinutes { get; set; } = 15;
+
+        /// <summary>
         /// How many password reset requests one caller may make per window.
         /// Asking for a link and using it share the allowance, so it has to
         /// cover a user who needs a second link and then a few attempts at a

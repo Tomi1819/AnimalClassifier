@@ -203,34 +203,80 @@ namespace AnimalClassifier.Tests
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
         }
 
-        [Fact]
-        public async Task ChangePassword_WithWrongCurrentPasswords_LocksTheAccount()
-        {
-            var account = await RegisterAsync();
-            var client = await SignInAsync(account.Email, Password);
-
-            await GuessUntilLockedOutAsync(client);
-
-            var response = await LogInAsync(account.Email, Password);
-
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-            Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
-        }
-
-        // Otherwise the lockout would stop nothing: guessing would carry on
+        // Otherwise the limit would stop nothing: guessing would carry on
         // here until the right password got through.
         [Fact]
-        public async Task ChangePassword_WhileLocked_RefusesEvenTheRightPassword()
+        public async Task ChangePassword_BeyondTheAttemptLimit_RefusesEvenTheRightPassword()
         {
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
 
-            await GuessUntilLockedOutAsync(client);
+            await UseUpPasswordAttemptsAsync(client);
 
             var response = await ChangePasswordAsync(client, Password, NewPassword);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
+            Assert.Contains(TooManyPasswordAttempts, await response.Content.ReadAsStringAsync());
+        }
+
+        // Guesses made inside a session are held back by a limit of their
+        // own. Counting them towards a lockout as well would let whoever
+        // holds a session keep its owner from signing in.
+        [Fact]
+        public async Task ChangePassword_WithWrongCurrentPasswords_LeavesSigningInAlone()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            await UseUpPasswordAttemptsAsync(client);
+
+            Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
+        }
+
+        // Anyone can lock an account out from outside by getting its password
+        // wrong, which must not keep a signed-in owner from changing it.
+        [Fact]
+        public async Task ChangePassword_WhileSigningInIsLockedOut_StillChangesIt()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+            await LockOutSigningInAsync(account.Email);
+
+            var response = await ChangePasswordAsync(client, Password, NewPassword);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        // The limit belongs to the account rather than to one kind of
+        // change, or each would hand out a fresh set of guesses.
+        [Fact]
+        public async Task DeleteAccount_AfterTheAttemptsWereSpentChangingThePassword_IsRefused()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            await UseUpPasswordAttemptsAsync(client);
+
+            var response = await DeleteAccountAsync(client, Password);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(TooManyPasswordAttempts, await response.Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
+        }
+
+        // Each account has its own, so one being guessed at costs nobody
+        // else their changes.
+        [Fact]
+        public async Task ChangePassword_AfterAnotherAccountSpentItsAttempts_StillChangesIt()
+        {
+            var other = await RegisterAsync();
+            await UseUpPasswordAttemptsAsync(await SignInAsync(other.Email, Password));
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await ChangePasswordAsync(client, Password, NewPassword);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         // The password has just been confirmed, which makes this as good as
@@ -572,6 +618,18 @@ namespace AnimalClassifier.Tests
         }
 
         [Fact]
+        public async Task DeleteAccount_WhileSigningInIsLockedOut_StillDeletesIt()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+            await LockOutSigningInAsync(account.Email);
+
+            var response = await DeleteAccountAsync(client, Password);
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        [Fact]
         public async Task DeleteAccount_ForAnAdministrator_IsRefused()
         {
             var account = await RegisterAsync();
@@ -666,15 +724,30 @@ namespace AnimalClassifier.Tests
             Assert.All(entries, e => Assert.Equal(DeletedUser, e.UserEmail));
         }
 
-        private async Task GuessUntilLockedOutAsync(HttpClient client)
+        private async Task UseUpPasswordAttemptsAsync(HttpClient client)
+        {
+            var permitLimit = factory.Services
+                .GetRequiredService<IOptions<RateLimitSettings>>().Value.PasswordConfirmationPermitLimit;
+
+            for (var attempt = 0; attempt < permitLimit; attempt++)
+            {
+                await ChangePasswordAsync(client, WrongPassword, NewPassword);
+            }
+        }
+
+        // The way anyone could from outside: by getting the password wrong
+        // until signing in is refused.
+        private async Task LockOutSigningInAsync(string email)
         {
             var maxFailedAccessAttempts = factory.Services
                 .GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
 
             for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
             {
-                await ChangePasswordAsync(client, WrongPassword, NewPassword);
+                await LogInAsync(email, WrongPassword);
             }
+
+            Assert.Contains(LockedOutAccount, await (await LogInAsync(email, Password)).Content.ReadAsStringAsync());
         }
 
         private static Task<HttpResponseMessage> ChangeNameAsync(HttpClient client, string fullName) =>

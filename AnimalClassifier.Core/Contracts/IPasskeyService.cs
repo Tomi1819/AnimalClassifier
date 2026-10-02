@@ -18,14 +18,14 @@ namespace AnimalClassifier.Core.Contracts
         /// Options for registering a passkey, once the account's password has
         /// been confirmed. A passkey is a way in that outlasts the session
         /// asking for it, and a password change leaves it in place, so holding
-        /// a session is not enough to add one. A wrong password counts towards
-        /// locking the account, the same as a failed sign-in.
+        /// a session is not enough to add one. The password may be checked
+        /// only so often; see <see cref="IPasswordConfirmer"/>.
         ///
         /// The state the options come with is what registering then requires,
         /// so the passkey itself cannot be added without getting past this.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// When the password is wrong or the account is locked.
+        /// When the password is wrong or has been checked too often.
         /// </exception>
         Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request, HttpContext httpContext);
 

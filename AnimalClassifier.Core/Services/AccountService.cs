@@ -56,7 +56,7 @@ namespace AnimalClassifier.Core.Services
             var user = await FindUserAsync(userId);
 
             // Checked apart from the change itself, which would only report a
-            // mismatch, so that a wrong guess is counted towards a lockout.
+            // mismatch, so that the guess is counted.
             await passwordConfirmer.ConfirmAsync(user, request.CurrentPassword);
 
             // Only once the current password is confirmed, so the answer says
@@ -87,7 +87,7 @@ namespace AnimalClassifier.Core.Services
             var user = await FindUserAsync(userId);
 
             // Checked before the password, so a request that would be refused
-            // anyway does not count towards a lockout.
+            // anyway does not use up one of its checks.
             if (await userManager.IsInRoleAsync(user, Admin))
             {
                 throw new InvalidOperationException(AdministratorAccountDeletion);

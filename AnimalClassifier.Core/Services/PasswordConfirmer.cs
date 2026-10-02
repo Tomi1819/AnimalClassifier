@@ -7,23 +7,29 @@ namespace AnimalClassifier.Core.Services
 
     public class PasswordConfirmer : IPasswordConfirmer
     {
-        private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly IPasswordConfirmationLimiter limiter;
 
-        public PasswordConfirmer(SignInManager<ApplicationUser> signInManager)
+        public PasswordConfirmer(UserManager<ApplicationUser> userManager, IPasswordConfirmationLimiter limiter)
         {
-            this.signInManager = signInManager;
+            this.userManager = userManager;
+            this.limiter = limiter;
         }
 
         public async Task ConfirmAsync(ApplicationUser user, string password)
         {
-            var result = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
-
-            if (result.IsLockedOut)
+            // Counted before the password is looked at, right or wrong, so
+            // that requests sent side by side cannot slip extra guesses past
+            // the limit.
+            if (!limiter.TryAcquire(user.Id))
             {
-                throw new InvalidOperationException(LockedOutAccount);
+                throw new InvalidOperationException(TooManyPasswordAttempts);
             }
 
-            if (!result.Succeeded)
+            // The password alone, rather than the check signing in makes,
+            // which would refuse an account that is locked out and count a
+            // wrong guess towards locking it.
+            if (!await userManager.CheckPasswordAsync(user, password))
             {
                 throw new InvalidOperationException(IncorrectCurrentPassword);
             }

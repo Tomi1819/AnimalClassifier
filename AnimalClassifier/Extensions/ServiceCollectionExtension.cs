@@ -141,11 +141,21 @@
         /// address the caller picks and hand out attempts at a token; and how
         /// often one account may export its data, since each export reads
         /// every file the account uploaded.
+        ///
+        /// How often an account's password may be confirmed from inside a
+        /// session is capped as well, by the service that confirms it rather
+        /// than by an endpoint, so that nothing asking for the password can
+        /// leave the cap out.
         /// </summary>
         public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services, IConfiguration configuration)
         {
             var rateLimitSettings = configuration.GetSection(RateLimiting).Get<RateLimitSettings>()
                 ?? new RateLimitSettings();
+
+            // Kept for as long as the app runs, since it is what remembers
+            // the checks already made.
+            services.Configure<RateLimitSettings>(configuration.GetSection(RateLimiting));
+            services.AddSingleton<IPasswordConfirmationLimiter, PasswordConfirmationLimiter>();
 
             services.AddRateLimiter(options =>
             {
