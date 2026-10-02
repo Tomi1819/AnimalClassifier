@@ -30,7 +30,7 @@ namespace AnimalClassifier.Controllers
 
         [HttpPost("login")]
         [EnableRateLimiting(LoginPolicy)]
-        public async Task<IActionResult> Login([FromBody] LogInRequest request) =>
+        public async Task<IActionResult> Login([FromBody] LoginRequest request) =>
             Ok(await authService.LoginAsync(request));
 
         /// <summary>

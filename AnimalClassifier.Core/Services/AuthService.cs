@@ -53,7 +53,7 @@ namespace AnimalClassifier.Core.Services
             };
         }
 
-        public async Task<LoginResponse> LoginAsync(LogInRequest request)
+        public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)

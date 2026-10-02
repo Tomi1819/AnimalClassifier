@@ -93,7 +93,7 @@
 
             var account = await RegisterAsync();
             var client = limited.CreateClient();
-            var request = new LogInRequest { Email = account.Email, Password = Password };
+            var request = new LoginRequest { Email = account.Email, Password = Password };
 
             var allowed = await client.PostAsJsonAsync(LoginPath, request);
             var refused = await client.PostAsJsonAsync(LoginPath, request);
@@ -112,7 +112,7 @@
 
             var account = await RegisterAsync();
             var client = limited.CreateClient();
-            var wrongGuess = new LogInRequest { Email = account.Email, Password = "not-the-password" };
+            var wrongGuess = new LoginRequest { Email = account.Email, Password = "not-the-password" };
 
             for (var attempt = 0; attempt < 10; attempt++)
             {
@@ -286,7 +286,7 @@
             });
 
         private Task<HttpResponseMessage> LogInAsync(string email, string password) =>
-            factory.CreateClient().PostAsJsonAsync(LoginPath, new LogInRequest
+            factory.CreateClient().PostAsJsonAsync(LoginPath, new LoginRequest
             {
                 Email = email,
                 Password = password
