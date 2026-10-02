@@ -40,11 +40,11 @@ namespace AnimalClassifier.Core.Services
         }
 
         public async Task<AccountProfile> GetProfileAsync(string userId) =>
-            ToProfile(await FindUserAsync(userId));
+            ToProfile(await userManager.GetByIdAsync(userId));
 
         public async Task<AccountProfile> ChangeNameAsync(string userId, ChangeNameRequest request)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
 
             user.FullName = TidyFullName(request.FullName);
             (await userManager.UpdateAsync(user)).ThrowIfFailed();
@@ -54,7 +54,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task<LoginResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
 
             // Checked apart from the change itself, which would only report a
             // mismatch, so that the guess is counted.
@@ -75,7 +75,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task<LoginResponse> SignOutOtherSessionsAsync(string userId, DateTime sessionExpiration)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
 
             (await userManager.UpdateSecurityStampAsync(user)).ThrowIfFailed();
             await securityAlertSender.OtherSessionsSignedOutAsync(user);
@@ -85,7 +85,7 @@ namespace AnimalClassifier.Core.Services
 
         public async Task DeleteAccountAsync(string userId, DeleteAccountRequest request)
         {
-            var user = await FindUserAsync(userId);
+            var user = await userManager.GetByIdAsync(userId);
 
             // Checked before the password, so a request that would be refused
             // anyway does not use up one of its checks.
@@ -124,9 +124,6 @@ namespace AnimalClassifier.Core.Services
                 logger.LogError(exception, "Could not delete the uploaded files of deleted user {UserId}.", userId);
             }
         }
-
-        private async Task<ApplicationUser> FindUserAsync(string userId) =>
-            await userManager.FindByIdAsync(userId) ?? throw new NotFoundException(UserNotFound);
 
         // Unlike at registration, the letters are left as typed; only the
         // spacing around and between the words is tidied.
