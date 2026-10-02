@@ -27,9 +27,13 @@ namespace AnimalClassifier.Controllers
         public Task<IActionResult> GetPasskeys() =>
             RunAsync(async () => Ok(await passkeyService.GetPasskeysAsync(User.Id()!)));
 
+        /// <summary>
+        /// Takes the account's password, since a passkey outlasts the session
+        /// that adds it.
+        /// </summary>
         [HttpPost("options")]
-        public Task<IActionResult> CreateOptions() =>
-            RunAsync(async () => Ok(await passkeyService.CreateRegistrationOptionsAsync(User.Id()!, HttpContext)));
+        public Task<IActionResult> CreateOptions([FromBody] PasskeyRegistrationOptionsRequest request) =>
+            RunAsync(async () => Ok(await passkeyService.CreateRegistrationOptionsAsync(User.Id()!, request, HttpContext)));
 
         [HttpPost]
         public Task<IActionResult> Register([FromBody] PasskeyRegistrationRequest request) =>

@@ -17,25 +17,30 @@ namespace AnimalClassifier.Core.Services
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IPasskeyHandler<ApplicationUser> passkeyHandler;
         private readonly IPasskeyStateProtector stateProtector;
+        private readonly IPasswordConfirmer passwordConfirmer;
         private readonly IAccessTokenIssuer tokenIssuer;
         private readonly ISecurityAlertSender securityAlertSender;
 
         public PasskeyService(UserManager<ApplicationUser> userManager,
                               IPasskeyHandler<ApplicationUser> passkeyHandler,
                               IPasskeyStateProtector stateProtector,
+                              IPasswordConfirmer passwordConfirmer,
                               IAccessTokenIssuer tokenIssuer,
                               ISecurityAlertSender securityAlertSender)
         {
             this.userManager = userManager;
             this.passkeyHandler = passkeyHandler;
             this.stateProtector = stateProtector;
+            this.passwordConfirmer = passwordConfirmer;
             this.tokenIssuer = tokenIssuer;
             this.securityAlertSender = securityAlertSender;
         }
 
-        public async Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, HttpContext httpContext)
+        public async Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request, HttpContext httpContext)
         {
             var user = await FindUserAsync(userId);
+
+            await passwordConfirmer.ConfirmAsync(user, request.Password);
 
             var options = await passkeyHandler.MakeCreationOptionsAsync(new PasskeyUserEntity
             {
