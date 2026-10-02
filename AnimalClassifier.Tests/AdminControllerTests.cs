@@ -11,7 +11,7 @@
 
     public class AdminControllerTests : IClassFixture<ApiFactory>
     {
-        private const string Password = "secret1";
+        private const string Password = "secret-one";
         private const string UsersPath = "/api/admin/users";
 
         private readonly ApiFactory factory;

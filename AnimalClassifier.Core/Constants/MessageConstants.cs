@@ -7,6 +7,7 @@
         public const string InvalidCredentials = "Invalid email or password.";
         public const string LockedOutAccount = "This account is locked.";
         public const string UnknownUser = "Unknown user";
+        public const string PasswordIsEmail = "The password cannot be your email address.";
         public const string Space = " ";
 
         //AdminService
@@ -21,6 +22,7 @@
 
         //AccountService
         public const string IncorrectCurrentPassword = "The current password is incorrect.";
+        public const string UnchangedPassword = "The new password has to be different from the current one.";
         public const string EmptyFullName = "Please enter a name.";
         public const string FullNameTooLong = "The name can be at most {0} characters long.";
         public const string AdministratorAccountDeletion ="Administrators cannot delete their account. Another administrator has to revoke the role first.";

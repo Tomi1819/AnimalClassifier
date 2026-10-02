@@ -10,7 +10,7 @@
 
     public class StatisticsControllerTests : IClassFixture<ApiFactory>
     {
-        private const string Password = "secret1";
+        private const string Password = "secret-one";
         private const string ActivityPath = "/api/statistics/activity";
         private const int Days = 7;
 
