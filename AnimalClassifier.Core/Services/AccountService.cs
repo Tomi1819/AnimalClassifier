@@ -4,13 +4,13 @@ namespace AnimalClassifier.Core.Services
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
+    using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Logging;
     using static Constants.MessageConstants;
     using static Constants.RoleConstants;
-    using static Constants.ValidationConstants;
 
     public class AccountService : IAccountService
     {
@@ -129,20 +129,14 @@ namespace AnimalClassifier.Core.Services
         // spacing around and between the words is tidied.
         private static string TidyFullName(string fullName)
         {
-            var words = fullName.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-            var tidied = string.Join(Space, words);
+            var name = AccountName.Tidy(fullName);
 
-            if (tidied.Length == 0)
+            if (name.Length == 0)
             {
                 throw new RequestRefusedException(EmptyFullName);
             }
 
-            if (tidied.Length > FullNameMaxLength)
-            {
-                throw new RequestRefusedException(string.Format(FullNameTooLong, FullNameMaxLength));
-            }
-
-            return tidied;
+            return name;
         }
 
         private static AccountProfile ToProfile(ApplicationUser user) => new()

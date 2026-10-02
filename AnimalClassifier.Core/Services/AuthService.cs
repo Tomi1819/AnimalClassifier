@@ -11,7 +11,6 @@ namespace AnimalClassifier.Core.Services
     using System.Threading.Tasks;
     using static Constants.RoleConstants;
     using static Constants.MessageConstants;
-    using static Constants.ValidationConstants;
 
     public class AuthService : IAuthService
     {
@@ -35,11 +34,9 @@ namespace AnimalClassifier.Core.Services
                 throw new RequestRefusedException(AlreadyRegisteredEmail);
             }
 
-            string processedFullName = ProcessFullName(request.FullName);
-
             var user = new ApplicationUser
             {
-                FullName = processedFullName,
+                FullName = NameAtRegistration(request.FullName),
                 UserName = request.Email,
                 Email = request.Email,
                 DateRegistered = DateTime.UtcNow
@@ -90,25 +87,13 @@ namespace AnimalClassifier.Core.Services
                     == SecurityStampClaim.From(await userManager.GetSecurityStampAsync(user));
         }
 
-        private string ProcessFullName(string fullName)
+        // Capitalised here and nowhere else: a name changed later keeps its
+        // letters as typed.
+        private static string NameAtRegistration(string fullName)
         {
-            if (string.IsNullOrWhiteSpace(fullName))
-            {
-                return UnknownUser;
-            }
+            var name = AccountName.Tidy(fullName);
 
-            var words = fullName.Split(Space, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(word => char.ToUpper(word[0]) + word.Substring(1).ToLower());
-            var processed = string.Join(Space, words);
-
-            // The same limit as changing the name later, so that an account
-            // can always save the name it already has.
-            if (processed.Length > FullNameMaxLength)
-            {
-                throw new RequestRefusedException(string.Format(FullNameTooLong, FullNameMaxLength));
-            }
-
-            return processed;
+            return name.Length == 0 ? UnknownUser : AccountName.Capitalise(name);
         }
     }
 }
