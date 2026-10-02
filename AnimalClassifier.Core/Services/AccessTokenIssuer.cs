@@ -10,7 +10,6 @@ namespace AnimalClassifier.Core.Services
     using Microsoft.IdentityModel.Tokens;
     using System.IdentityModel.Tokens.Jwt;
     using System.Security.Claims;
-    using System.Text;
 
     public class AccessTokenIssuer : IAccessTokenIssuer
     {
@@ -49,9 +48,7 @@ namespace AnimalClassifier.Core.Services
                 audience: jwtSettings.Audience,
                 expires: expiration,
                 claims: claims,
-                signingCredentials: new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-                    SecurityAlgorithms.HmacSha256));
+                signingCredentials: new SigningCredentials(jwtSettings.CreateSigningKey(), SecurityAlgorithms.HmacSha256));
 
             return new LoginResponse
             {

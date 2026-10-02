@@ -19,7 +19,6 @@
     using Microsoft.IdentityModel.Tokens;
     using Microsoft.ML;
     using System;
-    using System.Text;
     using System.Threading.RateLimiting;
     using static Core.Constants.ConfigConstants;
     using static Core.Constants.SecurityConstants;
@@ -309,7 +308,7 @@
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = jwtSettings.Issuer,
                         ValidAudience = jwtSettings.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
+                        IssuerSigningKey = jwtSettings.CreateSigningKey()
                     };
 
                     // A signed token would otherwise stay valid until it expires, so a
