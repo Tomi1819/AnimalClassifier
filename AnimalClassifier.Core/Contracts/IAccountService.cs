@@ -47,9 +47,13 @@ namespace AnimalClassifier.Core.Contracts
         /// which every token is checked against. That includes tokens nobody
         /// can sign out any other way, such as one copied off a device. The
         /// caller's own session is issued afresh, so only the others end.
+        ///
+        /// No password is asked for, so the new token runs out when the
+        /// caller's old one would have, rather than starting a full lifetime.
         /// </summary>
+        /// <param name="sessionExpiration">When the caller's token runs out.</param>
         /// <returns>The token the caller's session continues with.</returns>
-        Task<LoginResponse> SignOutOtherSessionsAsync(string userId);
+        Task<LoginResponse> SignOutOtherSessionsAsync(string userId, DateTime sessionExpiration);
 
         /// <summary>
         /// Deletes the account once its password has been confirmed, along with

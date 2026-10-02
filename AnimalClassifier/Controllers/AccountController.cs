@@ -46,11 +46,12 @@ namespace AnimalClassifier.Controllers
 
         /// <summary>
         /// Answers with a new token for the same reason: the caller's session
-        /// ends along with the others, and carries on with this one.
+        /// ends along with the others, and carries on with this one. It runs
+        /// out when the caller's old token would have.
         /// </summary>
         [HttpPost("sign-out-other-sessions")]
         public Task<IActionResult> SignOutOtherSessions() =>
-            RunAsync(async () => Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!)));
+            RunAsync(async () => Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!, User.TokenExpiration())));
 
         /// <summary>
         /// Answers with a ZIP archive of everything the account holds, for its

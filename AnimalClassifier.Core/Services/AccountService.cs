@@ -65,14 +65,14 @@ namespace AnimalClassifier.Core.Services
             return await tokenIssuer.IssueAsync(user);
         }
 
-        public async Task<LoginResponse> SignOutOtherSessionsAsync(string userId)
+        public async Task<LoginResponse> SignOutOtherSessionsAsync(string userId, DateTime sessionExpiration)
         {
             var user = await FindUserAsync(userId);
 
             (await userManager.UpdateSecurityStampAsync(user)).ThrowIfFailed();
             await securityAlertSender.OtherSessionsSignedOutAsync(user);
 
-            return await tokenIssuer.IssueAsync(user);
+            return await tokenIssuer.ReissueAsync(user, sessionExpiration);
         }
 
         public async Task DeleteAccountAsync(string userId, DeleteAccountRequest request)
