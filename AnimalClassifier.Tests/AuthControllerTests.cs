@@ -4,27 +4,23 @@
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
-    using System.Net.Http.Headers;
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.ValidationConstants;
     using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
 
-    public class AuthControllerTests : IClassFixture<ApiFactory>
+    public class AuthControllerTests : ApiTest
     {
-        private const string Password = "secret-one";
         private const string NewPassword = "secret-two";
         private const string LoginPath = "/api/auth/login";
         private const string ForgotPasswordPath = "/api/auth/forgot-password";
         private const string ResetPasswordPath = "/api/auth/reset-password";
         private const string HistoryPath = "/api/upload/history";
 
-        private readonly ApiFactory factory;
-
         public AuthControllerTests(ApiFactory factory)
+            : base(factory)
         {
-            this.factory = factory;
         }
 
         // Unlike a later change of name, which keeps the letters as typed.
@@ -88,7 +84,7 @@
         [Fact]
         public async Task Login_BeyondTheLimit_IsRefused()
         {
-            using var limited = factory.WithWebHostBuilder(builder =>
+            using var limited = Factory.WithWebHostBuilder(builder =>
                 builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1"));
 
             var account = await RegisterAsync();
@@ -107,7 +103,7 @@
         [Fact]
         public async Task Login_BeyondTheLimit_DoesNotCountTowardsALockout()
         {
-            using var limited = factory.WithWebHostBuilder(builder =>
+            using var limited = Factory.WithWebHostBuilder(builder =>
                 builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1"));
 
             var account = await RegisterAsync();
@@ -131,7 +127,7 @@
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-            var link = factory.Emails.LinkSentTo(account.Email);
+            var link = Factory.Emails.LinkSentTo(account.Email);
             Assert.NotNull(link);
 
             var query = QueryHelpers.ParseQuery(new Uri(link).Query);
@@ -147,7 +143,7 @@
             var response = await ForgotPasswordAsync(unknown);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.False(factory.Emails.AnySentTo(unknown));
+            Assert.False(Factory.Emails.AnySentTo(unknown));
         }
 
         [Fact]
@@ -165,7 +161,7 @@
         [Fact]
         public async Task ForgotPassword_BeyondTheLimit_IsRefused()
         {
-            using var limited = factory.WithWebHostBuilder(builder =>
+            using var limited = Factory.WithWebHostBuilder(builder =>
                 builder.UseSetting($"{RateLimiting}:PasswordResetPermitLimit", "1"));
 
             var client = limited.CreateClient();
@@ -212,7 +208,7 @@
 
             (await ResetPasswordAsync(account.Email, token, NewPassword)).EnsureSuccessStatusCode();
 
-            Assert.Contains(PasswordChangedSubject, factory.Emails.SubjectsSentTo(account.Email));
+            Assert.Contains(PasswordChangedSubject, Factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]
@@ -271,66 +267,24 @@
         {
             (await ForgotPasswordAsync(email)).EnsureSuccessStatusCode();
 
-            var link = factory.Emails.LinkSentTo(email);
+            var link = Factory.Emails.LinkSentTo(email);
             Assert.NotNull(link);
 
             return QueryHelpers.ParseQuery(new Uri(link).Query)["token"].ToString();
         }
 
         private Task<HttpResponseMessage> ResetPasswordAsync(string email, string token, string newPassword) =>
-            factory.CreateClient().PostAsJsonAsync(ResetPasswordPath, new ResetPasswordRequest
+            Factory.CreateClient().PostAsJsonAsync(ResetPasswordPath, new ResetPasswordRequest
             {
                 Email = email,
                 Token = token,
                 NewPassword = newPassword
             });
 
-        private Task<HttpResponseMessage> LogInAsync(string email, string password) =>
-            factory.CreateClient().PostAsJsonAsync(LoginPath, new LoginRequest
-            {
-                Email = email,
-                Password = password
-            });
-
-        private async Task<HttpClient> SignInAsync(string email, string password)
-        {
-            var response = await LogInAsync(email, password);
-            response.EnsureSuccessStatusCode();
-            var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-
-            var client = factory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.Token);
-
-            return client;
-        }
-
         private Task<HttpResponseMessage> ForgotPasswordAsync(string email) =>
-            factory.CreateClient().PostAsJsonAsync(ForgotPasswordPath, new ForgotPasswordRequest { Email = email });
-
-        private async Task<RegisterResponse> RegisterAsync()
-        {
-            var response = await RegisterAsync(UniqueEmail(), Password);
-            response.EnsureSuccessStatusCode();
-
-            return (await response.Content.ReadFromJsonAsync<RegisterResponse>())!;
-        }
-
-        private Task<HttpResponseMessage> RegisterAsync(string email, string password) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = "Test User",
-                Email = email,
-                Password = password
-            });
+            Factory.CreateClient().PostAsJsonAsync(ForgotPasswordPath, new ForgotPasswordRequest { Email = email });
 
         private Task<HttpResponseMessage> RegisterWithNameAsync(string fullName) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = fullName,
-                Email = UniqueEmail(),
-                Password = Password
-            });
-
-        private static string UniqueEmail() => $"{Guid.NewGuid():N}@example.test";
+            RegisterAsync(UniqueEmail(), Password, fullName);
     }
 }

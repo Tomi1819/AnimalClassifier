@@ -5,12 +5,10 @@
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.Extensions.DependencyInjection;
     using System.Net;
-    using System.Net.Http.Headers;
     using System.Net.Http.Json;
 
-    public class StatisticsControllerTests : IClassFixture<ApiFactory>
+    public class StatisticsControllerTests : ApiTest
     {
-        private const string Password = "secret-one";
         private const string ActivityPath = "/api/statistics/activity";
         private const int Days = 7;
 
@@ -18,17 +16,15 @@
         // UTC day falls on the next day there.
         private const string TokyoTimeZone = "Asia/Tokyo";
 
-        private readonly ApiFactory factory;
-
         public StatisticsControllerTests(ApiFactory factory)
+            : base(factory)
         {
-            this.factory = factory;
         }
 
         [Fact]
         public async Task GetActivity_WithoutToken_ReturnsUnauthorized()
         {
-            var response = await factory.CreateClient().GetAsync(ActivityPath);
+            var response = await Factory.CreateClient().GetAsync(ActivityPath);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -110,7 +106,7 @@
 
         private async Task AddRecognitionLogAsync(string userId, DateTime dateRecognized)
         {
-            using var scope = factory.Services.CreateScope();
+            using var scope = Factory.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
 
             context.AnimalRecognitionLogs.Add(new AnimalRecognitionLog
@@ -121,30 +117,6 @@
                 UserId = userId
             });
             await context.SaveChangesAsync();
-        }
-
-        private async Task<RegisterResponse> RegisterAsync()
-        {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = "Test User",
-                Email = $"{Guid.NewGuid():N}@example.test",
-                Password = Password
-            });
-            response.EnsureSuccessStatusCode();
-
-            return (await response.Content.ReadFromJsonAsync<RegisterResponse>())!;
-        }
-
-        private async Task<HttpClient> SignInAsync(string email)
-        {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest { Email = email, Password = Password });
-            response.EnsureSuccessStatusCode();
-            var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-
-            var client = factory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.Token);
-            return client;
         }
     }
 }
