@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Services
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;
@@ -71,7 +72,7 @@ namespace AnimalClassifier.Core.Services
             // agree, having nothing to compare against, so it is checked here.
             if (!result.Succeeded || result.UserEntity.Id != user.Id)
             {
-                throw new InvalidOperationException(RejectedPasskey);
+                throw new RequestRefusedException(RejectedPasskey);
             }
 
             var passkey = result.Passkey;
@@ -105,7 +106,7 @@ namespace AnimalClassifier.Core.Services
 
             if (!result.Succeeded)
             {
-                throw new UnauthorizedAccessException(InvalidPasskey);
+                throw new AuthenticationFailedException(InvalidPasskey);
             }
 
             var user = result.User;
@@ -115,7 +116,7 @@ namespace AnimalClassifier.Core.Services
             // watch them sign straight back in.
             if (await userManager.IsLockedOutAsync(user))
             {
-                throw new UnauthorizedAccessException(LockedOutAccount);
+                throw new AuthenticationFailedException(LockedOutAccount);
             }
 
             // The counter moves on with every use, and storing it is what lets
@@ -143,14 +144,14 @@ namespace AnimalClassifier.Core.Services
             // Scoped to the owner, so that knowing an id is not enough to take
             // somebody else's passkey away from them.
             var passkey = await userManager.GetPasskeyAsync(user, credentialId)
-                ?? throw new KeyNotFoundException(PasskeyNotFound);
+                ?? throw new NotFoundException(PasskeyNotFound);
 
             (await userManager.RemovePasskeyAsync(user, credentialId)).ThrowIfFailed();
             await securityAlertSender.PasskeyRemovedAsync(user, passkey.Name ?? UnnamedPasskey);
         }
 
         private async Task<ApplicationUser> FindUserAsync(string userId) =>
-            await userManager.FindByIdAsync(userId) ?? throw new KeyNotFoundException(UserNotFound);
+            await userManager.FindByIdAsync(userId) ?? throw new NotFoundException(UserNotFound);
 
         // Identity leaves room for a ceremony that needs nothing remembered,
         // which these two are not. Carrying an empty state rather than
@@ -172,7 +173,7 @@ namespace AnimalClassifier.Core.Services
             };
 
         private static string ReadCredential(PasskeyCredentialRequest request) =>
-            request.Credential?.ToJsonString() ?? throw new InvalidOperationException(RejectedPasskey);
+            request.Credential?.ToJsonString() ?? throw new RequestRefusedException(RejectedPasskey);
 
         private static byte[] DecodeId(string passkeyId)
         {
@@ -183,7 +184,7 @@ namespace AnimalClassifier.Core.Services
             catch (FormatException)
             {
                 // Never an id this server handed out, so there is nothing to find.
-                throw new KeyNotFoundException(PasskeyNotFound);
+                throw new NotFoundException(PasskeyNotFound);
             }
         }
     }

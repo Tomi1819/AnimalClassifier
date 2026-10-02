@@ -184,7 +184,7 @@
                     context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
                     await context.HttpContext.Response.WriteAsJsonAsync(
-                        new { message = TooManyRequests }, cancellationToken);
+                        new MessageResponse { Message = TooManyRequests }, cancellationToken);
                 };
             });
 

@@ -1,5 +1,7 @@
 namespace AnimalClassifier.Core.Contracts
 {
+    using AnimalClassifier.Core.Exceptions;
+
     /// <summary>
     /// Carries the state of a passkey ceremony across the two requests it
     /// spans: one to hand the browser its options, another to take back what
@@ -37,7 +39,7 @@ namespace AnimalClassifier.Core.Contracts
         /// <summary>
         /// Recovers a state this server issued for the same ceremony.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// The state was not issued here, was made for the other ceremony, was
         /// tampered with, or has expired. These are not told apart, because a
         /// caller can do nothing about any of them but start again.

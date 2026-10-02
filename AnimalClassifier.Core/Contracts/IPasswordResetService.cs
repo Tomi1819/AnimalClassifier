@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Contracts
 {
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
 
     public interface IPasswordResetService
     {
@@ -18,7 +19,7 @@
         /// ends every session opened with the old password and leaves the link
         /// itself spent.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// When the link cannot be used or the password fails the rules.
         /// </exception>
         Task ResetPasswordAsync(ResetPasswordRequest request);

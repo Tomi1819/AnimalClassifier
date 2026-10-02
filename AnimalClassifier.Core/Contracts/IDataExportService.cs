@@ -1,5 +1,7 @@
 namespace AnimalClassifier.Core.Contracts
 {
+    using AnimalClassifier.Core.Exceptions;
+
     /// <summary>
     /// A copy of everything an account holds, for its owner to keep.
     /// </summary>
@@ -18,7 +20,7 @@ namespace AnimalClassifier.Core.Contracts
         /// The archive, read from its start. It is kept in a temporary file,
         /// which is deleted once the stream is closed.
         /// </returns>
-        /// <exception cref="KeyNotFoundException">
+        /// <exception cref="NotFoundException">
         /// When the account does not exist.
         /// </exception>
         Task<Stream> ExportAsync(string userId);
