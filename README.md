@@ -44,6 +44,28 @@ cd AnimalClassifier
 dotnet user-secrets set "Admin:Email" "you@example.com"
 ```
 
+### Sign-in attempts
+
+Five wrong passwords in a row lock an account for five minutes, which is
+Identity's default. That guards the account they were tried on, but not against
+one address trying a few passwords on every account, or locking the same
+account again and again. `POST /api/auth/login` is therefore limited per
+address as well, and answers `429 Too Many Requests` beyond the limit. Signing
+in with a passkey is not limited, as there is nothing to guess.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `RateLimiting:LoginPermitLimit`, `RateLimiting:LoginWindowMinutes` | How many sign-in attempts one address may make per window, 10 every 15 minutes unless set. |
+
+The address is the one the connection comes from. Behind a reverse proxy that
+is the proxy's, and every caller would share one allowance, so forwarded headers
+have to be set up before the app is deployed that way. The same goes for the
+password reset limit below.
+
+The limit slows an address down rather than stopping it: one address can still
+lock an account for part of each window, and many addresses are not slowed at
+all.
+
 ### Passkeys
 
 A passkey signs a user in with their device instead of their password. Passwords
