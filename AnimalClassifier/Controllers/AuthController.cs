@@ -39,6 +39,7 @@
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting(LoginPolicy)]
         public async Task<IActionResult> Login([FromBody] LogInRequest request)
         {
             try

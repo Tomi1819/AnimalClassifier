@@ -53,7 +53,8 @@
 
             // Requests from a test carry no client address, so all of them
             // share one rate limiting window and the deployed limit would
-            // throttle the suite. The test that covers the limit sets its own.
+            // throttle the suite. The tests that cover the limits set their own.
+            builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1000");
             builder.UseSetting($"{RateLimiting}:PasswordResetPermitLimit", "1000");
 
             // Whatever the app sends is kept here rather than sent, which is
