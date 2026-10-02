@@ -27,15 +27,33 @@
             this.factory = factory;
         }
 
+        // Unlike a later change of name, which keeps the letters as typed.
+        [Fact]
+        public async Task Register_CapitalisesEachWordOfTheName()
+        {
+            var response = await RegisterWithNameAsync("  jane   mcDONALD ");
+            var account = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("Jane Mcdonald", account!.FullName);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("   ")]
+        public async Task Register_WithoutAName_GivesTheAccountOne(string blankName)
+        {
+            var response = await RegisterWithNameAsync(blankName);
+            var account = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(UnknownUser, account!.FullName);
+        }
+
         [Fact]
         public async Task Register_WithATooLongName_IsABadRequest()
         {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = new string('a', FullNameMaxLength + 1),
-                Email = UniqueEmail(),
-                Password = Password
-            });
+            var response = await RegisterWithNameAsync(new string('a', FullNameMaxLength + 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(string.Format(FullNameTooLong, FullNameMaxLength), await response.Content.ReadAsStringAsync());
@@ -303,6 +321,14 @@
                 FullName = "Test User",
                 Email = email,
                 Password = password
+            });
+
+        private Task<HttpResponseMessage> RegisterWithNameAsync(string fullName) =>
+            factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
+            {
+                FullName = fullName,
+                Email = UniqueEmail(),
+                Password = Password
             });
 
         private static string UniqueEmail() => $"{Guid.NewGuid():N}@example.test";
