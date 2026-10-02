@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Tests
 {
+    using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
@@ -68,15 +69,15 @@ namespace AnimalClassifier.Tests
         }
 
         // Otherwise a session left open could be used to guess the password
-        // here, where signing in would have stopped it.
+        // here, one wrong answer after another.
         [Fact]
-        public async Task Options_WithWrongPasswords_LockTheAccount()
+        public async Task Options_BeyondTheAttemptLimit_AreRefused()
         {
             var client = await SignInAsync(await RegisterAsync());
-            var maxFailedAccessAttempts = factory.Services
-                .GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
+            var permitLimit = factory.Services
+                .GetRequiredService<IOptions<RateLimitSettings>>().Value.PasswordConfirmationPermitLimit;
 
-            for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
+            for (var attempt = 0; attempt < permitLimit; attempt++)
             {
                 await PostOptionsAsync(client, WrongPassword);
             }
@@ -84,7 +85,32 @@ namespace AnimalClassifier.Tests
             var response = await PostOptionsAsync(client, Password);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
+            Assert.Contains(TooManyPasswordAttempts, await response.Content.ReadAsStringAsync());
+        }
+
+        // Anyone can lock an account out from outside by getting its password
+        // wrong, which must not keep a signed-in owner from adding a passkey:
+        // the way of signing in that a wrong password cannot touch.
+        [Fact]
+        public async Task Options_WhileSigningInIsLockedOut_AreStillGiven()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account);
+            var maxFailedAccessAttempts = factory.Services
+                .GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
+
+            for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
+            {
+                await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest
+                {
+                    Email = account.Email,
+                    Password = WrongPassword
+                });
+            }
+
+            var response = await PostOptionsAsync(client, Password);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         /// <summary>

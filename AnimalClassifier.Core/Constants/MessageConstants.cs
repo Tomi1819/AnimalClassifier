@@ -22,6 +22,7 @@
 
         //AccountService
         public const string IncorrectCurrentPassword = "The current password is incorrect.";
+        public const string TooManyPasswordAttempts = "Too many password attempts. Please wait a few minutes and try again.";
         public const string UnchangedPassword = "The new password has to be different from the current one.";
         public const string EmptyFullName = "Please enter a name.";
         public const string FullNameTooLong = "The name can be at most {0} characters long.";

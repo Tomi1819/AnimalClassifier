@@ -28,17 +28,17 @@ namespace AnimalClassifier.Core.Contracts
         Task<AccountProfile> ChangeNameAsync(string userId, ChangeNameRequest request);
 
         /// <summary>
-        /// Sets a new password once the current one has been confirmed. A wrong
-        /// current password counts towards locking the account, the same as a
-        /// failed sign-in, so a session left open cannot be used to guess it.
+        /// Sets a new password once the current one has been confirmed. The
+        /// account's password may be checked only so often, so a session left
+        /// open cannot be used to guess it; see <see cref="IPasswordConfirmer"/>.
         ///
         /// Succeeding changes the account's security stamp, which ends every
         /// other session, so the caller's own session is issued afresh.
         /// </summary>
         /// <returns>The token the caller's session continues with.</returns>
         /// <exception cref="InvalidOperationException">
-        /// When the current password is wrong, the account is locked, or the new
-        /// password fails the rules or is the one the account already has.
+        /// When the current password is wrong or has been checked too often, or
+        /// the new password fails the rules or is the one the account already has.
         /// </exception>
         Task<LoginResponse> ChangePasswordAsync(string userId, ChangePasswordRequest request);
 
@@ -65,8 +65,8 @@ namespace AnimalClassifier.Core.Contracts
         /// manage the site; another administrator has to revoke the role first.
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// When the password is wrong, the account is locked, or it belongs to
-        /// an administrator.
+        /// When the password is wrong or has been checked too often, or the
+        /// account belongs to an administrator.
         /// </exception>
         Task DeleteAccountAsync(string userId, DeleteAccountRequest request);
     }
