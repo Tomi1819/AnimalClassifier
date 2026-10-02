@@ -64,7 +64,26 @@ password reset limit below.
 
 The limit slows an address down rather than stopping it: one address can still
 lock an account for part of each window, and many addresses are not slowed at
-all.
+all. A lockout only stops signing in, though. A session that is already open
+carries on, and its owner can still change the password, add a passkey or
+delete the account.
+
+### Confirming the password
+
+Changing the password, adding a passkey and deleting the account each ask a
+signed-in user for their password. One account's password may be checked only
+so often across all three, right or wrong, so an unattended session cannot be
+used to guess it. Beyond that the answer is a bad request saying so, until the
+window ends.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `RateLimiting:PasswordConfirmationPermitLimit`, `RateLimiting:PasswordConfirmationWindowMinutes` | How many times one account's password may be checked per window, 10 every 15 minutes unless set. |
+
+This is kept apart from the lockout on signing in, in both directions. Anyone
+can lock an account out by getting its password wrong, and that must not keep
+its owner from changing it. A wrong guess made inside a session, in turn, must
+not keep the owner from signing in.
 
 ### Passkeys
 
@@ -93,7 +112,8 @@ Adding a passkey asks for the account's password. `POST /api/passkey/options`
 takes `{ password }`, and the state it answers with is what `POST /api/passkey`
 needs to register the passkey. A passkey outlasts the session that adds it, and
 a password change leaves it in place, so a session alone is not enough to add
-one. A wrong password counts towards a lockout, like any other check of it.
+one. The password can be checked only so often, as described under
+[Confirming the password](#confirming-the-password).
 
 The schema keeps passkeys from version 3 onwards, which the `AddPasskeys`
 migration moves to. An existing database needs it applied:
@@ -127,8 +147,9 @@ where it was stored when they were created.
 ### Changing a password
 
 `POST /api/account/change-password` takes the current password and the new one.
-A wrong current password counts towards a lockout, the same as a failed sign-in,
-so an unattended session cannot be used to guess it.
+The current password can be checked only so often, so an unattended session
+cannot be used to guess it; see
+[Confirming the password](#confirming-the-password).
 
 A password has to be at least 8 characters long and cannot be the account's
 email, wherever it is set: registration and a password reset hold to the same
@@ -182,8 +203,8 @@ few in a while; beyond that it is answered `429 Too Many Requests`.
 
 ### Deleting an account
 
-`DELETE /api/account` takes the account's password, which counts towards a
-lockout like any other check of it, and answers `204 No Content`. The account
+`DELETE /api/account` takes the account's password, which can be checked only
+so often like any other confirmation of it, and answers `204 No Content`. The account
 goes at once, with nothing to undo, and every session goes with it.
 
 Its recognitions are removed, cleared ones included, so they leave the
