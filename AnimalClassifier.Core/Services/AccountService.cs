@@ -14,7 +14,7 @@ namespace AnimalClassifier.Core.Services
     public class AccountService : IAccountService
     {
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly IPasswordConfirmer passwordConfirmer;
         private readonly IAccessTokenIssuer tokenIssuer;
         private readonly IRepository repository;
         private readonly IFileStorageService fileStorageService;
@@ -22,7 +22,7 @@ namespace AnimalClassifier.Core.Services
         private readonly ILogger<AccountService> logger;
 
         public AccountService(UserManager<ApplicationUser> userManager,
-                              SignInManager<ApplicationUser> signInManager,
+                              IPasswordConfirmer passwordConfirmer,
                               IAccessTokenIssuer tokenIssuer,
                               IRepository repository,
                               IFileStorageService fileStorageService,
@@ -31,7 +31,7 @@ namespace AnimalClassifier.Core.Services
         {
             this.logger = logger;
             this.userManager = userManager;
-            this.signInManager = signInManager;
+            this.passwordConfirmer = passwordConfirmer;
             this.tokenIssuer = tokenIssuer;
             this.repository = repository;
             this.fileStorageService = fileStorageService;
@@ -55,7 +55,9 @@ namespace AnimalClassifier.Core.Services
         {
             var user = await FindUserAsync(userId);
 
-            await ConfirmPasswordAsync(user, request.CurrentPassword);
+            // Checked apart from the change itself, which would only report a
+            // mismatch, so that a wrong guess is counted towards a lockout.
+            await passwordConfirmer.ConfirmAsync(user, request.CurrentPassword);
 
             (await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword)).ThrowIfFailed();
             await securityAlertSender.PasswordChangedAsync(user);
@@ -84,7 +86,7 @@ namespace AnimalClassifier.Core.Services
                 throw new InvalidOperationException(AdministratorAccountDeletion);
             }
 
-            await ConfirmPasswordAsync(user, request.Password);
+            await passwordConfirmer.ConfirmAsync(user, request.Password);
 
             await using (var transaction = await repository.BeginTransactionAsync())
             {
@@ -117,23 +119,6 @@ namespace AnimalClassifier.Core.Services
 
         private async Task<ApplicationUser> FindUserAsync(string userId) =>
             await userManager.FindByIdAsync(userId) ?? throw new KeyNotFoundException(UserNotFound);
-
-        // Checked apart from the change itself, which would only report a
-        // mismatch, so that a wrong guess is counted towards a lockout.
-        private async Task ConfirmPasswordAsync(ApplicationUser user, string password)
-        {
-            var result = await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
-
-            if (result.IsLockedOut)
-            {
-                throw new InvalidOperationException(LockedOutAccount);
-            }
-
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException(IncorrectCurrentPassword);
-            }
-        }
 
         // Unlike at registration, the letters are left as typed; only the
         // spacing around and between the words is tidied.
