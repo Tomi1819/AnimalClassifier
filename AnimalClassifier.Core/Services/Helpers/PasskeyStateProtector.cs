@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Services.Helpers
 {
     using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Exceptions;
     using Microsoft.AspNetCore.DataProtection;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;
@@ -42,7 +43,7 @@ namespace AnimalClassifier.Core.Services.Helpers
             }
             catch (CryptographicException)
             {
-                throw new InvalidOperationException(ExpiredPasskeyCeremony);
+                throw new RequestRefusedException(ExpiredPasskeyCeremony);
             }
         }
 

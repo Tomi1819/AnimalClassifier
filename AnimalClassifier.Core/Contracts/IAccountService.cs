@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Contracts
 {
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
 
     /// <summary>
     /// Changes a signed-in user makes to their own account.
@@ -22,7 +23,7 @@ namespace AnimalClassifier.Core.Contracts
         /// as that copy lives on the user's device.
         /// </summary>
         /// <returns>The profile with the new name.</returns>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// When the name is blank or too long.
         /// </exception>
         Task<AccountProfile> ChangeNameAsync(string userId, ChangeNameRequest request);
@@ -36,7 +37,7 @@ namespace AnimalClassifier.Core.Contracts
         /// other session, so the caller's own session is issued afresh.
         /// </summary>
         /// <returns>The token the caller's session continues with.</returns>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// When the current password is wrong or has been checked too often, or
         /// the new password fails the rules or is the one the account already has.
         /// </exception>
@@ -64,7 +65,7 @@ namespace AnimalClassifier.Core.Contracts
         /// An administrator is refused, so that there is always someone left to
         /// manage the site; another administrator has to revoke the role first.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// When the password is wrong or has been checked too often, or the
         /// account belongs to an administrator.
         /// </exception>

@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Services
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -31,7 +32,7 @@ namespace AnimalClassifier.Core.Services
         {
             if (await userManager.FindByEmailAsync(request.Email) != null)
             {
-                throw new InvalidOperationException(AlreadyRegisteredEmail);
+                throw new RequestRefusedException(AlreadyRegisteredEmail);
             }
 
             string processedFullName = ProcessFullName(request.FullName);
@@ -60,7 +61,7 @@ namespace AnimalClassifier.Core.Services
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                throw new UnauthorizedAccessException(InvalidCredentials);
+                throw new AuthenticationFailedException(InvalidCredentials);
             }
 
             // Unlike checking the password alone, this refuses a locked-out account
@@ -69,12 +70,12 @@ namespace AnimalClassifier.Core.Services
 
             if (result.IsLockedOut)
             {
-                throw new UnauthorizedAccessException(LockedOutAccount);
+                throw new AuthenticationFailedException(LockedOutAccount);
             }
 
             if (!result.Succeeded)
             {
-                throw new UnauthorizedAccessException(InvalidCredentials);
+                throw new AuthenticationFailedException(InvalidCredentials);
             }
 
             return await tokenIssuer.IssueAsync(user);
@@ -104,7 +105,7 @@ namespace AnimalClassifier.Core.Services
             // can always save the name it already has.
             if (processed.Length > FullNameMaxLength)
             {
-                throw new InvalidOperationException(string.Format(FullNameTooLong, FullNameMaxLength));
+                throw new RequestRefusedException(string.Format(FullNameTooLong, FullNameMaxLength));
             }
 
             return processed;

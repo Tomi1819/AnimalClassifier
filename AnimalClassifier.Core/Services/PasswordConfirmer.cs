@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Services
 {
     using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using static Constants.MessageConstants;
@@ -23,7 +24,7 @@ namespace AnimalClassifier.Core.Services
             // the limit.
             if (!limiter.TryAcquire(user.Id))
             {
-                throw new InvalidOperationException(TooManyPasswordAttempts);
+                throw new RequestRefusedException(TooManyPasswordAttempts);
             }
 
             // The password alone, rather than the check signing in makes,
@@ -31,7 +32,7 @@ namespace AnimalClassifier.Core.Services
             // wrong guess towards locking it.
             if (!await userManager.CheckPasswordAsync(user, password))
             {
-                throw new InvalidOperationException(IncorrectCurrentPassword);
+                throw new RequestRefusedException(IncorrectCurrentPassword);
             }
         }
     }

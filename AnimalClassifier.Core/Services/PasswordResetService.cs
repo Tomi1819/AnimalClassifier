@@ -3,6 +3,7 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -78,14 +79,14 @@
                 // Told apart from a bad token by nothing at all. The link is
                 // everything the caller has, and which half of it does not fit
                 // is not a thing they need to be told.
-                throw new InvalidOperationException(InvalidPasswordResetLink);
+                throw new RequestRefusedException(InvalidPasswordResetLink);
             }
 
             var result = await userManager.ResetPasswordAsync(user, DecodeToken(request.Token), request.NewPassword);
 
             if (result.Errors.Any(error => error.Code == InvalidTokenCode))
             {
-                throw new InvalidOperationException(InvalidPasswordResetLink);
+                throw new RequestRefusedException(InvalidPasswordResetLink);
             }
 
             // Anything else is the new password failing the rules, which the
@@ -118,7 +119,7 @@
             {
                 // A link mangled on its way here is no longer a link, and
                 // Identity should never see what is left of it.
-                throw new InvalidOperationException(InvalidPasswordResetLink);
+                throw new RequestRefusedException(InvalidPasswordResetLink);
             }
         }
     }

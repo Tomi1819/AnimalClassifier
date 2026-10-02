@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Services
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -63,7 +64,7 @@ namespace AnimalClassifier.Core.Services
             // nothing to someone guessing at it.
             if (request.NewPassword == request.CurrentPassword)
             {
-                throw new InvalidOperationException(UnchangedPassword);
+                throw new RequestRefusedException(UnchangedPassword);
             }
 
             (await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword)).ThrowIfFailed();
@@ -90,7 +91,7 @@ namespace AnimalClassifier.Core.Services
             // anyway does not use up one of its checks.
             if (await userManager.IsInRoleAsync(user, Admin))
             {
-                throw new InvalidOperationException(AdministratorAccountDeletion);
+                throw new RequestRefusedException(AdministratorAccountDeletion);
             }
 
             await passwordConfirmer.ConfirmAsync(user, request.Password);
@@ -125,7 +126,7 @@ namespace AnimalClassifier.Core.Services
         }
 
         private async Task<ApplicationUser> FindUserAsync(string userId) =>
-            await userManager.FindByIdAsync(userId) ?? throw new KeyNotFoundException(UserNotFound);
+            await userManager.FindByIdAsync(userId) ?? throw new NotFoundException(UserNotFound);
 
         // Unlike at registration, the letters are left as typed; only the
         // spacing around and between the words is tidied.
@@ -136,12 +137,12 @@ namespace AnimalClassifier.Core.Services
 
             if (tidied.Length == 0)
             {
-                throw new InvalidOperationException(EmptyFullName);
+                throw new RequestRefusedException(EmptyFullName);
             }
 
             if (tidied.Length > FullNameMaxLength)
             {
-                throw new InvalidOperationException(string.Format(FullNameTooLong, FullNameMaxLength));
+                throw new RequestRefusedException(string.Format(FullNameTooLong, FullNameMaxLength));
             }
 
             return tidied;

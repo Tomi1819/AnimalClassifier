@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Contracts
 {
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
     using Microsoft.AspNetCore.Http;
 
     /// <summary>
@@ -24,7 +25,7 @@ namespace AnimalClassifier.Core.Contracts
         /// The state the options come with is what registering then requires,
         /// so the passkey itself cannot be added without getting past this.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// When the password is wrong or has been checked too often.
         /// </exception>
         Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request, HttpContext httpContext);

@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -49,14 +50,14 @@
         public Task LockUserAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.Lock,
                 user => user.LockoutEnd == DateTimeOffset.MaxValue
-                    ? throw new InvalidOperationException(UserAlreadyLocked)
+                    ? throw new RequestRefusedException(UserAlreadyLocked)
                     : userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue));
 
         public Task UnlockUserAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.Unlock,
                 user => user.LockoutEnd > DateTimeOffset.UtcNow
                     ? userManager.SetLockoutEndDateAsync(user, null)
-                    : throw new InvalidOperationException(UserNotLocked));
+                    : throw new RequestRefusedException(UserNotLocked));
 
         public Task GrantAdminAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.GrantAdmin,
@@ -89,11 +90,11 @@
         {
             if (adminId == userId)
             {
-                throw new InvalidOperationException(OwnAccountChange);
+                throw new RequestRefusedException(OwnAccountChange);
             }
 
             var user = await userManager.FindByIdAsync(userId)
-                ?? throw new KeyNotFoundException(UserNotFound);
+                ?? throw new NotFoundException(UserNotFound);
 
             await using var transaction = await repository.BeginTransactionAsync();
 

@@ -29,20 +29,20 @@ namespace AnimalClassifier.Controllers
         }
 
         [HttpGet]
-        public Task<IActionResult> GetProfile() =>
-            RunAsync(async () => Ok(await accountService.GetProfileAsync(User.Id()!)));
+        public async Task<IActionResult> GetProfile() =>
+            Ok(await accountService.GetProfileAsync(User.Id()!));
 
         [HttpPut("name")]
-        public Task<IActionResult> ChangeName([FromBody] ChangeNameRequest request) =>
-            RunAsync(async () => Ok(await accountService.ChangeNameAsync(User.Id()!, request)));
+        public async Task<IActionResult> ChangeName([FromBody] ChangeNameRequest request) =>
+            Ok(await accountService.ChangeNameAsync(User.Id()!, request));
 
         /// <summary>
         /// Answers with a new token, because the change ends every session the
         /// account had, the caller's included.
         /// </summary>
         [HttpPost("change-password")]
-        public Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request) =>
-            RunAsync(async () => Ok(await accountService.ChangePasswordAsync(User.Id()!, request)));
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request) =>
+            Ok(await accountService.ChangePasswordAsync(User.Id()!, request));
 
         /// <summary>
         /// Answers with a new token for the same reason: the caller's session
@@ -50,8 +50,8 @@ namespace AnimalClassifier.Controllers
         /// out when the caller's old token would have.
         /// </summary>
         [HttpPost("sign-out-other-sessions")]
-        public Task<IActionResult> SignOutOtherSessions() =>
-            RunAsync(async () => Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!, User.TokenExpiration())));
+        public async Task<IActionResult> SignOutOtherSessions() =>
+            Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!, User.TokenExpiration()));
 
         /// <summary>
         /// Answers with a ZIP archive of everything the account holds, for its
@@ -59,42 +59,21 @@ namespace AnimalClassifier.Controllers
         /// </summary>
         [HttpGet("export")]
         [EnableRateLimiting(DataExportPolicy)]
-        public Task<IActionResult> ExportData() =>
-            RunAsync(async () => File(await dataExportService.ExportAsync(User.Id()!),
-                                      MediaTypeNames.Application.Zip,
-                                      ExportFileName()));
+        public async Task<IActionResult> ExportData() =>
+            File(await dataExportService.ExportAsync(User.Id()!), MediaTypeNames.Application.Zip, ExportFileName());
 
         /// <summary>
         /// Nothing is answered, as there is no session left to carry on with.
         /// </summary>
         [HttpDelete]
-        public Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request) =>
-            RunAsync(async () =>
-            {
-                await accountService.DeleteAccountAsync(User.Id()!, request);
-                return NoContent();
-            });
+        public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
+        {
+            await accountService.DeleteAccountAsync(User.Id()!, request);
+
+            return NoContent();
+        }
 
         // Dated, so that copies downloaded on different days sit side by side.
         private static string ExportFileName() => $"animal-classifier-data-{DateTime.UtcNow:yyyy-MM-dd}.zip";
-
-        private static async Task<IActionResult> RunAsync(Func<Task<IActionResult>> action)
-        {
-            try
-            {
-                return await action();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return new NotFoundObjectResult(new { message = ex.Message });
-            }
-            // A refusal, such as a wrong current password, is a bad request
-            // rather than a 401, which would tell the frontend that the session
-            // itself had ended.
-            catch (InvalidOperationException ex)
-            {
-                return new BadRequestObjectResult(new { message = ex.Message });
-            }
-        }
     }
 }

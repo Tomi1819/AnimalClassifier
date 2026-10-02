@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Core.Contracts
 {
+    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
 
     public interface IPasswordConfirmer
@@ -16,7 +17,7 @@ namespace AnimalClassifier.Core.Contracts
         /// password; and a wrong guess made in here must not keep them from
         /// signing in.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RequestRefusedException">
         /// When the password is wrong, or has been checked too often.
         /// </exception>
         Task ConfirmAsync(ApplicationUser user, string password);
