@@ -119,7 +119,9 @@ stamp, which every request's token is checked against, so every session ends on
 its next request. That covers tokens a user cannot reach any other way, such as
 one copied off a lost device; signing out in a browser only forgets its own
 copy. As with a password change, the answer carries a new token so the caller
-stays signed in.
+stays signed in. Unlike one, it asks for no password, so that token runs out
+when the caller's old one would have. With a full lifetime, a token could be
+kept alive for good by trading it in before it expired.
 
 Passkeys are left alone, since they are ways in rather than sessions. Password
 reset links still waiting to be used stop working, because Identity ties them to
