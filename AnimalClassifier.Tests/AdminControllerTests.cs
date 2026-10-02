@@ -172,6 +172,6 @@
         }
 
         private Task<HttpResponseMessage> LogInAsync(string email) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest { Email = email, Password = Password });
+            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest { Email = email, Password = Password });
     }
 }

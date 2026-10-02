@@ -5,7 +5,7 @@
     public interface IAuthService
     {
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);
-        Task<LoginResponse> LoginAsync(LogInRequest request);
+        Task<LoginResponse> LoginAsync(LoginRequest request);
 
         /// <summary>
         /// Whether a signed token still speaks for its user: the account exists

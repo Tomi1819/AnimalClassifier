@@ -840,7 +840,7 @@ namespace AnimalClassifier.Tests
         }
 
         private Task<HttpResponseMessage> LogInAsync(string email, string password) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest
+            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest
             {
                 Email = email,
                 Password = password

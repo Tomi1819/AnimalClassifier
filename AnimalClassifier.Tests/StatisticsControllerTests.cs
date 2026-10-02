@@ -138,7 +138,7 @@
 
         private async Task<HttpClient> SignInAsync(string email)
         {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest { Email = email, Password = Password });
+            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest { Email = email, Password = Password });
             response.EnsureSuccessStatusCode();
             var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
 

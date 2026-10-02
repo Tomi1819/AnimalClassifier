@@ -101,7 +101,7 @@ namespace AnimalClassifier.Tests
 
             for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
             {
-                await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest
+                await factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest
                 {
                     Email = account.Email,
                     Password = WrongPassword
@@ -403,7 +403,7 @@ namespace AnimalClassifier.Tests
         {
             app ??= factory;
 
-            var response = await app.CreateClient().PostAsJsonAsync("/api/auth/login", new LogInRequest
+            var response = await app.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest
             {
                 Email = account.Email,
                 Password = Password
