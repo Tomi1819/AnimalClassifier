@@ -14,7 +14,20 @@ namespace AnimalClassifier.Core.Contracts
     /// </summary>
     public interface IPasskeyService
     {
-        Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, HttpContext httpContext);
+        /// <summary>
+        /// Options for registering a passkey, once the account's password has
+        /// been confirmed. A passkey is a way in that outlasts the session
+        /// asking for it, and a password change leaves it in place, so holding
+        /// a session is not enough to add one. A wrong password counts towards
+        /// locking the account, the same as a failed sign-in.
+        ///
+        /// The state the options come with is what registering then requires,
+        /// so the passkey itself cannot be added without getting past this.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// When the password is wrong or the account is locked.
+        /// </exception>
+        Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request, HttpContext httpContext);
 
         /// <summary>
         /// Registers a new passkey to the user who asked for the options.

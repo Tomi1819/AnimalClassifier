@@ -5,6 +5,7 @@ namespace AnimalClassifier.Tests
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
     using System.Net;
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
@@ -15,6 +16,7 @@ namespace AnimalClassifier.Tests
     public class PasskeyControllerTests : IClassFixture<ApiFactory>
     {
         private const string Password = "secret1";
+        private const string WrongPassword = "not-the-password";
         private const string PasskeyPath = "/api/passkey";
         private const string OptionsPath = "/api/passkey/options";
         private const string SignInOptionsPath = "/api/auth/passkey/options";
@@ -45,6 +47,44 @@ namespace AnimalClassifier.Tests
 
             Assert.NotNull(options.Options);
             Assert.False(string.IsNullOrWhiteSpace(options.State));
+        }
+
+        /// <summary>
+        /// A passkey outlasts the session that adds it, and a password change
+        /// leaves it in place, so a session alone must not be enough to add
+        /// one.
+        /// </summary>
+        [Theory]
+        [InlineData(WrongPassword)]
+        [InlineData("")]
+        public async Task Options_WithoutTheAccountsPassword_AreRefused(string password)
+        {
+            var client = await SignInAsync(await RegisterAsync());
+
+            var response = await PostOptionsAsync(client, password);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(IncorrectCurrentPassword, await response.Content.ReadAsStringAsync());
+        }
+
+        // Otherwise a session left open could be used to guess the password
+        // here, where signing in would have stopped it.
+        [Fact]
+        public async Task Options_WithWrongPasswords_LockTheAccount()
+        {
+            var client = await SignInAsync(await RegisterAsync());
+            var maxFailedAccessAttempts = factory.Services
+                .GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
+
+            for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
+            {
+                await PostOptionsAsync(client, WrongPassword);
+            }
+
+            var response = await PostOptionsAsync(client, Password);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(LockedOutAccount, await response.Content.ReadAsStringAsync());
         }
 
         /// <summary>
@@ -294,7 +334,10 @@ namespace AnimalClassifier.Tests
                 await app.CreateClient().PostAsync(SignInOptionsPath, content: null));
 
         private static async Task<PasskeyOptionsResponse> RequestOptionsAsync(HttpClient client) =>
-            await ReadAsync<PasskeyOptionsResponse>(await client.PostAsync(OptionsPath, content: null));
+            await ReadAsync<PasskeyOptionsResponse>(await PostOptionsAsync(client, Password));
+
+        private static Task<HttpResponseMessage> PostOptionsAsync(HttpClient client, string password) =>
+            client.PostAsJsonAsync(OptionsPath, new PasskeyRegistrationOptionsRequest { Password = password });
 
         private static Task<HttpResponseMessage> RegisterPasskeyAsync(HttpClient client, PasskeyOptionsResponse options, string? name) =>
             client.PostAsJsonAsync(PasskeyPath, new PasskeyRegistrationRequest
