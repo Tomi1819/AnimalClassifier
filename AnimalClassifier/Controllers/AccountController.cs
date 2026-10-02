@@ -30,11 +30,11 @@ namespace AnimalClassifier.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetProfile() =>
-            Ok(await accountService.GetProfileAsync(User.Id()!));
+            Ok(await accountService.GetProfileAsync(User.RequiredId()));
 
         [HttpPut("name")]
         public async Task<IActionResult> ChangeName([FromBody] ChangeNameRequest request) =>
-            Ok(await accountService.ChangeNameAsync(User.Id()!, request));
+            Ok(await accountService.ChangeNameAsync(User.RequiredId(), request));
 
         /// <summary>
         /// Answers with a new token, because the change ends every session the
@@ -42,7 +42,7 @@ namespace AnimalClassifier.Controllers
         /// </summary>
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request) =>
-            Ok(await accountService.ChangePasswordAsync(User.Id()!, request));
+            Ok(await accountService.ChangePasswordAsync(User.RequiredId(), request));
 
         /// <summary>
         /// Answers with a new token for the same reason: the caller's session
@@ -51,7 +51,7 @@ namespace AnimalClassifier.Controllers
         /// </summary>
         [HttpPost("sign-out-other-sessions")]
         public async Task<IActionResult> SignOutOtherSessions() =>
-            Ok(await accountService.SignOutOtherSessionsAsync(User.Id()!, User.TokenExpiration()));
+            Ok(await accountService.SignOutOtherSessionsAsync(User.RequiredId(), User.TokenExpiration()));
 
         /// <summary>
         /// Answers with a ZIP archive of everything the account holds, for its
@@ -60,7 +60,7 @@ namespace AnimalClassifier.Controllers
         [HttpGet("export")]
         [EnableRateLimiting(DataExportPolicy)]
         public async Task<IActionResult> ExportData() =>
-            File(await dataExportService.ExportAsync(User.Id()!), MediaTypeNames.Application.Zip, ExportFileName());
+            File(await dataExportService.ExportAsync(User.RequiredId()), MediaTypeNames.Application.Zip, ExportFileName());
 
         /// <summary>
         /// Nothing is answered, as there is no session left to carry on with.
@@ -68,7 +68,7 @@ namespace AnimalClassifier.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
         {
-            await accountService.DeleteAccountAsync(User.Id()!, request);
+            await accountService.DeleteAccountAsync(User.RequiredId(), request);
 
             return NoContent();
         }
