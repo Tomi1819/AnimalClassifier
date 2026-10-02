@@ -25,7 +25,7 @@ namespace AnimalClassifier.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetPasskeys() =>
-            Ok(await passkeyService.GetPasskeysAsync(User.Id()!));
+            Ok(await passkeyService.GetPasskeysAsync(User.RequiredId()));
 
         /// <summary>
         /// Takes the account's password, since a passkey outlasts the session
@@ -33,16 +33,16 @@ namespace AnimalClassifier.Controllers
         /// </summary>
         [HttpPost("options")]
         public async Task<IActionResult> CreateOptions([FromBody] PasskeyRegistrationOptionsRequest request) =>
-            Ok(await passkeyService.CreateRegistrationOptionsAsync(User.Id()!, request, HttpContext));
+            Ok(await passkeyService.CreateRegistrationOptionsAsync(User.RequiredId(), request, HttpContext));
 
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] PasskeyRegistrationRequest request) =>
-            Ok(await passkeyService.RegisterAsync(User.Id()!, request, HttpContext));
+            Ok(await passkeyService.RegisterAsync(User.RequiredId(), request, HttpContext));
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Remove(string id)
         {
-            await passkeyService.RemoveAsync(User.Id()!, id);
+            await passkeyService.RemoveAsync(User.RequiredId(), id);
 
             return NoContent();
         }

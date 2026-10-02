@@ -51,7 +51,7 @@
 
         private async Task<IActionResult> ChangeUserAsync(Func<string, string, Task> change, string userId)
         {
-            await change(User.Id()!, userId);
+            await change(User.RequiredId(), userId);
 
             return NoContent();
         }
