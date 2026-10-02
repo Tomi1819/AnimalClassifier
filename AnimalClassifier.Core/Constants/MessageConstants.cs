@@ -8,7 +8,6 @@
         public const string LockedOutAccount = "This account is locked.";
         public const string UnknownUser = "Unknown user";
         public const string PasswordIsEmail = "The password cannot be your email address.";
-        public const string Space = " ";
 
         //AdminService
         public const string UserNotFound = "The user does not exist.";
