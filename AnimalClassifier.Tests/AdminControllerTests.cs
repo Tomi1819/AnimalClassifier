@@ -2,29 +2,22 @@
 {
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Infrastructure.Data.Models;
-    using Microsoft.AspNetCore.Identity;
-    using Microsoft.Extensions.DependencyInjection;
     using System.Net;
-    using System.Net.Http.Headers;
     using System.Net.Http.Json;
-    using static AnimalClassifier.Core.Constants.RoleConstants;
 
-    public class AdminControllerTests : IClassFixture<ApiFactory>
+    public class AdminControllerTests : ApiTest
     {
-        private const string Password = "secret-one";
         private const string UsersPath = "/api/admin/users";
 
-        private readonly ApiFactory factory;
-
         public AdminControllerTests(ApiFactory factory)
+            : base(factory)
         {
-            this.factory = factory;
         }
 
         [Fact]
         public async Task GetUsers_WithoutToken_ReturnsUnauthorized()
         {
-            var response = await factory.CreateClient().GetAsync(UsersPath);
+            var response = await Factory.CreateClient().GetAsync(UsersPath);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -136,42 +129,12 @@
             Assert.Equal(account.Email, latest.UserEmail);
         }
 
-        private async Task<RegisterResponse> RegisterAsync()
-        {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = "Test User",
-                Email = $"{Guid.NewGuid():N}@example.test",
-                Password = Password
-            });
-            response.EnsureSuccessStatusCode();
-
-            return (await response.Content.ReadFromJsonAsync<RegisterResponse>())!;
-        }
-
         private async Task<RegisterResponse> RegisterAdminAsync()
         {
             var account = await RegisterAsync();
-
-            using var scope = factory.Services.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            await userManager.AddToRoleAsync((await userManager.FindByIdAsync(account.UserId))!, Admin);
+            await MakeAdministratorAsync(account.UserId);
 
             return account;
         }
-
-        private async Task<HttpClient> SignInAsync(string email)
-        {
-            var response = await LogInAsync(email);
-            response.EnsureSuccessStatusCode();
-            var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-
-            var client = factory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.Token);
-            return client;
-        }
-
-        private Task<HttpResponseMessage> LogInAsync(string email) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest { Email = email, Password = Password });
     }
 }

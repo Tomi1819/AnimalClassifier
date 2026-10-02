@@ -4,27 +4,22 @@ namespace AnimalClassifier.Tests
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
-    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
     using System.IO.Compression;
     using System.Net;
-    using System.Net.Http.Headers;
     using System.Net.Http.Json;
     using System.Text.Json;
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
-    using static AnimalClassifier.Core.Constants.RoleConstants;
     using static AnimalClassifier.Core.Constants.ValidationConstants;
     using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
 
-    public class AccountControllerTests : IClassFixture<ApiFactory>
+    public class AccountControllerTests : ApiTest
     {
-        private const string Password = "secret-one";
         private const string NewPassword = "secret-two";
-        private const string WrongPassword = "not-the-password";
         private const string AccountPath = "/api/account";
         private const string ChangeNamePath = "/api/account/name";
         private const string ChangePasswordPath = "/api/account/change-password";
@@ -42,17 +37,15 @@ namespace AnimalClassifier.Tests
         // would look alike whether or not the lifetime started again.
         private static readonly TimeSpan LongerThanAnExpirysPrecision = TimeSpan.FromSeconds(1.5);
 
-        private readonly ApiFactory factory;
-
         public AccountControllerTests(ApiFactory factory)
+            : base(factory)
         {
-            this.factory = factory;
         }
 
         [Fact]
         public async Task GetProfile_WithoutSigningIn_IsRefused()
         {
-            var response = await factory.CreateClient().GetAsync(AccountPath);
+            var response = await Factory.CreateClient().GetAsync(AccountPath);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -84,7 +77,7 @@ namespace AnimalClassifier.Tests
         [Fact]
         public async Task ChangeName_WithoutSigningIn_IsRefused()
         {
-            var response = await ChangeNameAsync(factory.CreateClient(), "Jane Goodall");
+            var response = await ChangeNameAsync(Factory.CreateClient(), "Jane Goodall");
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -146,7 +139,7 @@ namespace AnimalClassifier.Tests
         [Fact]
         public async Task ChangePassword_WithoutSigningIn_IsRefused()
         {
-            var response = await ChangePasswordAsync(factory.CreateClient(), Password, NewPassword);
+            var response = await ChangePasswordAsync(Factory.CreateClient(), Password, NewPassword);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -285,10 +278,10 @@ namespace AnimalClassifier.Tests
         public async Task ChangePassword_AnswersWithATokenOfAFullLifetime()
         {
             var account = await RegisterAsync();
-            var signedIn = await ReadLoginAsync(await LogInAsync(account.Email, Password));
+            var signedIn = await ReadAsync<LoginResponse>(await LogInAsync(account.Email, Password));
 
             await Task.Delay(LongerThanAnExpirysPrecision);
-            var reissued = await ReadLoginAsync(await ChangePasswordAsync(WithToken(signedIn.Token), Password, NewPassword));
+            var reissued = await ReadAsync<LoginResponse>(await ChangePasswordAsync(WithToken(signedIn.Token), Password, NewPassword));
 
             Assert.True(reissued.Expiration > signedIn.Expiration);
         }
@@ -301,7 +294,7 @@ namespace AnimalClassifier.Tests
 
             (await ChangePasswordAsync(client, Password, NewPassword)).EnsureSuccessStatusCode();
 
-            Assert.Contains(PasswordChangedSubject, factory.Emails.SubjectsSentTo(account.Email));
+            Assert.Contains(PasswordChangedSubject, Factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]
@@ -312,7 +305,7 @@ namespace AnimalClassifier.Tests
 
             await ChangePasswordAsync(client, WrongPassword, NewPassword);
 
-            Assert.False(factory.Emails.AnySentTo(account.Email));
+            Assert.False(Factory.Emails.AnySentTo(account.Email));
         }
 
         [Fact]
@@ -356,13 +349,13 @@ namespace AnimalClassifier.Tests
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(UnchangedPassword, await response.Content.ReadAsStringAsync());
             Assert.Equal(HttpStatusCode.OK, (await elsewhere.GetAsync(HistoryPath)).StatusCode);
-            Assert.False(factory.Emails.AnySentTo(account.Email));
+            Assert.False(Factory.Emails.AnySentTo(account.Email));
         }
 
         [Fact]
         public async Task SignOutOtherSessions_WithoutSigningIn_IsRefused()
         {
-            var response = await SignOutOtherSessionsAsync(factory.CreateClient());
+            var response = await SignOutOtherSessionsAsync(Factory.CreateClient());
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -410,10 +403,10 @@ namespace AnimalClassifier.Tests
         public async Task SignOutOtherSessions_AnswersWithATokenThatRunsOutWhenTheOldOneWould()
         {
             var account = await RegisterAsync();
-            var signedIn = await ReadLoginAsync(await LogInAsync(account.Email, Password));
+            var signedIn = await ReadAsync<LoginResponse>(await LogInAsync(account.Email, Password));
 
             await Task.Delay(LongerThanAnExpirysPrecision);
-            var reissued = await ReadLoginAsync(await SignOutOtherSessionsAsync(WithToken(signedIn.Token)));
+            var reissued = await ReadAsync<LoginResponse>(await SignOutOtherSessionsAsync(WithToken(signedIn.Token)));
 
             Assert.Equal(signedIn.Expiration, reissued.Expiration);
         }
@@ -426,7 +419,7 @@ namespace AnimalClassifier.Tests
 
             (await SignOutOtherSessionsAsync(client)).EnsureSuccessStatusCode();
 
-            Assert.Contains(OtherSessionsSignedOutSubject, factory.Emails.SubjectsSentTo(account.Email));
+            Assert.Contains(OtherSessionsSignedOutSubject, Factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]
@@ -443,7 +436,7 @@ namespace AnimalClassifier.Tests
         [Fact]
         public async Task ExportData_WithoutSigningIn_IsRefused()
         {
-            var response = await factory.CreateClient().GetAsync(ExportPath);
+            var response = await Factory.CreateClient().GetAsync(ExportPath);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -572,7 +565,7 @@ namespace AnimalClassifier.Tests
         [Fact]
         public async Task DeleteAccount_WithoutSigningIn_IsRefused()
         {
-            var response = await DeleteAccountAsync(factory.CreateClient(), Password);
+            var response = await DeleteAccountAsync(Factory.CreateClient(), Password);
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -655,7 +648,7 @@ namespace AnimalClassifier.Tests
 
             (await DeleteAccountAsync(client, Password)).EnsureSuccessStatusCode();
 
-            await using var scope = factory.Services.CreateAsyncScope();
+            await using var scope = Factory.Services.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
             Assert.False(await context.AnimalRecognitionLogs.AnyAsync(l => l.UserId == account.UserId));
         }
@@ -726,28 +719,13 @@ namespace AnimalClassifier.Tests
 
         private async Task UseUpPasswordAttemptsAsync(HttpClient client)
         {
-            var permitLimit = factory.Services
+            var permitLimit = Factory.Services
                 .GetRequiredService<IOptions<RateLimitSettings>>().Value.PasswordConfirmationPermitLimit;
 
             for (var attempt = 0; attempt < permitLimit; attempt++)
             {
                 await ChangePasswordAsync(client, WrongPassword, NewPassword);
             }
-        }
-
-        // The way anyone could from outside: by getting the password wrong
-        // until signing in is refused.
-        private async Task LockOutSigningInAsync(string email)
-        {
-            var maxFailedAccessAttempts = factory.Services
-                .GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout.MaxFailedAccessAttempts;
-
-            for (var attempt = 0; attempt < maxFailedAccessAttempts; attempt++)
-            {
-                await LogInAsync(email, WrongPassword);
-            }
-
-            Assert.Contains(LockedOutAccount, await (await LogInAsync(email, Password)).Content.ReadAsStringAsync());
         }
 
         private static Task<HttpResponseMessage> ChangeNameAsync(HttpClient client, string fullName) =>
@@ -788,32 +766,13 @@ namespace AnimalClassifier.Tests
         // Lowered, so that a test reaches the limit in one export rather than
         // several.
         private WebApplicationFactory<Program> WithDataExportLimit(int permitLimit) =>
-            factory.WithWebHostBuilder(builder =>
+            Factory.WithWebHostBuilder(builder =>
                 builder.UseSetting($"{RateLimiting}:DataExportPermitLimit", permitLimit.ToString()));
-
-        // The copy of the app shares the database and the signing key, so the
-        // token the usual one issues is good for it as well.
-        private async Task<HttpClient> SignInAsync(WebApplicationFactory<Program> app, string email)
-        {
-            var client = app.CreateClient();
-            client.DefaultRequestHeaders.Authorization =
-                (await SignInAsync(email, Password)).DefaultRequestHeaders.Authorization;
-
-            return client;
-        }
-
-        private async Task MakeAdministratorAsync(string userId)
-        {
-            await using var scope = factory.Services.CreateAsyncScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-            await userManager.AddToRoleAsync((await userManager.FindByIdAsync(userId))!, Admin);
-        }
 
         // Added directly, since uploading would need the recognition model.
         private async Task AddRecognitionAsync(string userId, bool isDeleted)
         {
-            await using var scope = factory.Services.CreateAsyncScope();
+            await using var scope = Factory.Services.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
 
             context.AnimalRecognitionLogs.Add(new AnimalRecognitionLog
@@ -830,7 +789,7 @@ namespace AnimalClassifier.Tests
         /// <returns>The directory the user's uploads are kept in.</returns>
         private async Task<string> AddUploadAsync(string userId)
         {
-            var uploadPath = factory.Services.GetRequiredService<IOptions<UploadSettings>>().Value.UploadPath;
+            var uploadPath = Factory.Services.GetRequiredService<IOptions<UploadSettings>>().Value.UploadPath;
             var userDirectory = Path.Combine(uploadPath, userId);
 
             Directory.CreateDirectory(userDirectory);
@@ -838,45 +797,5 @@ namespace AnimalClassifier.Tests
 
             return userDirectory;
         }
-
-        private Task<HttpResponseMessage> LogInAsync(string email, string password) =>
-            factory.CreateClient().PostAsJsonAsync("/api/auth/login", new LoginRequest
-            {
-                Email = email,
-                Password = password
-            });
-
-        private async Task<HttpClient> SignInAsync(string email, string password) =>
-            WithToken((await ReadLoginAsync(await LogInAsync(email, password))).Token);
-
-        private static async Task<LoginResponse> ReadLoginAsync(HttpResponseMessage response)
-        {
-            response.EnsureSuccessStatusCode();
-
-            return (await response.Content.ReadFromJsonAsync<LoginResponse>())!;
-        }
-
-        private HttpClient WithToken(string token)
-        {
-            var client = factory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            return client;
-        }
-
-        private async Task<RegisterResponse> RegisterAsync()
-        {
-            var response = await factory.CreateClient().PostAsJsonAsync("/api/auth/register", new RegisterRequest
-            {
-                FullName = "Test User",
-                Email = UniqueEmail(),
-                Password = Password
-            });
-            response.EnsureSuccessStatusCode();
-
-            return (await response.Content.ReadFromJsonAsync<RegisterResponse>())!;
-        }
-
-        private static string UniqueEmail() => $"{Guid.NewGuid():N}@example.test";
     }
 }
