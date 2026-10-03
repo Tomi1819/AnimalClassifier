@@ -3,6 +3,7 @@ namespace AnimalClassifier.Tests
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.DependencyInjection;
     using System.Net;
     using System.Net.Http.Json;

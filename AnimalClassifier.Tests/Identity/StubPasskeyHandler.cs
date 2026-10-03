@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Tests
+namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;

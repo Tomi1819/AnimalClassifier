@@ -1,8 +1,9 @@
-﻿namespace AnimalClassifier.Tests
+﻿namespace AnimalClassifier.Tests.Support
 {
     using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Tests.Identity;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;

@@ -3,6 +3,7 @@
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Tests.Support;
     using System.Net;
     using System.Net.Http.Json;
 

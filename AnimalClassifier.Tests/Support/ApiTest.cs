@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Tests
+namespace AnimalClassifier.Tests.Support
 {
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Infrastructure.Data.Models;

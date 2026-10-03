@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Tests
+﻿namespace AnimalClassifier.Tests.Support
 {
     using AnimalClassifier.Core.Common.Email;
     using System.Collections.Concurrent;
