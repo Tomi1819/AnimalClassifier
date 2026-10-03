@@ -5,11 +5,6 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Identity.Account;
-    using AnimalClassifier.Core.Identity.Authentication;
-    using AnimalClassifier.Core.Identity.Passkeys;
-    using AnimalClassifier.Core.Identity.Passwords;
-    using AnimalClassifier.Core.Identity.SecurityAlerts;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data;
@@ -46,21 +41,12 @@
         {
             services.AddScoped<IRepository, Repository>();
             services.AddScoped<IUploadService, UploadService>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
-            services.AddScoped<IPasswordConfirmer, PasswordConfirmer>();
-            services.AddSingleton<IPasskeyStateProtector, PasskeyStateProtector>();
             services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IFileStorageService, FileStorageService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddScoped<IAdminService, AdminService>();
-            services.AddScoped<IPasswordResetService, PasswordResetService>();
-            services.AddScoped<ISecurityAlertSender, SecurityAlertSender>();
-            services.AddScoped<IPasskeyService, PasskeyService>();
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IDataExportService, DataExportService>();
             services.AddSingleton<MLContext>();
 
             var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
@@ -148,10 +134,7 @@
             var rateLimitSettings = configuration.GetSection(RateLimiting).Get<RateLimitSettings>()
                 ?? new RateLimitSettings();
 
-            // Kept for as long as the app runs, since it is what remembers
-            // the checks already made.
             services.Configure<RateLimitSettings>(configuration.GetSection(RateLimiting));
-            services.AddSingleton<IPasswordConfirmationLimiter, PasswordConfirmationLimiter>();
 
             services.AddRateLimiter(options =>
             {
