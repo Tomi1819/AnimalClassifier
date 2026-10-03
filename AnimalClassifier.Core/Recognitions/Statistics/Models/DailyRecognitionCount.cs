@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.DTO
+﻿namespace AnimalClassifier.Core.Recognitions.Statistics.Models
 {
     /// <summary>
     /// The number of recognitions made on one day, in the time zone the day
