@@ -11,7 +11,9 @@ namespace AnimalClassifier.Tests
     using System.Net;
     using System.Net.Http.Json;
     using System.Text.Json.Nodes;
-    using static AnimalClassifier.Core.Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
+    using static AnimalClassifier.Core.Identity.Passkeys.PasskeyMessages;
+    using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
     public class PasskeyControllerTests : ApiTest

@@ -2,7 +2,7 @@ namespace AnimalClassifier.Core.Identity.Passwords
 {
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
 
     /// <summary>
     /// Refuses a password that is the account's own email. Anyone trying to

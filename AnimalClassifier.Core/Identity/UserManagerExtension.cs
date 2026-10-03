@@ -3,7 +3,7 @@ namespace AnimalClassifier.Core.Identity
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.IdentityMessages;
 
     public static class UserManagerExtension
     {
