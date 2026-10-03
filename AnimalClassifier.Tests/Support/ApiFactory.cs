@@ -1,9 +1,15 @@
 ﻿namespace AnimalClassifier.Tests.Support
 {
     using AnimalClassifier.Core.Common.Email;
+    using AnimalClassifier.Core.Common.Settings;
+    using AnimalClassifier.Core.Common.Storage;
+    using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Identity;
+    using AnimalClassifier.Tests.Recognitions;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -13,7 +19,6 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
-    using static AnimalClassifier.Core.Constants.ConfigConstants;
 
     /// <summary>
     /// Runs the API against its own LocalDB database, created from the
@@ -29,6 +34,16 @@
 
         public RecordingEmailSender Emails { get; } = new();
 
+        /// <summary>
+        /// What every upload is classified by, in place of the model.
+        /// </summary>
+        public StubImageClassifier Classifier { get; } = new();
+
+        /// <summary>
+        /// What every uploaded video's frames are read by, in place of OpenCV.
+        /// </summary>
+        public StubVideoFrameSampler FrameSampler { get; } = new();
+
         private readonly string connectionString =
             $@"Server=(localdb)\MSSQLLocalDB;Database=AnimalClassifierTests_{Guid.NewGuid():N};Trusted_Connection=True;TrustServerCertificate=True;";
 
@@ -40,32 +55,46 @@
             // Outside Development nothing else supplies these settings, so the
             // tests can never reach the development database.
             builder.UseEnvironment("Testing");
-            builder.UseSetting($"ConnectionStrings:{DefaultConnection}", connectionString);
+            builder.UseSetting($"ConnectionStrings:{AnimalClassifierDbContext.ConnectionStringName}", connectionString);
 
             // Kept apart from the app's own uploads, and removed with the database.
-            builder.UseSetting($"{FileUploadSettings}:UploadPath", uploadPath);
-            builder.UseSetting($"{Jwt}:SecretKey", "TEST-ONLY-SIGNING-KEY-NOT-FOR-PRODUCTION-USE");
+            builder.UseSetting(Key<UploadSettings>(nameof(UploadSettings.UploadPath)), uploadPath);
+            builder.UseSetting(Key<JwtSettings>(nameof(JwtSettings.SecretKey)), "TEST-ONLY-SIGNING-KEY-NOT-FOR-PRODUCTION-USE");
 
             // The app refuses to start outside Development without these, and
             // nothing here ever connects to the host they name.
-            builder.UseSetting($"{Email}:Host", "localhost");
-            builder.UseSetting($"{Email}:SenderEmail", "tests@animalclassifier.local");
-            builder.UseSetting($"{Frontend}:BaseUrl", $"https://{FrontendDomain}");
+            builder.UseSetting(Key<EmailSettings>(nameof(EmailSettings.Host)), "localhost");
+            builder.UseSetting(Key<EmailSettings>(nameof(EmailSettings.SenderEmail)), "tests@animalclassifier.local");
+            builder.UseSetting(Key<FrontendSettings>(nameof(FrontendSettings.BaseUrl)), $"https://{FrontendDomain}");
 
             // Requests from a test carry no client address, so all of them
             // share one rate limiting window and the deployed limit would
             // throttle the suite. The tests that cover the limits set their own.
-            builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1000");
-            builder.UseSetting($"{RateLimiting}:PasswordResetPermitLimit", "1000");
+            builder.UseSetting(Key<RateLimitSettings>(nameof(RateLimitSettings.LoginPermitLimit)), "1000");
+            builder.UseSetting(Key<RateLimitSettings>(nameof(RateLimitSettings.PasswordResetPermitLimit)), "1000");
 
             // Whatever the app sends is kept here rather than sent, which is
-            // also what stops a test run from mailing anyone.
+            // also what stops a test run from mailing anyone. Uploads are
+            // recognised by stand-ins, which a test can tell what to see.
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IEmailSender>();
                 services.AddSingleton<IEmailSender>(Emails);
+
+                services.RemoveAll<IImageClassifier>();
+                services.AddSingleton<IImageClassifier>(Classifier);
+
+                services.RemoveAll<IVideoFrameSampler>();
+                services.AddSingleton<IVideoFrameSampler>(FrameSampler);
             });
         }
+
+        /// <summary>
+        /// The configuration key of one of the settings, such as
+        /// <c>Jwt:SecretKey</c>.
+        /// </summary>
+        public static string Key<TSettings>(string setting) where TSettings : ISettings =>
+            $"{TSettings.SectionName}:{setting}";
 
         /// <summary>
         /// The same app with an authenticator standing in for the real one, so

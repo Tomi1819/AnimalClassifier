@@ -1,7 +1,8 @@
 ﻿namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Admin;
     using AnimalClassifier.Core.Identity;
+    using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -13,21 +14,24 @@
     public class AdminController : ControllerBase
     {
         private readonly IAdminService adminService;
-        private readonly IUploadService uploadService;
+        private readonly IRecognitionHistoryService historyService;
 
-        public AdminController(IAdminService adminService, IUploadService uploadService)
+        public AdminController(IAdminService adminService, IRecognitionHistoryService historyService)
         {
             this.adminService = adminService;
-            this.uploadService = uploadService;
+            this.historyService = historyService;
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsers([FromQuery] string? search, [FromQuery, Range(1, int.MaxValue)] int page = 1) =>
-            Ok(await adminService.GetUsersAsync(search, page));
+        public async Task<IActionResult> GetUsers(
+            [FromQuery] string? search,
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await adminService.GetUsersAsync(search, page, cancellationToken));
 
         [HttpGet("users/{id}/history")]
-        public async Task<IActionResult> GetUserHistory(string id) =>
-            Ok(await uploadService.GetHistoryAsync(id));
+        public async Task<IActionResult> GetUserHistory(string id, CancellationToken cancellationToken) =>
+            Ok(await historyService.GetHistoryAsync(id, cancellationToken));
 
         [HttpPost("users/{id}/lock")]
         public Task<IActionResult> LockUser(string id) =>
@@ -46,8 +50,10 @@
             ChangeUserAsync(adminService.RevokeAdminAsync, id);
 
         [HttpGet("audit")]
-        public async Task<IActionResult> GetAuditLog([FromQuery, Range(1, int.MaxValue)] int page = 1) =>
-            Ok(await adminService.GetAuditLogAsync(page));
+        public async Task<IActionResult> GetAuditLog(
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await adminService.GetAuditLogAsync(page, cancellationToken));
 
         private async Task<IActionResult> ChangeUserAsync(Func<string, string, Task> change, string userId)
         {

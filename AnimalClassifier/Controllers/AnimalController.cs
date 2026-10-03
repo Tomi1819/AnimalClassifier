@@ -1,34 +1,27 @@
 ﻿namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Recognitions.Search;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
-    using static Constants.MessageConstants;
 
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class AnimalController : ControllerBase
     {
-        private readonly IAnimalService animalService;
+        private readonly IAnimalSearchService searchService;
 
-        public AnimalController(IAnimalService animalService)
+        public AnimalController(IAnimalSearchService searchService)
         {
-            this.animalService = animalService;
+            this.searchService = searchService;
         }
 
+        /// <summary>
+        /// Answers 404 when nothing matches, which the search page shows as
+        /// an empty result rather than as an error.
+        /// </summary>
         [HttpGet("search")]
-        public async Task<IActionResult> SearchAnimals([FromQuery] string searchTerm)
-        {
-            if (string.IsNullOrWhiteSpace(searchTerm))
-                return BadRequest(EnterSearchTerm);
-
-            var results = await animalService.SearchAnimalByNameAsync(searchTerm);
-
-            if (!results.Any())
-                return NotFound(NoMatches);
-
-            return Ok(results);
-        }
+        public async Task<IActionResult> SearchAnimals([FromQuery] string? searchTerm, CancellationToken cancellationToken) =>
+            Ok(await searchService.SearchAsync(searchTerm, cancellationToken));
     }
 }

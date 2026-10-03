@@ -1,36 +1,44 @@
+using AnimalClassifier.Cors;
 using AnimalClassifier.Extensions;
-using AnimalClassifier.Filters;
-using static AnimalClassifier.Core.Constants.ConfigConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationDbContext(builder.Configuration);
-
-builder.Services.AddApplicationIdentity();
-
-builder.Services.AddApplicationAuthentication(builder.Configuration);
-
-builder.Services.AddControllers(options => options.Filters.Add<DomainExceptionFilter>());
-
-builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
-
-builder.Services.AddApplicationPasskeys(builder.Configuration);
+builder.Services.AddApplicationPersistence(builder.Configuration);
 
 builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
 
-builder.Services.AddApplicationRateLimiting(builder.Configuration);
+builder.Services.AddApplicationStorage(builder.Environment);
 
-builder.Services.AddApplicationCors(builder.Configuration);
+builder.Services.AddApplicationFrontend();
+
+builder.Services.AddApplicationIdentity();
+
+builder.Services.AddApplicationAuthentication();
+
+builder.Services.AddApplicationPasskeys();
+
+builder.Services.AddApplicationRecognitions(builder.Configuration, builder.Environment);
+
+builder.Services.AddApplicationAdmin();
+
+builder.Services.AddApplicationApi();
+
+builder.Services.AddApplicationRateLimiting();
+
+builder.Services.AddApplicationCors();
 
 var app = builder.Build();
 
 await app.SeedRolesAsync();
 
+// First, so that a failure anywhere after it is answered in the same shape.
+app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
 
 app.UseApplicationUploads();
 
-app.UseCors(CorsPolicy);
+app.UseCors(CorsSettings.PolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -3,11 +3,11 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Extensions;
+    using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
     using System.Net.Mime;
-    using static Core.Constants.ConfigConstants;
 
     /// <summary>
     /// A signed-in user's own account: what it holds, and the changes they make
@@ -21,11 +21,15 @@ namespace AnimalClassifier.Controllers
     {
         private readonly IAccountService accountService;
         private readonly IDataExportService dataExportService;
+        private readonly IAccountDeletionService accountDeletionService;
 
-        public AccountController(IAccountService accountService, IDataExportService dataExportService)
+        public AccountController(IAccountService accountService,
+                                 IDataExportService dataExportService,
+                                 IAccountDeletionService accountDeletionService)
         {
             this.accountService = accountService;
             this.dataExportService = dataExportService;
+            this.accountDeletionService = accountDeletionService;
         }
 
         [HttpGet]
@@ -58,7 +62,7 @@ namespace AnimalClassifier.Controllers
         /// owner to keep.
         /// </summary>
         [HttpGet("export")]
-        [EnableRateLimiting(DataExportPolicy)]
+        [EnableRateLimiting(RateLimitPolicies.DataExport)]
         public async Task<IActionResult> ExportData() =>
             File(await dataExportService.ExportAsync(User.RequiredId()), MediaTypeNames.Application.Zip, ExportFileName());
 
@@ -68,7 +72,7 @@ namespace AnimalClassifier.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
         {
-            await accountService.DeleteAccountAsync(User.RequiredId(), request);
+            await accountDeletionService.DeleteAccountAsync(User.RequiredId(), request);
 
             return NoContent();
         }

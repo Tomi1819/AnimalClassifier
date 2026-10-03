@@ -1,10 +1,10 @@
 namespace AnimalClassifier.Core.Identity.Account
 {
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Passkeys;
-    using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
     using System.IO.Compression;
     using System.Text.Json;
 
@@ -21,17 +21,17 @@ namespace AnimalClassifier.Core.Identity.Account
 
         private readonly IAccountService accountService;
         private readonly IPasskeyService passkeyService;
-        private readonly IRepository repository;
+        private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IFileStorageService fileStorageService;
 
         public DataExportService(IAccountService accountService,
                                  IPasskeyService passkeyService,
-                                 IRepository repository,
+                                 IRecognitionLogRepository recognitionLogs,
                                  IFileStorageService fileStorageService)
         {
             this.accountService = accountService;
             this.passkeyService = passkeyService;
-            this.repository = repository;
+            this.recognitionLogs = recognitionLogs;
             this.fileStorageService = fileStorageService;
         }
 
@@ -77,7 +77,7 @@ namespace AnimalClassifier.Core.Identity.Account
 
         private async Task<IEnumerable<ExportedRecognition>> ReadRecognitionsAsync(string userId)
         {
-            var logs = await repository.GetAllRecognitionLogsForUserAsync(userId);
+            var logs = await recognitionLogs.GetAllForUserAsync(userId);
 
             return logs.Select(ToExportedRecognition).ToList();
         }

@@ -6,7 +6,9 @@ namespace AnimalClassifier.Core.Identity.Account
     using AnimalClassifier.Core.Identity.Passwords;
 
     /// <summary>
-    /// Changes a signed-in user makes to their own account.
+    /// Changes a signed-in user makes to their own account. Deleting it is
+    /// <see cref="IAccountDeletionService"/>'s, being the one change that
+    /// reaches past the account into everything it holds.
     /// </summary>
     public interface IAccountService
     {
@@ -57,20 +59,5 @@ namespace AnimalClassifier.Core.Identity.Account
         /// <param name="sessionExpiration">When the caller's token runs out.</param>
         /// <returns>The token the caller's session continues with.</returns>
         Task<LoginResponse> SignOutOtherSessionsAsync(string userId, DateTime sessionExpiration);
-
-        /// <summary>
-        /// Deletes the account once its password has been confirmed, along with
-        /// its recognitions, uploads and passkeys. The admin audit log keeps its
-        /// entries, naming a deleted user in the account's place. Every session
-        /// ends with it, since a token is only good for an account that exists.
-        ///
-        /// An administrator is refused, so that there is always someone left to
-        /// manage the site; another administrator has to revoke the role first.
-        /// </summary>
-        /// <exception cref="RequestRefusedException">
-        /// When the password is wrong or has been checked too often, or the
-        /// account belongs to an administrator.
-        /// </exception>
-        Task DeleteAccountAsync(string userId, DeleteAccountRequest request);
     }
 }

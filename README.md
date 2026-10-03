@@ -264,6 +264,60 @@ Removing them again, with `dotnet user-secrets remove "Email:Host"`, puts the li
 
 A link stays valid for an hour, is spent once it is used, and changing a password ends every session that account had open.
 
+### Uploading images and videos
+
+`POST /api/upload/image` takes a JPEG or PNG image in the `formFile` field,
+and `POST /api/upload/video` an MP4, MOV or AVI video in the `videoFile` field,
+each of at most 5 MB. A file's name and content type are whatever its sender
+says they are, so an image's first bytes are checked as well, and a file that
+is not really one is refused before the model ever reads it.
+
+A video is classified a frame at a time, one frame for every second of it. A
+video long enough to give more than 120 frames is sampled further apart, so
+that how long it takes has a bound however long the video is, and one that
+cannot be read is refused. An animal counts only when the model scores it at
+0.6 or more in at least three frames, since a single frame is often a blur or a
+glimpse; a video in which none does is recorded as `Unknown`.
+
+An upload that fails at any step leaves nothing behind: no file, and no
+recognition in the history.
+
+### Errors
+
+Every failure is answered with a message for the user, in one shape:
+
+```json
+{ "message": "Only JPEG and PNG images can be uploaded." }
+```
+
+| Status | When |
+| ------ | ---- |
+| `400 Bad Request` | The request was understood and refused, such as a wrong password or an unsupported file, or it could not be read, such as a number out of range. |
+| `401 Unauthorized` | Signing in failed, or the request's token is missing or no longer valid. |
+| `404 Not Found` | What the request names does not exist, or is not the caller's to see. |
+| `429 Too Many Requests` | A rate limit was reached. |
+| `500 Internal Server Error` | Something failed inside the app. It is logged, and the message says only that something went wrong. |
+
+### Settings
+
+Each setting is checked when the app starts, and the app refuses to start while
+one it needs is missing or wrong, naming it, rather than failing later on the
+first request that needs it. A signing key in `Jwt:SecretKey` has to be at
+least 32 characters long, for example, and every rate limit at least 1.
+
+### Updating the database
+
+Every change to the schema is a migration, which an existing database needs
+applied:
+
+```bash
+dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
+```
+
+`RemoveAnimalImages` drops the `AnimalImages` table, which nothing ever wrote
+to, and `IndexRecognitionDates` indexes when each recognition was made, which
+the activity chart reads by.
+
 ### Running the tests
 
 The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb). Each run creates its own database and drops it afterwards.
@@ -272,60 +326,94 @@ The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-u
 dotnet test
 ```
 
+Uploads are recognised by stand-ins for the model and for reading videos,
+which a test tells what to see. `ImageClassifierTests` alone loads the trained
+model, to show that the app still reads it correctly, and takes a few seconds
+for it.
+
 ## 📁 Project Structure
 
 ```
-AnimalClassifier/                  The API: controllers, filters, and how the app is put together
+AnimalClassifier/                  The API: controllers, and how the app is put together
+  Controllers/                     One per area, each only passing a request on and answering
+  ErrorHandling/                   How every failure is answered, always as { message }
   Extensions/                      Service registration, a file per area, such as IdentityServiceCollectionExtension
-  Filters/                         DomainExceptionFilter, which answers what the services refuse
+  Cors/ RateLimiting/              Which origins may call the API, and the limits on its endpoints
 AnimalClassifier.Core/             What the app does
-  Common/                          What every feature uses
+  Common/                          What every area uses
     Email/                         Sending email over SMTP, or into the log in development
     Exceptions/                    The refusals a service reports to the caller
-    Models/                        Responses shared by every feature
+    Models/                        Responses shared by every area, such as MessageResponse and PagedResult
+    Settings/                      ISettings, which every settings class implements, and the frontend's settings
+    Storage/                       Storing uploaded files, a folder per user
   Identity/                        Accounts and signing in; AccountName and the roles sit here
-    Authentication/                Registering, signing in, and the tokens a session runs on
     SecurityAlerts/                The emails sent when how an account signs in changes
+    Authentication/                Registering, signing in, and the tokens a session runs on
     Passwords/                     The password rules, confirming one, and resetting a forgotten one
     Passkeys/                      Registering, using and removing passkeys
     Account/                       A signed-in user's own account: profile, name, password, export, deletion
-  Configurations/ Constants/       The rest of the app, until it moves into features of its own
-  Contracts/ DTO/ Services/
-AnimalClassifier.Infrastructure/   The database: entities, migrations and the repository
-AnimalClassifier.Tests/            Integration tests, each class against a database of its own
-  Identity/                        The tests of identity, and the passkey authenticator they stand in
-  Support/                         The test app, ApiTest that every test class signs in with, and the recorded email
+  Recognitions/                    Recognising animals, and reading the recognitions back; MediaFile sits here
+    Classification/                The model, and reading a video's frames for it
+    Uploads/                       Checking and storing an upload, and recording what was recognised in it
+    History/                       A user's own recognitions, and clearing them
+    Search/                        Finding animals by name
+    Statistics/                    The totals, the animals recognised most, and the daily activity
+  Admin/                           Locking users, granting the administrator role, and the audit log
+AnimalClassifier.Infrastructure/   The database: entities, migrations, and a repository per table
+AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
+  Identity/ Recognitions/ Admin/   The tests of each area, and the stand-ins they use
+  ErrorHandling/ Settings/         How failures are answered, and the settings the app refuses to start without
+  Support/                         The test app, ApiTest that most test classes start from, and DependencyOrder
 ```
 
-Core is split by feature rather than by kind of file. Everything a feature
-needs sits in its folder, and the namespaces follow the folders:
+Core is split by area rather than by kind of file, and each area into parts.
+Everything a part needs sits in its folder, and the namespaces follow the
+folders:
 
 - the interface beside the service that implements it,
 - the requests and responses it takes in `Models/`,
-- its settings, and the texts it shows the user in a `<Feature>Messages` class,
+- its settings, which name their own section and mark what they need with
+  attributes such as `[Required]`,
+- the texts it shows the user, in a `<Part>Messages` class,
 - any limit it enforces, on the class that enforces it, as with
-  `AccountName.MaxLength` and `PasswordPolicy.MinLength`.
+  `AccountName.MaxLength`, `PasswordPolicy.MinLength` and
+  `UploadValidator.MaxFileSize`.
 
 The entities stay in Infrastructure, since the migrations name each by its
-full type name and moving one would read as a change to the schema.
+full type name and moving one would read as a change to the schema. Each table
+has a repository of its own, and `IUnitOfWork` saves what they were given and
+runs several changes in one transaction. A read that serves a request can take
+the request's cancellation token, since abandoning one loses nothing; a write
+never does, so that a caller who goes away cannot leave a change half made.
 
 ### Adding a feature
 
-1. Give it a folder of its own: `Core/Identity/<Feature>/` for a part of
-   identity, or a new area beside `Identity/`.
+1. Give it a folder of its own: `Core/<Area>/<Part>/` for a part of an area,
+   such as `Core/Recognitions/Uploads/`, or a new area beside the others.
 2. Have its services throw `RequestRefusedException`, `NotFoundException` or
    `AuthenticationFailedException` for anything the user should be told.
    `DomainExceptionFilter` answers them with 400, 404 and 401 and the message,
-   so a controller has nothing to catch. Any other exception is a server error,
-   and its message never reaches the caller.
-3. Register its services in its area's file in `AnimalClassifier/Extensions`,
-   such as `AddIdentityServices`.
-4. Test it from `AnimalClassifier.Tests/<Area>/` with a class deriving from
-   `ApiTest`.
+   so a controller has nothing to catch. Any other exception is logged and
+   answered as a server error, and its message never reaches the caller.
+3. Give its settings a class implementing `ISettings`, and add them with
+   `services.AddSettings<TSettings>()`, which checks them as the app starts.
+4. Register its services in its area's file in `AnimalClassifier/Extensions`,
+   such as `AddApplicationRecognitions`, and call any new file's from
+   `Program.cs`.
+5. Test it from `AnimalClassifier.Tests/<Area>/`, with a class deriving from
+   `ApiTest` to call it as a signed-in user would.
 
-The parts of identity depend on each other in one direction, in this order:
-SecurityAlerts, Authentication, Passwords, Passkeys, Account. Each may use
-those before it and none after, so Account uses all four and nothing uses
-Account. What they share sits in `Identity/` and uses none of them.
-`IdentityLayoutTests` holds that order and fails, naming the types, when a
-change breaks it; a new part goes into its list after what it uses.
+Core's areas depend on each other in one direction, in this order: Common,
+Identity, Recognitions, Admin. Each may use those before it and none after, so
+Common uses no other area, and nothing uses Admin. The parts within an area are
+held to an order of their own in the same way:
+
+| Area | Order of its parts |
+| ---- | ------------------ |
+| Identity | SecurityAlerts, Authentication, Passwords, Passkeys, Account |
+| Recognitions | Classification, Uploads, History, Search, Statistics |
+
+What an area's parts share sits in the area's own folder and uses none of
+them. `CoreLayoutTests`, `IdentityLayoutTests` and `RecognitionsLayoutTests`
+hold these orders and fail, naming the types, when a change breaks one; a new
+area or part goes into its list after what it uses.
