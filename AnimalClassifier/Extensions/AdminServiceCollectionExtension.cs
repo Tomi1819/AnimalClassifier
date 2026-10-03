@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Admin;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Services;
 
@@ -10,6 +11,8 @@ namespace AnimalClassifier.Extensions
     {
         public static IServiceCollection AddApplicationAdmin(this IServiceCollection services)
         {
+            services.AddSettings<AdminSettings>();
+
             services.AddScoped<IAdminService, AdminService>();
 
             return services;

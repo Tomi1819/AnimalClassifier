@@ -7,15 +7,15 @@ builder.Services.AddApplicationPersistence(builder.Configuration);
 
 builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
 
-builder.Services.AddApplicationStorage(builder.Configuration, builder.Environment);
+builder.Services.AddApplicationStorage(builder.Environment);
 
-builder.Services.AddApplicationFrontend(builder.Configuration);
+builder.Services.AddApplicationFrontend();
 
 builder.Services.AddApplicationIdentity();
 
-builder.Services.AddApplicationAuthentication(builder.Configuration);
+builder.Services.AddApplicationAuthentication();
 
-builder.Services.AddApplicationPasskeys(builder.Configuration);
+builder.Services.AddApplicationPasskeys();
 
 builder.Services.AddApplicationRecognitions(builder.Configuration);
 
@@ -23,9 +23,9 @@ builder.Services.AddApplicationAdmin();
 
 builder.Services.AddApplicationApi();
 
-builder.Services.AddApplicationRateLimiting(builder.Configuration);
+builder.Services.AddApplicationRateLimiting();
 
-builder.Services.AddApplicationCors(builder.Configuration);
+builder.Services.AddApplicationCors();
 
 var app = builder.Build();
 

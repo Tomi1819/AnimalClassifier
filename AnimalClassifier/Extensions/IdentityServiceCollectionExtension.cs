@@ -10,8 +10,8 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Identity;
+    using Microsoft.Extensions.Options;
     using Microsoft.IdentityModel.Tokens;
-    using static Constants.MessageConstants;
 
     /// <summary>
     /// Sets up who the users are and how a request shows which of them it
@@ -25,6 +25,11 @@ namespace AnimalClassifier.Extensions
 
         // The WebAuthn value asking the authenticator for a discoverable credential.
         private const string RequiredResidentKey = "required";
+
+        private const string OutdatedToken = "The token no longer matches the account.";
+
+        private const string UnresolvedPasskeyServerDomain =
+            "Passkey:ServerDomain is not set, and no domain can be read from Frontend:BaseUrl.";
 
         /// <summary>
         /// The accounts Identity keeps, the rules their passwords are held to,
@@ -69,21 +74,20 @@ namespace AnimalClassifier.Extensions
         /// Has every request show who it comes from with a token this app
         /// signed, and refuses one that no longer speaks for its account.
         /// </summary>
-        public static IServiceCollection AddApplicationAuthentication(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationAuthentication(this IServiceCollection services)
         {
-            var jwtSection = configuration.GetSection(JwtSettings.SectionName);
-            var jwtSettings = jwtSection.Get<JwtSettings>();
-
-            if (string.IsNullOrEmpty(jwtSettings?.SecretKey))
-            {
-                throw new InvalidOperationException(MissingJwtSecurityKey);
-            }
-
-            services.Configure<JwtSettings>(jwtSection);
+            services.AddSettings<JwtSettings>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+                .AddJwtBearer();
+
+            // Read from the settings once they can be, which is after they
+            // have been checked.
+            services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+                .Configure<IOptions<JwtSettings>>((options, jwtOptions) =>
                 {
+                    var jwtSettings = jwtOptions.Value;
+
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
@@ -108,34 +112,26 @@ namespace AnimalClassifier.Extensions
         /// anywhere else. Splitting the two across unrelated domains leaves no
         /// domain that covers both, and passkeys cannot be used at all.
         /// </summary>
-        public static IServiceCollection AddApplicationPasskeys(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationPasskeys(this IServiceCollection services)
         {
-            // Read once and folded into IdentityPasskeyOptions below, which is
-            // the form everything downstream asks for.
-            var passkeySettings = configuration.GetSection(PasskeySettings.SectionName).Get<PasskeySettings>();
-            var frontendSettings = configuration.GetSection(FrontendSettings.SectionName).Get<FrontendSettings>();
+            services.AddSettings<PasskeySettings>()
+                .Validate<IOptions<FrontendSettings>>(
+                    (passkeySettings, frontendOptions) => passkeySettings.ResolveServerDomain(frontendOptions.Value) is not null,
+                    UnresolvedPasskeyServerDomain);
 
-            var serverDomain = string.IsNullOrWhiteSpace(passkeySettings?.ServerDomain)
-                ? ReadHost(frontendSettings?.BaseUrl)
-                : passkeySettings.ServerDomain;
+            services.AddOptions<IdentityPasskeyOptions>()
+                .Configure<IOptions<PasskeySettings>, IOptions<FrontendSettings>>((options, passkeyOptions, frontendOptions) =>
+                {
+                    // Left to the host header, this would be whatever a caller put
+                    // there, and a passkey could be bound to a domain of their
+                    // choosing.
+                    options.ServerDomain = passkeyOptions.Value.ResolveServerDomain(frontendOptions.Value);
 
-            if (string.IsNullOrWhiteSpace(serverDomain))
-            {
-                throw new InvalidOperationException(InvalidPasskeyServerDomain);
-            }
-
-            services.Configure<IdentityPasskeyOptions>(options =>
-            {
-                // Left to the host header, this would be whatever a caller put
-                // there, and a passkey could be bound to a domain of their
-                // choosing.
-                options.ServerDomain = serverDomain;
-
-                // Signing in without first naming an account needs the
-                // credential to be discoverable, which is what the browser
-                // offers an account picker from.
-                options.ResidentKeyRequirement = RequiredResidentKey;
-            });
+                    // Signing in without first naming an account needs the
+                    // credential to be discoverable, which is what the browser
+                    // offers an account picker from.
+                    options.ResidentKeyRequirement = RequiredResidentKey;
+                });
 
             return services;
         }
@@ -176,8 +172,5 @@ namespace AnimalClassifier.Extensions
                 context.Fail(OutdatedToken);
             }
         }
-
-        private static string? ReadHost(string? url) =>
-            Uri.TryCreate(url, UriKind.Absolute, out var parsed) ? parsed.Host : null;
     }
 }

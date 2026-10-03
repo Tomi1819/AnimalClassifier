@@ -2,6 +2,8 @@ namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Cors;
     using AnimalClassifier.Filters;
+    using Microsoft.AspNetCore.Cors.Infrastructure;
+    using Microsoft.Extensions.Options;
 
     /// <summary>
     /// How the API itself answers: its controllers, how a failure is put to
@@ -16,18 +18,18 @@ namespace AnimalClassifier.Extensions
             return services;
         }
 
-        public static IServiceCollection AddApplicationCors(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationCors(this IServiceCollection services)
         {
-            var allowedOrigins = configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()?.AllowedOrigins
-                ?? [];
+            services.AddSettings<CorsSettings>();
 
-            services.AddCors(options =>
-            {
-                options.AddPolicy(CorsSettings.PolicyName, policy => policy
-                    .WithOrigins(allowedOrigins)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader());
-            });
+            services.AddCors();
+
+            services.AddOptions<CorsOptions>()
+                .Configure<IOptions<CorsSettings>>((options, settings) =>
+                    options.AddPolicy(CorsSettings.PolicyName, policy => policy
+                        .WithOrigins(settings.Value.AllowedOrigins)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()));
 
             return services;
         }

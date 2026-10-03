@@ -3,6 +3,8 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.RateLimiting;
+    using Microsoft.AspNetCore.RateLimiting;
+    using Microsoft.Extensions.Options;
     using System.Threading.RateLimiting;
     using static Constants.MessageConstants;
 
@@ -23,56 +25,55 @@ namespace AnimalClassifier.Extensions
         /// than by an endpoint, so that nothing asking for the password can
         /// leave the cap out.
         /// </summary>
-        public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services)
         {
-            var rateLimitSettings = configuration.GetSection(RateLimitSettings.SectionName).Get<RateLimitSettings>()
-                ?? new RateLimitSettings();
+            services.AddSettings<RateLimitSettings>();
 
-            services.Configure<RateLimitSettings>(configuration.GetSection(RateLimitSettings.SectionName));
+            // Otherwise the refusal arrives as a bare status the frontend
+            // has nothing to show for.
+            services.AddRateLimiter(options => options.OnRejected = RespondTooManyRequestsAsync);
 
-            services.AddRateLimiter(options =>
-            {
-                options.AddPolicy<string>(RateLimitPolicies.Login, context => LimitPerAddress(
-                    context, rateLimitSettings.LoginPermitLimit, rateLimitSettings.LoginWindowMinutes));
-
-                options.AddPolicy<string>(RateLimitPolicies.PasswordReset, context => LimitPerAddress(
-                    context, rateLimitSettings.PasswordResetPermitLimit, rateLimitSettings.PasswordResetWindowMinutes));
-
-                // Counted per account rather than per address, as only a
-                // signed-in user can export, and people sharing an address
-                // should not use up each other's exports.
-                options.AddPolicy<string>(RateLimitPolicies.DataExport, context =>
-                    RateLimitPartition.GetFixedWindowLimiter(
-                        context.User.Id() ?? UnknownClient,
-                        _ => new FixedWindowRateLimiterOptions
-                        {
-                            PermitLimit = rateLimitSettings.DataExportPermitLimit,
-                            Window = TimeSpan.FromMinutes(rateLimitSettings.DataExportWindowMinutes)
-                        }));
-
-                // Otherwise the refusal arrives as a bare status the frontend
-                // has nothing to show for.
-                options.OnRejected = async (context, cancellationToken) =>
-                {
-                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-
-                    await context.HttpContext.Response.WriteAsJsonAsync(
-                        new MessageResponse { Message = TooManyRequests }, cancellationToken);
-                };
-            });
+            // Read from the settings once they can be, which is after they
+            // have been checked.
+            services.AddOptions<RateLimiterOptions>()
+                .Configure<IOptions<RateLimitSettings>>((options, settings) => AddPolicies(options, settings.Value));
 
             return services;
+        }
+
+        private static void AddPolicies(RateLimiterOptions options, RateLimitSettings settings)
+        {
+            options.AddPolicy<string>(RateLimitPolicies.Login, context => LimitPerAddress(
+                context, settings.LoginPermitLimit, settings.LoginWindowMinutes));
+
+            options.AddPolicy<string>(RateLimitPolicies.PasswordReset, context => LimitPerAddress(
+                context, settings.PasswordResetPermitLimit, settings.PasswordResetWindowMinutes));
+
+            // Counted per account rather than per address, as only a
+            // signed-in user can export, and people sharing an address
+            // should not use up each other's exports.
+            options.AddPolicy<string>(RateLimitPolicies.DataExport, context => FixedWindow(
+                context.User.Id() ?? UnknownClient, settings.DataExportPermitLimit, settings.DataExportWindowMinutes));
         }
 
         // Callers sharing an address share a window. Counting them all as one
         // instead would let a single caller spend everybody's attempts.
         private static RateLimitPartition<string> LimitPerAddress(HttpContext context, int permitLimit, int windowMinutes) =>
-            RateLimitPartition.GetFixedWindowLimiter(
-                context.Connection.RemoteIpAddress?.ToString() ?? UnknownClient,
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = permitLimit,
-                    Window = TimeSpan.FromMinutes(windowMinutes)
-                });
+            FixedWindow(context.Connection.RemoteIpAddress?.ToString() ?? UnknownClient, permitLimit, windowMinutes);
+
+        private static RateLimitPartition<string> FixedWindow(string partitionKey, int permitLimit, int windowMinutes) =>
+            RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromMinutes(windowMinutes)
+            });
+
+        private static async ValueTask RespondTooManyRequestsAsync(OnRejectedContext context, CancellationToken cancellationToken)
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+            await context.HttpContext.Response.WriteAsJsonAsync(
+                new MessageResponse { Message = TooManyRequests }, cancellationToken);
+        }
     }
 }

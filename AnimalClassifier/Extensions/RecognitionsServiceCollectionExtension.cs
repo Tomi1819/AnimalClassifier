@@ -7,7 +7,6 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Services.Helpers;
     using Microsoft.Extensions.ML;
     using Microsoft.ML;
-    using static Constants.MessageConstants;
 
     /// <summary>
     /// Recognising animals in what users upload, and everything read back from
@@ -24,16 +23,12 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddSingleton<MLContext>();
 
-            services.Configure<MLModelSettings>(configuration.GetSection(MLModelSettings.SectionName));
-
-            var mlModelSettings = configuration.GetSection(MLModelSettings.SectionName).Get<MLModelSettings>();
-            if (string.IsNullOrWhiteSpace(mlModelSettings?.Path))
-            {
-                throw new InvalidOperationException(MissingMLModelPath);
-            }
+            // The pool is built from the model's path, so the settings are read
+            // here rather than once the app starts.
+            var modelSettings = configuration.GetValidatedSettings<MLModelSettings>();
 
             services.AddPredictionEnginePool<ImageData, ImagePrediction>()
-                .FromFile(mlModelSettings.Path);
+                .FromFile(modelSettings.Path);
 
             return services;
         }
