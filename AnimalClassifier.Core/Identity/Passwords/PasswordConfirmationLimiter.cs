@@ -1,6 +1,5 @@
 namespace AnimalClassifier.Core.Identity.Passwords
 {
-    using AnimalClassifier.Core.Configurations;
     using Microsoft.Extensions.Options;
     using System.Threading.RateLimiting;
 
@@ -8,9 +7,9 @@ namespace AnimalClassifier.Core.Identity.Passwords
     {
         private readonly PartitionedRateLimiter<string> limiter;
 
-        public PasswordConfirmationLimiter(IOptions<RateLimitSettings> rateLimitOptions)
+        public PasswordConfirmationLimiter(IOptions<PasswordConfirmationSettings> settingsOptions)
         {
-            var settings = rateLimitOptions.Value;
+            var settings = settingsOptions.Value;
 
             // One window per account, so that neither the people sharing an
             // address nor the sessions sharing an account matter to the count.

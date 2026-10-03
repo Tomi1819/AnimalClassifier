@@ -8,6 +8,7 @@ namespace AnimalClassifier.Tests.Identity
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.EntityFrameworkCore;
@@ -725,7 +726,7 @@ namespace AnimalClassifier.Tests.Identity
         private async Task UseUpPasswordAttemptsAsync(HttpClient client)
         {
             var permitLimit = Factory.Services
-                .GetRequiredService<IOptions<RateLimitSettings>>().Value.PasswordConfirmationPermitLimit;
+                .GetRequiredService<IOptions<PasswordConfirmationSettings>>().Value.PasswordConfirmationPermitLimit;
 
             for (var attempt = 0; attempt < permitLimit; attempt++)
             {

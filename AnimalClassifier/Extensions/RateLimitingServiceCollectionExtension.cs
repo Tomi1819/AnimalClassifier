@@ -1,7 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.Extensions.Options;

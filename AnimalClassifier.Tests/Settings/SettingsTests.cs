@@ -2,6 +2,7 @@ namespace AnimalClassifier.Tests.Settings
 {
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Options;
