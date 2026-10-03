@@ -32,7 +32,6 @@
             configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
         }
 
-        public DbSet<AnimalImage> AnimalImages { get; set; } = null!;
         public DbSet<AnimalRecognitionLog> AnimalRecognitionLogs { get; set; } = null!;
         public DbSet<AdminAuditLog> AdminAuditLogs { get; set; } = null!;
     }
