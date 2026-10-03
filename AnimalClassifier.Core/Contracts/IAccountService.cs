@@ -3,6 +3,7 @@ namespace AnimalClassifier.Core.Contracts
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.Passwords;
 
     /// <summary>
     /// Changes a signed-in user makes to their own account.

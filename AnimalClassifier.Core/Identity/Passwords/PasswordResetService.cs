@@ -1,13 +1,10 @@
-﻿namespace AnimalClassifier.Core.Services
+﻿namespace AnimalClassifier.Core.Identity.Passwords
 {
     using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Configurations;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Identity;
+    using AnimalClassifier.Core.Identity.Passwords.Models;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
-    using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;

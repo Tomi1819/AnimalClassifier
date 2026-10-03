@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Contracts
+namespace AnimalClassifier.Core.Identity.Passwords
 {
     /// <summary>
     /// Caps how often one account's password may be checked from inside a

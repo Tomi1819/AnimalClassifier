@@ -1,7 +1,6 @@
-namespace AnimalClassifier.Core.Services.Helpers
+namespace AnimalClassifier.Core.Identity.Passwords
 {
     using AnimalClassifier.Core.Configurations;
-    using AnimalClassifier.Core.Contracts;
     using Microsoft.Extensions.Options;
     using System.Threading.RateLimiting;
 

@@ -1,7 +1,6 @@
-namespace AnimalClassifier.Core.Services
+namespace AnimalClassifier.Core.Identity.Passwords
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using static Constants.MessageConstants;
