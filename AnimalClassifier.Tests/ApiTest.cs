@@ -8,7 +8,7 @@ namespace AnimalClassifier.Tests
     using Microsoft.Extensions.Options;
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
-    using static AnimalClassifier.Core.Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
 
     /// <summary>

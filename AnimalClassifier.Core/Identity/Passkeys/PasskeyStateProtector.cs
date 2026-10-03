@@ -5,7 +5,7 @@ namespace AnimalClassifier.Core.Identity.Passkeys
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;
     using System.Security.Cryptography;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Passkeys.PasskeyMessages;
     using static Constants.SecurityConstants;
 
     public class PasskeyStateProtector : IPasskeyStateProtector

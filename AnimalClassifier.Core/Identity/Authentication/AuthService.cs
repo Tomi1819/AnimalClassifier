@@ -6,6 +6,7 @@ namespace AnimalClassifier.Core.Identity.Authentication
     using Microsoft.AspNetCore.Identity;
     using System.Security.Claims;
     using System.Threading.Tasks;
+    using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
     using static Constants.MessageConstants;
 

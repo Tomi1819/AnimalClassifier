@@ -9,6 +9,8 @@
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.ValidationConstants;
+    using static AnimalClassifier.Core.Identity.IdentityMessages;
+    using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
     public class AuthControllerTests : ApiTest

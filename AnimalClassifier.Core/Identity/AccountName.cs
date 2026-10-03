@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.IdentityMessages;
     using static Constants.ValidationConstants;
 
     /// <summary>

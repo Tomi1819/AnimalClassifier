@@ -11,7 +11,8 @@ namespace AnimalClassifier.Core.Identity.Passkeys
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Text.Json.Nodes;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
+    using static AnimalClassifier.Core.Identity.Passkeys.PasskeyMessages;
 
     public class PasskeyService : IPasskeyService
     {

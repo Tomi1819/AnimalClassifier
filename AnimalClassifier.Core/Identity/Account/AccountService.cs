@@ -11,8 +11,8 @@ namespace AnimalClassifier.Core.Identity.Account
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Logging;
+    using static AnimalClassifier.Core.Identity.Account.AccountMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
-    using static Constants.MessageConstants;
 
     public class AccountService : IAccountService
     {

@@ -12,7 +12,7 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using System.Text;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static Constants.SecurityConstants;
 
     public class PasswordResetService : IPasswordResetService
