@@ -1,9 +1,11 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Core.Identity.Passwords;
+    using AnimalClassifier.Core.Identity.SecurityAlerts;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -25,6 +27,10 @@ namespace AnimalClassifier.Extensions
         // The WebAuthn value asking the authenticator for a discoverable credential.
         private const string RequiredResidentKey = "required";
 
+        /// <summary>
+        /// The accounts Identity keeps, the rules their passwords are held to,
+        /// and the services that sign them in and change them.
+        /// </summary>
         public static IServiceCollection AddApplicationIdentity(this IServiceCollection services)
         {
             services
@@ -57,7 +63,7 @@ namespace AnimalClassifier.Extensions
             services.Configure<DataProtectionTokenProviderOptions>(options =>
                 options.TokenLifespan = PasswordPolicy.ResetTokenLifespan);
 
-            return services;
+            return services.AddIdentityServices();
         }
 
         /// <summary>
@@ -131,6 +137,31 @@ namespace AnimalClassifier.Extensions
                 // offers an account picker from.
                 options.ResidentKeyRequirement = RequiredResidentKey;
             });
+
+            return services;
+        }
+
+        // Grouped as the folders under Core/Identity are, so that a part of
+        // identity and what it registers are found the same way.
+        private static IServiceCollection AddIdentityServices(this IServiceCollection services)
+        {
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
+
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IDataExportService, DataExportService>();
+
+            services.AddScoped<IPasswordConfirmer, PasswordConfirmer>();
+            services.AddScoped<IPasswordResetService, PasswordResetService>();
+
+            // Kept for as long as the app runs, since it is what remembers
+            // the checks already made.
+            services.AddSingleton<IPasswordConfirmationLimiter, PasswordConfirmationLimiter>();
+
+            services.AddScoped<IPasskeyService, PasskeyService>();
+            services.AddSingleton<IPasskeyStateProtector, PasskeyStateProtector>();
+
+            services.AddScoped<ISecurityAlertSender, SecurityAlertSender>();
 
             return services;
         }
