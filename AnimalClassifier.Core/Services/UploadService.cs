@@ -112,29 +112,6 @@
         public Task<AnimalRecognitionLog?> GetRecognitionLogByIdAsync(int id) =>
             recognitionLogs.GetByIdAsync(id);
 
-        public async Task<IEnumerable<RecognitionHistoryItem>> GetHistoryAsync(string userId)
-        {
-            var logs = await recognitionLogs.GetHistoryAsync(userId);
-
-            return logs.Select(log => new RecognitionHistoryItem
-            {
-                Id = log.Id,
-                MediaPath = log.ImagePath,
-                RecognizedAnimal = log.AnimalName,
-                DateRecognized = log.DateRecognized,
-                PredictionScore = log.PredictionScore,
-                FramesProcessed = log.FramesProcessed,
-                // A video is stored in the same column as an image, so the path
-                // is what tells the two apart.
-                IsVideo = !fileValidator.IsImage(log.ImagePath)
-            });
-        }
-
-        public async Task<int> ClearHistoryAsync(string userId)
-        {
-            return await recognitionLogs.ClearHistoryAsync(userId);
-        }
-
         private const string UnrecognisedAnimal = "Unknown";
 
         private async Task<StoredFile> SaveAsync(IFormFile file, string userId)

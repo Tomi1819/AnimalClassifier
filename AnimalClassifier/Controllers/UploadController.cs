@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
@@ -17,11 +18,15 @@
     public class UploadController : ControllerBase
     {
         private readonly IUploadService uploadService;
+        private readonly IRecognitionHistoryService historyService;
         private readonly ILogger<UploadController> logger;
 
-        public UploadController(IUploadService uploadService, ILogger<UploadController> logger)
+        public UploadController(IUploadService uploadService,
+                                IRecognitionHistoryService historyService,
+                                ILogger<UploadController> logger)
         {
             this.uploadService = uploadService;
+            this.historyService = historyService;
             this.logger = logger;
         }
 
@@ -112,17 +117,8 @@
         /// </summary>
         [HttpGet("history")]
         [Authorize]
-        public async Task<IActionResult> GetHistory()
-        {
-            var userId = User.Id();
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("User is not authenticated.");
-            }
-
-            return Ok(await uploadService.GetHistoryAsync(userId));
-        }
+        public async Task<IActionResult> GetHistory(CancellationToken cancellationToken) =>
+            Ok(await historyService.GetHistoryAsync(User.RequiredId(), cancellationToken));
 
         /// <summary>
         /// Clears the signed-in user's history. The recognitions are kept, so
@@ -133,15 +129,7 @@
         [Authorize]
         public async Task<IActionResult> ClearHistory()
         {
-            var userId = User.Id();
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("User is not authenticated.");
-            }
-
-            var cleared = await uploadService.ClearHistoryAsync(userId);
-            logger.LogInformation($"Cleared {cleared} recognition(s) for user {userId}.");
+            await historyService.ClearHistoryAsync(User.RequiredId());
 
             return NoContent();
         }

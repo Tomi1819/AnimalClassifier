@@ -3,6 +3,7 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
+    using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Core.Services.Helpers;
     using Microsoft.Extensions.ML;
@@ -16,6 +17,7 @@ namespace AnimalClassifier.Extensions
         public static IServiceCollection AddApplicationRecognitions(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
             services.AddScoped<IUploadService, UploadService>();
+            services.AddScoped<IRecognitionHistoryService, RecognitionHistoryService>();
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddScoped<IAnimalService, AnimalService>();
