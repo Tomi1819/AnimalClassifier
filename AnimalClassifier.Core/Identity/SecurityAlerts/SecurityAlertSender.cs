@@ -1,10 +1,9 @@
-namespace AnimalClassifier.Core.Services
+namespace AnimalClassifier.Core.Identity.SecurityAlerts
 {
     using AnimalClassifier.Core.Common.Email;
-    using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.Extensions.Logging;
-    using static Helpers.SecurityAlertEmail;
+    using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
     public class SecurityAlertSender : ISecurityAlertSender
     {
