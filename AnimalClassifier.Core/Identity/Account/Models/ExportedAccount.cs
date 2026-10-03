@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.DTO
+namespace AnimalClassifier.Core.Identity.Account.Models
 {
     /// <summary>
     /// The account itself, as its owner's copy of their data holds it.

@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.DTO
+namespace AnimalClassifier.Core.Identity.Account.Models
 {
     /// <summary>
     /// What the signed-in user's account says about them.

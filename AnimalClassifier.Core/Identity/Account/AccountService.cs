@@ -1,9 +1,8 @@
-namespace AnimalClassifier.Core.Services
+namespace AnimalClassifier.Core.Identity.Account
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Identity;
+    using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
