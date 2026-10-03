@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Contracts
 {
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
 
     /// <summary>
     /// Carries the state of a passkey ceremony across the two requests it

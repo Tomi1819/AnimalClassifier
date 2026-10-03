@@ -1,6 +1,5 @@
-﻿namespace AnimalClassifier.Core.Services
+﻿namespace AnimalClassifier.Core.Common.Email
 {
-    using AnimalClassifier.Core.Contracts;
     using Microsoft.Extensions.Logging;
 
     /// <summary>

@@ -1,5 +1,7 @@
 ﻿namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Common.Email;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;

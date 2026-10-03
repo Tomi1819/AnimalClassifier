@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Services
 {
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using static Constants.MessageConstants;

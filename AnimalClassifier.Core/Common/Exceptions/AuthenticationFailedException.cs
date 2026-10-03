@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Exceptions
+namespace AnimalClassifier.Core.Common.Exceptions
 {
     /// <summary>
     /// The caller could not be signed in: the credentials were wrong, or the

@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Core.Services
 {
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Exceptions;
     using AnimalClassifier.Core.Extensions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;

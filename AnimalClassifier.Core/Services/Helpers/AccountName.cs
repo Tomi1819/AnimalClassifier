@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Services.Helpers
 {
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
     using static Constants.MessageConstants;
     using static Constants.ValidationConstants;
 

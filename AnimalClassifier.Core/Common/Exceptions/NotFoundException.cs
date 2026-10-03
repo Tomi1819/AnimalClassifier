@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Exceptions
+namespace AnimalClassifier.Core.Common.Exceptions
 {
     /// <summary>
     /// What the request names does not exist, or is not the caller's to reach.

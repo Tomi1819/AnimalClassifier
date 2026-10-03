@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Tests
 {
-    using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Filters;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;

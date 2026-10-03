@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Exceptions
+namespace AnimalClassifier.Core.Common.Exceptions
 {
     /// <summary>
     /// A failure the caller is told about. Its message is written for the

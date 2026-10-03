@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Exceptions
+namespace AnimalClassifier.Core.Common.Exceptions
 {
     /// <summary>
     /// The request was understood and turned down: a wrong password, a name

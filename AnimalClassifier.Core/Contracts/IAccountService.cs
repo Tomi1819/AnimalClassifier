@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Contracts
 {
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Exceptions;
 
     /// <summary>
     /// Changes a signed-in user makes to their own account.
