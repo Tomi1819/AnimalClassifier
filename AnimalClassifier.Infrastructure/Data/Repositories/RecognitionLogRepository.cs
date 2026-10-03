@@ -29,6 +29,10 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                       .Select(l => l.DateRecognized)
                       .ToListAsync();
 
+        public async Task<IReadOnlyList<AnimalRecognitionLog>> FindByAnimalNameAsync(string term, CancellationToken cancellationToken) =>
+            await Logs.Where(l => l.AnimalName.Contains(term))
+                      .ToListAsync(cancellationToken);
+
         public async Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken) =>
             await Logs.Where(l => l.UserId == userId && !l.IsDeleted)
                       .OrderByDescending(l => l.DateRecognized)

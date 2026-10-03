@@ -4,6 +4,7 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.History;
+    using AnimalClassifier.Core.Recognitions.Search;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using AnimalClassifier.Core.Services;
     using Microsoft.Extensions.ML;
@@ -19,7 +20,7 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IRecognitionHistoryService, RecognitionHistoryService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
-            services.AddScoped<IAnimalService, AnimalService>();
+            services.AddScoped<IAnimalSearchService, AnimalSearchService>();
 
             // Both are safe to share: the classifier takes an engine from the
             // pool for each image, and the sampler keeps nothing between videos.
