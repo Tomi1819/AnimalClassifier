@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
-    using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.Core.Common.Settings;
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Passkeys;
