@@ -1,11 +1,11 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.ErrorHandling;
     using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.Extensions.Options;
     using System.Threading.RateLimiting;
-    using static Constants.MessageConstants;
 
     public static class RateLimitingServiceCollectionExtension
     {
@@ -72,7 +72,7 @@ namespace AnimalClassifier.Extensions
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
             await context.HttpContext.Response.WriteAsJsonAsync(
-                new MessageResponse { Message = TooManyRequests }, cancellationToken);
+                new MessageResponse { Message = ErrorMessages.TooManyRequests }, cancellationToken);
         }
     }
 }
