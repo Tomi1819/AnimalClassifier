@@ -1,10 +1,10 @@
 namespace AnimalClassifier.Controllers
 {
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.Passkeys;
+    using AnimalClassifier.Core.Identity.Passkeys.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
     using Microsoft.AspNetCore.Mvc;

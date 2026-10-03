@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.DTO
+namespace AnimalClassifier.Core.Identity.Passkeys.Models
 {
     /// <summary>
     /// One of the passkeys registered to an account, as its owner sees it.

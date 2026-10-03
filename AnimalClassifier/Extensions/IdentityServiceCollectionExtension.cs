@@ -2,6 +2,7 @@ namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
