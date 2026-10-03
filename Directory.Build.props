@@ -1,0 +1,9 @@
+<Project>
+  <!-- What every project in the solution is built with, so that a change of
+       framework or language setting is made once rather than per project. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>
