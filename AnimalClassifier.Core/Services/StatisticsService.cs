@@ -2,20 +2,20 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Infrastructure.Data.Common;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
 
     public class StatisticsService : IStatisticsService
     {
-        private readonly IRepository repository;
+        private readonly IRecognitionLogRepository recognitionLogs;
 
-        public StatisticsService(IRepository repository)
+        public StatisticsService(IRecognitionLogRepository recognitionLogs)
         {
-            this.repository = repository;
+            this.recognitionLogs = recognitionLogs;
         }
 
         public async Task<List<MostCommonAnimal>> GetMostCommonAnimalAsync()
         {
-            var logs = await repository.GetAllRecognitionLogsAsync();
+            var logs = await recognitionLogs.GetAllAsync();
 
             var mostCommon = logs
                 .GroupBy(l => l.AnimalName)
@@ -38,13 +38,13 @@
 
         public async Task<int> GetTotalClassificationAsync()
         {
-            var logs = await repository.GetAllRecognitionLogsAsync();
-            return logs.Count();
+            var logs = await recognitionLogs.GetAllAsync();
+            return logs.Count;
         }
 
         public async Task<int> GetUniqueUserCountAsync()
         {
-            var logs = await repository.GetAllRecognitionLogsAsync();
+            var logs = await recognitionLogs.GetAllAsync();
             return logs.Select(u => u.UserId)
                 .Distinct()
                 .Count();
@@ -55,7 +55,7 @@
             var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
             var firstDay = today.AddDays(1 - days);
 
-            var dates = await repository.GetRecognitionDatesSinceAsync(DateTime.UtcNow.AddDays(-(days + 1)));
+            var dates = await recognitionLogs.GetDatesSinceAsync(DateTime.UtcNow.AddDays(-(days + 1)));
 
             var counts = dates
                 .GroupBy(date => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(date, timeZone)))

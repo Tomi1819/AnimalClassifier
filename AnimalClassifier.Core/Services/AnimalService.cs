@@ -2,16 +2,16 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Infrastructure.Data.Common;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
 
     public class AnimalService : IAnimalService
     {
-        private readonly IRepository repository;
+        private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IFileValidator fileValidator;
 
-        public AnimalService(IRepository repository, IFileValidator fileValidator)
+        public AnimalService(IRecognitionLogRepository recognitionLogs, IFileValidator fileValidator)
         {
-            this.repository = repository;
+            this.recognitionLogs = recognitionLogs;
             this.fileValidator = fileValidator;
         }
         public async Task<List<AnimalSearchResult>> SearchAnimalByNameAsync(string searchTerm)
@@ -19,7 +19,7 @@
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return new List<AnimalSearchResult>();
 
-            var logs = await repository.GetAllRecognitionLogsAsync();
+            var logs = await recognitionLogs.GetAllAsync();
 
             var filtered = logs
                 .Where(l => l.AnimalName.Contains(searchTerm.Trim(), StringComparison.OrdinalIgnoreCase))

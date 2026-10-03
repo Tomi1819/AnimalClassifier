@@ -4,8 +4,8 @@
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity;
-    using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Identity;
     using static AnimalClassifier.Core.Identity.RoleConstants;
     using static Constants.MessageConstants;
@@ -15,23 +15,33 @@
         private const int PageSize = 20;
 
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly IRepository repository;
+        private readonly IUserRepository users;
+        private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IAdminAuditLogRepository auditLogs;
+        private readonly IUnitOfWork unitOfWork;
 
-        public AdminService(UserManager<ApplicationUser> userManager, IRepository repository)
+        public AdminService(UserManager<ApplicationUser> userManager,
+                            IUserRepository users,
+                            IRecognitionLogRepository recognitionLogs,
+                            IAdminAuditLogRepository auditLogs,
+                            IUnitOfWork unitOfWork)
         {
             this.userManager = userManager;
-            this.repository = repository;
+            this.users = users;
+            this.recognitionLogs = recognitionLogs;
+            this.auditLogs = auditLogs;
+            this.unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<AdminUserItem>> GetUsersAsync(string? search, int page)
         {
-            var (users, totalCount) = await repository.GetUsersAsync(search, page, PageSize);
-            var recognitionCounts = await repository.CountRecognitionLogsByUserAsync(users.Select(u => u.Id));
+            var (pageOfUsers, totalCount) = await users.GetPageAsync(search, page, PageSize);
+            var recognitionCounts = await recognitionLogs.CountHistoryByUserAsync(pageOfUsers.Select(u => u.Id));
             var adminIds = (await userManager.GetUsersInRoleAsync(Admin)).Select(u => u.Id).ToHashSet();
 
             return new PagedResult<AdminUserItem>
             {
-                Items = users.Select(user => new AdminUserItem
+                Items = pageOfUsers.Select(user => new AdminUserItem
                 {
                     Id = user.Id,
                     FullName = user.FullName,
@@ -69,7 +79,7 @@
 
         public async Task<PagedResult<AdminAuditLogItem>> GetAuditLogAsync(int page)
         {
-            var (logs, totalCount) = await repository.GetAdminAuditLogsAsync(page, PageSize);
+            var (logs, totalCount) = await auditLogs.GetPageAsync(page, PageSize);
 
             return new PagedResult<AdminAuditLogItem>
             {
@@ -95,24 +105,23 @@
 
             var user = await userManager.GetByIdAsync(userId);
 
-            await using var transaction = await repository.BeginTransactionAsync();
-
-            (await change(user)).ThrowIfFailed();
-
-            // Identity leaves the stamp alone on role and lockout changes, and the
-            // stamp is what ends the user's current sessions.
-            (await userManager.UpdateSecurityStampAsync(user)).ThrowIfFailed();
-
-            await repository.AddAdminAuditLogAsync(new AdminAuditLog
+            await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                Action = action,
-                DatePerformed = DateTime.UtcNow,
-                AdminId = adminId,
-                UserId = userId
-            });
-            await repository.SaveChangesAsync();
+                (await change(user)).ThrowIfFailed();
 
-            await transaction.CommitAsync();
+                // Identity leaves the stamp alone on role and lockout changes, and
+                // the stamp is what ends the user's current sessions.
+                (await userManager.UpdateSecurityStampAsync(user)).ThrowIfFailed();
+
+                auditLogs.Add(new AdminAuditLog
+                {
+                    Action = action,
+                    DatePerformed = DateTime.UtcNow,
+                    AdminId = adminId,
+                    UserId = userId
+                });
+                await unitOfWork.SaveChangesAsync();
+            });
         }
 
         // An entry outlives the accounts it names, which are gone once deleted.

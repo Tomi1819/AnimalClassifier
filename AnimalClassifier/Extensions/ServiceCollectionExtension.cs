@@ -8,7 +8,7 @@
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Common;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Http;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
@@ -38,7 +38,10 @@
 
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
-            services.AddScoped<IRepository, Repository>();
+            services.AddScoped<IRecognitionLogRepository, RecognitionLogRepository>();
+            services.AddScoped<IAdminAuditLogRepository, AdminAuditLogRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFileValidator, FileValidator>();
