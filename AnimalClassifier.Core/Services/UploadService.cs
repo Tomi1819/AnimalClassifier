@@ -2,8 +2,8 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Http;
     using System.Globalization;
 
@@ -12,18 +12,21 @@
         private readonly IFileValidator fileValidator;
         private readonly IFileStorageService fileStorageService;
         private readonly IRecognitionService recognitionService;
-        private readonly IRepository repository;
+        private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IUnitOfWork unitOfWork;
 
         public UploadService(
             IFileValidator fileValidator,
             IFileStorageService fileStorageService,
             IRecognitionService recognitionService,
-            IRepository repository)
+            IRecognitionLogRepository recognitionLogs,
+            IUnitOfWork unitOfWork)
         {
             this.fileValidator = fileValidator;
             this.fileStorageService = fileStorageService;
             this.recognitionService = recognitionService;
-            this.repository = repository;
+            this.recognitionLogs = recognitionLogs;
+            this.unitOfWork = unitOfWork;
         }
 
         public async Task<ImageUploadResult> UploadImageAsync(IFormFile formFile, string userId)
@@ -43,8 +46,8 @@
                 PredictionScore = predictionScore
             };
 
-            await repository.AddRecognitionLogAsync(log);
-            await repository.SaveChangesAsync();
+            recognitionLogs.Add(log);
+            await unitOfWork.SaveChangesAsync();
 
             return new ImageUploadResult
             {
@@ -88,8 +91,8 @@
                 FramesProcessed = recognitionResults.Count
             };
 
-            await repository.AddRecognitionLogAsync(log);
-            await repository.SaveChangesAsync();
+            recognitionLogs.Add(log);
+            await unitOfWork.SaveChangesAsync();
 
             return new VideoUploadResult
             {
@@ -98,14 +101,12 @@
                 VideoPath = storedFile.PublicPath,
             };
         }
-        public async Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id)
-        {
-            return await repository.GetRecognitionLogByIdAsync(id);
-        }
+        public Task<AnimalRecognitionLog?> GetRecognitionLogByIdAsync(int id) =>
+            recognitionLogs.GetByIdAsync(id);
 
         public async Task<IEnumerable<RecognitionHistoryItem>> GetHistoryAsync(string userId)
         {
-            var logs = await repository.GetRecognitionLogsForUserAsync(userId);
+            var logs = await recognitionLogs.GetHistoryAsync(userId);
 
             return logs.Select(log => new RecognitionHistoryItem
             {
@@ -123,7 +124,7 @@
 
         public async Task<int> ClearHistoryAsync(string userId)
         {
-            return await repository.ClearRecognitionLogsForUserAsync(userId);
+            return await recognitionLogs.ClearHistoryAsync(userId);
         }
 
         private const string UnrecognisedAnimal = "Unknown";

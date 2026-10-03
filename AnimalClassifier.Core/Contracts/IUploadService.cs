@@ -7,7 +7,7 @@
     public interface IUploadService
     {
         Task<ImageUploadResult> UploadImageAsync(IFormFile formFile, string userId);
-        Task<AnimalRecognitionLog> GetRecognitionLogByIdAsync(int id);
+        Task<AnimalRecognitionLog?> GetRecognitionLogByIdAsync(int id);
 
         /// <summary>
         /// One user's own recognitions, most recent first, excluding any they

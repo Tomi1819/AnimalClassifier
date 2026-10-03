@@ -7,8 +7,8 @@ namespace AnimalClassifier.Core.Identity.Account
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
-    using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Logging;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
@@ -19,7 +19,9 @@ namespace AnimalClassifier.Core.Identity.Account
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IPasswordConfirmer passwordConfirmer;
         private readonly IAccessTokenIssuer tokenIssuer;
-        private readonly IRepository repository;
+        private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IAdminAuditLogRepository auditLogs;
+        private readonly IUnitOfWork unitOfWork;
         private readonly IFileStorageService fileStorageService;
         private readonly ISecurityAlertSender securityAlertSender;
         private readonly ILogger<AccountService> logger;
@@ -27,7 +29,9 @@ namespace AnimalClassifier.Core.Identity.Account
         public AccountService(UserManager<ApplicationUser> userManager,
                               IPasswordConfirmer passwordConfirmer,
                               IAccessTokenIssuer tokenIssuer,
-                              IRepository repository,
+                              IRecognitionLogRepository recognitionLogs,
+                              IAdminAuditLogRepository auditLogs,
+                              IUnitOfWork unitOfWork,
                               IFileStorageService fileStorageService,
                               ISecurityAlertSender securityAlertSender,
                               ILogger<AccountService> logger)
@@ -36,7 +40,9 @@ namespace AnimalClassifier.Core.Identity.Account
             this.userManager = userManager;
             this.passwordConfirmer = passwordConfirmer;
             this.tokenIssuer = tokenIssuer;
-            this.repository = repository;
+            this.recognitionLogs = recognitionLogs;
+            this.auditLogs = auditLogs;
+            this.unitOfWork = unitOfWork;
             this.fileStorageService = fileStorageService;
             this.securityAlertSender = securityAlertSender;
         }
@@ -98,14 +104,12 @@ namespace AnimalClassifier.Core.Identity.Account
 
             await passwordConfirmer.ConfirmAsync(user, request.Password);
 
-            await using (var transaction = await repository.BeginTransactionAsync())
+            await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                await repository.DeleteRecognitionLogsForUserAsync(user.Id);
-                await repository.DetachUserFromAdminAuditLogsAsync(user.Id);
+                await recognitionLogs.DeleteAllForUserAsync(user.Id);
+                await auditLogs.DetachUserAsync(user.Id);
                 (await userManager.DeleteAsync(user)).ThrowIfFailed();
-
-                await transaction.CommitAsync();
-            }
+            });
 
             // Only once the account is certainly gone, since a rolled back
             // transaction could not bring the files back.
