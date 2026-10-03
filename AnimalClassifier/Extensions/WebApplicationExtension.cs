@@ -47,7 +47,7 @@
                 }
             }
 
-            var adminEmail = app.Configuration.GetSection(AdminSettings.SectionName).Get<AdminSettings>()?.Email;
+            var adminEmail = scope.ServiceProvider.GetRequiredService<IOptions<AdminSettings>>().Value.Email;
             if (string.IsNullOrWhiteSpace(adminEmail))
             {
                 return;

@@ -3,7 +3,6 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.EntityFrameworkCore;
-    using static Constants.MessageConstants;
 
     /// <summary>
     /// The database, and the repositories every area reads and writes it
@@ -11,6 +10,9 @@ namespace AnimalClassifier.Extensions
     /// </summary>
     public static class PersistenceServiceCollectionExtension
     {
+        private const string MissingConnectionString =
+            $"ConnectionStrings:{AnimalClassifierDbContext.ConnectionStringName} is not set.";
+
         public static IServiceCollection AddApplicationPersistence(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString(AnimalClassifierDbContext.ConnectionStringName)

@@ -16,5 +16,19 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         /// on api.example.com share example.com.
         /// </summary>
         public string ServerDomain { get; set; } = string.Empty;
+
+        /// <returns>
+        /// The domain passkeys are bound to, or null when it is neither set
+        /// here nor readable from the frontend's address.
+        /// </returns>
+        public string? ResolveServerDomain(FrontendSettings frontend)
+        {
+            if (!string.IsNullOrWhiteSpace(ServerDomain))
+            {
+                return ServerDomain;
+            }
+
+            return Uri.TryCreate(frontend.BaseUrl, UriKind.Absolute, out var baseUrl) ? baseUrl.Host : null;
+        }
     }
 }
