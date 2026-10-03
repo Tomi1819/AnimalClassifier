@@ -1,8 +1,8 @@
-namespace AnimalClassifier.Tests
+namespace AnimalClassifier.Tests.ErrorHandling
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Filters;
+    using AnimalClassifier.ErrorHandling;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Abstractions;

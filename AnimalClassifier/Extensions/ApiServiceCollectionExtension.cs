@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Cors;
-    using AnimalClassifier.Filters;
+    using AnimalClassifier.ErrorHandling;
     using Microsoft.AspNetCore.Cors.Infrastructure;
     using Microsoft.Extensions.Options;
 
