@@ -1,7 +1,6 @@
 namespace AnimalClassifier.Core.Identity.Account
 {
     using AnimalClassifier.Core.Common.Storage;
-    using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Infrastructure.Data.Models;

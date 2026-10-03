@@ -61,11 +61,11 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                       .OrderByDescending(l => l.DateRecognized)
                       .ToListAsync();
 
-        public Task<Dictionary<string, int>> CountHistoryByUserAsync(IEnumerable<string> userIds) =>
+        public Task<Dictionary<string, int>> CountHistoryByUserAsync(IEnumerable<string> userIds, CancellationToken cancellationToken) =>
             Logs.Where(l => userIds.Contains(l.UserId) && !l.IsDeleted)
                 .GroupBy(l => l.UserId)
                 .Select(g => new { UserId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(g => g.UserId, g => g.Count);
+                .ToDictionaryAsync(g => g.UserId, g => g.Count, cancellationToken);
 
         public Task<int> ClearHistoryAsync(string userId) =>
             context.AnimalRecognitionLogs

@@ -1,8 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Admin;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.Services;
 
     /// <summary>
     /// What administrators do to other users, and the record of it.

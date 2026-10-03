@@ -61,7 +61,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// The number of recognitions in each of the given users' history, so
         /// cleared ones are left out, as are users without any.
         /// </summary>
-        Task<Dictionary<string, int>> CountHistoryByUserAsync(IEnumerable<string> userIds);
+        Task<Dictionary<string, int>> CountHistoryByUserAsync(IEnumerable<string> userIds, CancellationToken cancellationToken);
 
         /// <summary>
         /// Marks one user's recognitions as cleared, and returns how many were

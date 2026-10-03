@@ -12,7 +12,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
             this.context = context;
         }
 
-        public async Task<(IReadOnlyList<ApplicationUser> Users, int TotalCount)> GetPageAsync(string? search, int page, int pageSize)
+        public async Task<(IReadOnlyList<ApplicationUser> Users, int TotalCount)> GetPageAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
         {
             var users = context.Users.AsNoTracking();
 
@@ -21,12 +21,12 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 users = users.Where(u => u.Email!.Contains(search) || u.FullName.Contains(search));
             }
 
-            var totalCount = await users.CountAsync();
+            var totalCount = await users.CountAsync(cancellationToken);
             var pageOfUsers = await users
                 .OrderByDescending(u => u.DateRegistered)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return (pageOfUsers, totalCount);
         }

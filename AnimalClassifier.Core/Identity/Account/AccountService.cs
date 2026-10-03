@@ -2,7 +2,6 @@ namespace AnimalClassifier.Core.Identity.Account
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Storage;
-    using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;

@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Tests.Admin
 {
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Admin.Models;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
