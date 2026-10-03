@@ -264,6 +264,60 @@ Removing them again, with `dotnet user-secrets remove "Email:Host"`, puts the li
 
 A link stays valid for an hour, is spent once it is used, and changing a password ends every session that account had open.
 
+### Uploading images and videos
+
+`POST /api/upload/image` takes a JPEG or PNG image in the `formFile` field,
+and `POST /api/upload/video` an MP4, MOV or AVI video in the `videoFile` field,
+each of at most 5 MB. A file's name and content type are whatever its sender
+says they are, so an image's first bytes are checked as well, and a file that
+is not really one is refused before the model ever reads it.
+
+A video is classified a frame at a time, one frame for every second of it. A
+video long enough to give more than 120 frames is sampled further apart, so
+that how long it takes has a bound however long the video is, and one that
+cannot be read is refused. An animal counts only when the model scores it at
+0.6 or more in at least three frames, since a single frame is often a blur or a
+glimpse; a video in which none does is recorded as `Unknown`.
+
+An upload that fails at any step leaves nothing behind: no file, and no
+recognition in the history.
+
+### Errors
+
+Every failure is answered with a message for the user, in one shape:
+
+```json
+{ "message": "Only JPEG and PNG images can be uploaded." }
+```
+
+| Status | When |
+| ------ | ---- |
+| `400 Bad Request` | The request was understood and refused, such as a wrong password or an unsupported file, or it could not be read, such as a number out of range. |
+| `401 Unauthorized` | Signing in failed, or the request's token is missing or no longer valid. |
+| `404 Not Found` | What the request names does not exist, or is not the caller's to see. |
+| `429 Too Many Requests` | A rate limit was reached. |
+| `500 Internal Server Error` | Something failed inside the app. It is logged, and the message says only that something went wrong. |
+
+### Settings
+
+Each setting is checked when the app starts, and the app refuses to start while
+one it needs is missing or wrong, naming it, rather than failing later on the
+first request that needs it. A signing key in `Jwt:SecretKey` has to be at
+least 32 characters long, for example, and every rate limit at least 1.
+
+### Updating the database
+
+Every change to the schema is a migration, which an existing database needs
+applied:
+
+```bash
+dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
+```
+
+`RemoveAnimalImages` drops the `AnimalImages` table, which nothing ever wrote
+to, and `IndexRecognitionDates` indexes when each recognition was made, which
+the activity chart reads by.
+
 ### Running the tests
 
 The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb). Each run creates its own database and drops it afterwards.
@@ -271,6 +325,11 @@ The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-u
 ```bash
 dotnet test
 ```
+
+Uploads are recognised by stand-ins for the model and for reading videos,
+which a test tells what to see. `ImageClassifierTests` alone loads the trained
+model, to show that the app still reads it correctly, and takes a few seconds
+for it.
 
 ## 📁 Project Structure
 
