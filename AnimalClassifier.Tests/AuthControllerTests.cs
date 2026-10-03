@@ -1,14 +1,14 @@
 ﻿namespace AnimalClassifier.Tests
 {
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Constants.ConfigConstants;
-    using static AnimalClassifier.Core.Constants.MessageConstants;
-    using static AnimalClassifier.Core.Constants.ValidationConstants;
     using static AnimalClassifier.Core.Identity.IdentityMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
@@ -46,16 +46,16 @@
             var account = await response.Content.ReadFromJsonAsync<RegisterResponse>();
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal(UnknownUser, account!.FullName);
+            Assert.Equal(AccountName.Unknown, account!.FullName);
         }
 
         [Fact]
         public async Task Register_WithATooLongName_IsABadRequest()
         {
-            var response = await RegisterWithNameAsync(new string('a', FullNameMaxLength + 1));
+            var response = await RegisterWithNameAsync(new string('a', AccountName.MaxLength + 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(string.Format(FullNameTooLong, FullNameMaxLength), await response.Content.ReadAsStringAsync());
+            Assert.Contains(string.Format(FullNameTooLong, AccountName.MaxLength), await response.Content.ReadAsStringAsync());
         }
 
         [Fact]
@@ -63,10 +63,10 @@
         {
             var email = UniqueEmail();
 
-            var response = await RegisterAsync(email, new string('a', PasswordMinLength - 1));
+            var response = await RegisterAsync(email, new string('a', PasswordPolicy.MinLength - 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Equal(HttpStatusCode.Unauthorized, (await LogInAsync(email, new string('a', PasswordMinLength - 1))).StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await LogInAsync(email, new string('a', PasswordPolicy.MinLength - 1))).StatusCode);
         }
 
         // Anyone trying to get in already knows the address, which makes it

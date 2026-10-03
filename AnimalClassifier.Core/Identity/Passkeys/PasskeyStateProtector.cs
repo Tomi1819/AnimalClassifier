@@ -6,7 +6,6 @@ namespace AnimalClassifier.Core.Identity.Passkeys
     using Microsoft.Extensions.Options;
     using System.Security.Cryptography;
     using static AnimalClassifier.Core.Identity.Passkeys.PasskeyMessages;
-    using static Constants.SecurityConstants;
 
     public class PasskeyStateProtector : IPasskeyStateProtector
     {
@@ -14,6 +13,14 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         // without anything in flight being read under the old meaning.
         private const string AttestationPurpose = "AnimalClassifier.Passkey.Attestation.v1";
         private const string AssertionPurpose = "AnimalClassifier.Passkey.Assertion.v1";
+
+        /// <summary>
+        /// How much longer than the authenticator's own timeout a state stays
+        /// valid. The authenticator starts counting once the browser has been
+        /// handed the options, so the state is always the older of the two,
+        /// and this covers the round trips either side of it.
+        /// </summary>
+        private static readonly TimeSpan StateGrace = TimeSpan.FromMinutes(1);
 
         private readonly ITimeLimitedDataProtector attestationProtector;
         private readonly ITimeLimitedDataProtector assertionProtector;
@@ -28,7 +35,7 @@ namespace AnimalClassifier.Core.Identity.Passkeys
             // The authenticator is already giving up at this point, so a state
             // that outlived it by more than the round trips is of no use to the
             // user it was issued to.
-            lifetime = passkeyOptions.Value.AuthenticatorTimeout + PasskeyStateGrace;
+            lifetime = passkeyOptions.Value.AuthenticatorTimeout + StateGrace;
         }
 
         public string Protect(PasskeyCeremony ceremony, string state) =>

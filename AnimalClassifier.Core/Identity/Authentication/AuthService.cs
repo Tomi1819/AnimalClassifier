@@ -8,7 +8,6 @@ namespace AnimalClassifier.Core.Identity.Authentication
     using System.Threading.Tasks;
     using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
-    using static Constants.MessageConstants;
 
     public class AuthService : IAuthService
     {
@@ -91,7 +90,7 @@ namespace AnimalClassifier.Core.Identity.Authentication
         {
             var name = AccountName.Tidy(fullName);
 
-            return name.Length == 0 ? UnknownUser : AccountName.Capitalise(name);
+            return name.Length == 0 ? AccountName.Unknown : AccountName.Capitalise(name);
         }
     }
 }

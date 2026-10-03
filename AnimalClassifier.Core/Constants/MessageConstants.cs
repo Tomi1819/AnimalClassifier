@@ -2,9 +2,6 @@
 {
     public static class MessageConstants
     {
-        //AuthService
-        public const string UnknownUser = "Unknown user";
-
         //AdminService
         public const string OwnAccountChange = "Administrators cannot change their own account.";
         public const string UserAlreadyLocked = "The user is already locked.";

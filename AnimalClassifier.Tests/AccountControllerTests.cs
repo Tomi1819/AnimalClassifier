@@ -2,8 +2,10 @@ namespace AnimalClassifier.Tests
 {
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -16,7 +18,6 @@ namespace AnimalClassifier.Tests
     using System.Text.Json;
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
-    using static AnimalClassifier.Core.Constants.ValidationConstants;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
@@ -134,7 +135,7 @@ namespace AnimalClassifier.Tests
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
 
-            var response = await ChangeNameAsync(client, new string('a', 101));
+            var response = await ChangeNameAsync(client, new string('a', AccountName.MaxLength + 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Equal(account.FullName, (await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.FullName);
@@ -318,7 +319,7 @@ namespace AnimalClassifier.Tests
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
 
-            var response = await ChangePasswordAsync(client, Password, new string('a', PasswordMinLength - 1));
+            var response = await ChangePasswordAsync(client, Password, new string('a', PasswordPolicy.MinLength - 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Equal(HttpStatusCode.OK, (await LogInAsync(account.Email, Password)).StatusCode);
