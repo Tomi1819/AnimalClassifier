@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.DTO
+namespace AnimalClassifier.Core.Identity.Account.Models
 {
     /// <summary>
     /// One recognition in its owner's copy of their data.
