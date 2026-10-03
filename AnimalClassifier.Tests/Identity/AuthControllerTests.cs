@@ -1,5 +1,6 @@
 ﻿namespace AnimalClassifier.Tests.Identity
 {
+    using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
@@ -8,7 +9,6 @@
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
     using System.Net.Http.Json;
-    using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Identity.IdentityMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
@@ -88,7 +88,7 @@
         public async Task Login_BeyondTheLimit_IsRefused()
         {
             using var limited = Factory.WithWebHostBuilder(builder =>
-                builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1"));
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.LoginPermitLimit)), "1"));
 
             var account = await RegisterAsync();
             var client = limited.CreateClient();
@@ -107,7 +107,7 @@
         public async Task Login_BeyondTheLimit_DoesNotCountTowardsALockout()
         {
             using var limited = Factory.WithWebHostBuilder(builder =>
-                builder.UseSetting($"{RateLimiting}:LoginPermitLimit", "1"));
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.LoginPermitLimit)), "1"));
 
             var account = await RegisterAsync();
             var client = limited.CreateClient();
@@ -165,7 +165,7 @@
         public async Task ForgotPassword_BeyondTheLimit_IsRefused()
         {
             using var limited = Factory.WithWebHostBuilder(builder =>
-                builder.UseSetting($"{RateLimiting}:PasswordResetPermitLimit", "1"));
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.PasswordResetPermitLimit)), "1"));
 
             var client = limited.CreateClient();
             var request = new ForgotPasswordRequest { Email = UniqueEmail() };

@@ -7,6 +7,12 @@
 
     public class AnimalClassifierDbContext : IdentityDbContext<ApplicationUser>
     {
+        /// <summary>
+        /// The connection string, under <c>ConnectionStrings</c>, that the
+        /// database is reached by.
+        /// </summary>
+        public const string ConnectionStringName = "DefaultConnection";
+
         public AnimalClassifierDbContext(DbContextOptions<AnimalClassifierDbContext> options)
             : base(options)
         {

@@ -7,10 +7,10 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Core.Identity.Passkeys.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
+    using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
     using static Constants.MessageConstants;
-    using static Core.Constants.ConfigConstants;
 
     [Route("api/[controller]")]
     [ApiController]
@@ -34,7 +34,7 @@ namespace AnimalClassifier.Controllers
             Ok(await authService.RegisterAsync(request));
 
         [HttpPost("login")]
-        [EnableRateLimiting(LoginPolicy)]
+        [EnableRateLimiting(RateLimitPolicies.Login)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request) =>
             Ok(await authService.LoginAsync(request));
 
@@ -52,7 +52,7 @@ namespace AnimalClassifier.Controllers
             Ok(await passkeyService.LoginAsync(request, HttpContext));
 
         [HttpPost("forgot-password")]
-        [EnableRateLimiting(PasswordResetPolicy)]
+        [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             await passwordResetService.ForgotPasswordAsync(request);
@@ -63,7 +63,7 @@ namespace AnimalClassifier.Controllers
         }
 
         [HttpPost("reset-password")]
-        [EnableRateLimiting(PasswordResetPolicy)]
+        [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             await passwordResetService.ResetPasswordAsync(request);

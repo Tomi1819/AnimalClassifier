@@ -12,7 +12,6 @@ namespace AnimalClassifier.Extensions
     using Microsoft.AspNetCore.Identity;
     using Microsoft.IdentityModel.Tokens;
     using static Constants.MessageConstants;
-    using static Core.Constants.ConfigConstants;
 
     /// <summary>
     /// Sets up who the users are and how a request shows which of them it
@@ -72,7 +71,7 @@ namespace AnimalClassifier.Extensions
         /// </summary>
         public static IServiceCollection AddApplicationAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
-            var jwtSection = configuration.GetSection(Jwt);
+            var jwtSection = configuration.GetSection(JwtSettings.SectionName);
             var jwtSettings = jwtSection.Get<JwtSettings>();
 
             if (string.IsNullOrEmpty(jwtSettings?.SecretKey))
@@ -113,8 +112,8 @@ namespace AnimalClassifier.Extensions
         {
             // Read once and folded into IdentityPasskeyOptions below, which is
             // the form everything downstream asks for.
-            var passkeySettings = configuration.GetSection(Passkey).Get<PasskeySettings>();
-            var frontendSettings = configuration.GetSection(Frontend).Get<FrontendSettings>();
+            var passkeySettings = configuration.GetSection(PasskeySettings.SectionName).Get<PasskeySettings>();
+            var frontendSettings = configuration.GetSection(FrontendSettings.SectionName).Get<FrontendSettings>();
 
             var serverDomain = string.IsNullOrWhiteSpace(passkeySettings?.ServerDomain)
                 ? ReadHost(frontendSettings?.BaseUrl)

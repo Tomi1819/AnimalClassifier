@@ -1,7 +1,11 @@
 ﻿namespace AnimalClassifier.Core.Common.Email
 {
-    public class EmailSettings
+    using AnimalClassifier.Core.Common.Settings;
+
+    public class EmailSettings : ISettings
     {
+        public static string SectionName => "Email";
+
         public string Host { get; set; } = string.Empty;
 
         public int Port { get; set; }

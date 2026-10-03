@@ -2,9 +2,9 @@ namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.RateLimiting;
     using System.Threading.RateLimiting;
     using static Constants.MessageConstants;
-    using static Core.Constants.ConfigConstants;
 
     public static class RateLimitingServiceCollectionExtension
     {
@@ -25,23 +25,23 @@ namespace AnimalClassifier.Extensions
         /// </summary>
         public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services, IConfiguration configuration)
         {
-            var rateLimitSettings = configuration.GetSection(RateLimiting).Get<RateLimitSettings>()
+            var rateLimitSettings = configuration.GetSection(RateLimitSettings.SectionName).Get<RateLimitSettings>()
                 ?? new RateLimitSettings();
 
-            services.Configure<RateLimitSettings>(configuration.GetSection(RateLimiting));
+            services.Configure<RateLimitSettings>(configuration.GetSection(RateLimitSettings.SectionName));
 
             services.AddRateLimiter(options =>
             {
-                options.AddPolicy<string>(LoginPolicy, context => LimitPerAddress(
+                options.AddPolicy<string>(RateLimitPolicies.Login, context => LimitPerAddress(
                     context, rateLimitSettings.LoginPermitLimit, rateLimitSettings.LoginWindowMinutes));
 
-                options.AddPolicy<string>(PasswordResetPolicy, context => LimitPerAddress(
+                options.AddPolicy<string>(RateLimitPolicies.PasswordReset, context => LimitPerAddress(
                     context, rateLimitSettings.PasswordResetPermitLimit, rateLimitSettings.PasswordResetWindowMinutes));
 
                 // Counted per account rather than per address, as only a
                 // signed-in user can export, and people sharing an address
                 // should not use up each other's exports.
-                options.AddPolicy<string>(DataExportPolicy, context =>
+                options.AddPolicy<string>(RateLimitPolicies.DataExport, context =>
                     RateLimitPartition.GetFixedWindowLimiter(
                         context.User.Id() ?? UnknownClient,
                         _ => new FixedWindowRateLimiterOptions

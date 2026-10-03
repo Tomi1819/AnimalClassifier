@@ -1,10 +1,13 @@
 namespace AnimalClassifier.Core.Identity.Authentication
 {
+    using AnimalClassifier.Core.Common.Settings;
     using Microsoft.IdentityModel.Tokens;
     using System.Text;
 
-    public class JwtSettings
+    public class JwtSettings : ISettings
     {
+        public static string SectionName => "Jwt";
+
         public string SecretKey { get; set; } = string.Empty;
         public string Issuer { get; set; } = string.Empty;
         public string Audience { get; set; } = string.Empty;

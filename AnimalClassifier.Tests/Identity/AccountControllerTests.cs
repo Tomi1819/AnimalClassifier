@@ -17,7 +17,6 @@ namespace AnimalClassifier.Tests.Identity
     using System.Net;
     using System.Net.Http.Json;
     using System.Text.Json;
-    using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
@@ -773,7 +772,7 @@ namespace AnimalClassifier.Tests.Identity
         // several.
         private WebApplicationFactory<Program> WithDataExportLimit(int permitLimit) =>
             Factory.WithWebHostBuilder(builder =>
-                builder.UseSetting($"{RateLimiting}:DataExportPermitLimit", permitLimit.ToString()));
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.DataExportPermitLimit)), permitLimit.ToString()));
 
         // Added directly, since uploading would need the recognition model.
         private async Task AddRecognitionAsync(string userId, bool isDeleted)

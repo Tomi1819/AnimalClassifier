@@ -1,5 +1,6 @@
 ﻿namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Admin;
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
@@ -7,7 +8,6 @@
     using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Options;
     using static AnimalClassifier.Core.Identity.RoleConstants;
-    using static Core.Constants.ConfigConstants;
 
     public static class WebApplicationExtension
     {
@@ -47,7 +47,7 @@
                 }
             }
 
-            var adminEmail = app.Configuration[AdminEmail];
+            var adminEmail = app.Configuration.GetSection(AdminSettings.SectionName).Get<AdminSettings>()?.Email;
             if (string.IsNullOrWhiteSpace(adminEmail))
             {
                 return;
