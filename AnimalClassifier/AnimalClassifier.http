@@ -1,6 +1,30 @@
 @AnimalClassifier_HostAddress = http://localhost:5292
 
-GET {{AnimalClassifier_HostAddress}}/weatherforecast/
-Accept: application/json
+# Sign in with an account registered from the frontend, then paste the token
+# it answers with here for the requests below.
+@token =
+
+POST {{AnimalClassifier_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "you@example.com",
+  "password": "your-password"
+}
+
+###
+
+GET {{AnimalClassifier_HostAddress}}/api/account
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AnimalClassifier_HostAddress}}/api/upload/history
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AnimalClassifier_HostAddress}}/api/statistics/activity?days=7
+Authorization: Bearer {{token}}
 
 ###
