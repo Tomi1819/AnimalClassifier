@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Services.Helpers
+namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using static Constants.MessageConstants;

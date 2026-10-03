@@ -5,7 +5,7 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Extensions;
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;

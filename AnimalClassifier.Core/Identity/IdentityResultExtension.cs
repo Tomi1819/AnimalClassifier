@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Extensions
+﻿namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using Microsoft.AspNetCore.Identity;
