@@ -1,7 +1,11 @@
 ﻿namespace AnimalClassifier.Core.Configurations
 {
-    public class RateLimitSettings
+    using AnimalClassifier.Core.Common.Settings;
+
+    public class RateLimitSettings : ISettings
     {
+        public static string SectionName => "RateLimiting";
+
         /// <summary>
         /// How many sign-in attempts one address may make per window, right
         /// or wrong. Wrong passwords already lock the account they are tried

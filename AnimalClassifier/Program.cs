@@ -1,5 +1,5 @@
+using AnimalClassifier.Cors;
 using AnimalClassifier.Extensions;
-using static AnimalClassifier.Core.Constants.ConfigConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +35,7 @@ app.UseHttpsRedirection();
 
 app.UseApplicationUploads();
 
-app.UseCors(CorsPolicy);
+app.UseCors(CorsSettings.PolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();

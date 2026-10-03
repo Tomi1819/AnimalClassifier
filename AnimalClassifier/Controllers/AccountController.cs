@@ -3,11 +3,11 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Extensions;
+    using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
     using System.Net.Mime;
-    using static Core.Constants.ConfigConstants;
 
     /// <summary>
     /// A signed-in user's own account: what it holds, and the changes they make
@@ -58,7 +58,7 @@ namespace AnimalClassifier.Controllers
         /// owner to keep.
         /// </summary>
         [HttpGet("export")]
-        [EnableRateLimiting(DataExportPolicy)]
+        [EnableRateLimiting(RateLimitPolicies.DataExport)]
         public async Task<IActionResult> ExportData() =>
             File(await dataExportService.ExportAsync(User.RequiredId()), MediaTypeNames.Application.Zip, ExportFileName());
 

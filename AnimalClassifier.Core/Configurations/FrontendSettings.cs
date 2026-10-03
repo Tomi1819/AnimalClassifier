@@ -1,7 +1,11 @@
 ﻿namespace AnimalClassifier.Core.Configurations
 {
-    public class FrontendSettings
+    using AnimalClassifier.Core.Common.Settings;
+
+    public class FrontendSettings : ISettings
     {
+        public static string SectionName => "Frontend";
+
         /// <summary>
         /// Where the frontend is served from. Configured rather than taken
         /// from the incoming request, whose host header is whatever the caller

@@ -5,7 +5,6 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Services;
     using static Constants.MessageConstants;
-    using static Core.Constants.ConfigConstants;
 
     /// <summary>
     /// What more than one area uses: sending email, storing uploaded files, and
@@ -21,9 +20,9 @@ namespace AnimalClassifier.Extensions
         /// </summary>
         public static IServiceCollection AddApplicationEmail(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
-            services.Configure<EmailSettings>(configuration.GetSection(Email));
+            services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
 
-            var emailSettings = configuration.GetSection(Email).Get<EmailSettings>();
+            var emailSettings = configuration.GetSection(EmailSettings.SectionName).Get<EmailSettings>();
 
             if (!string.IsNullOrWhiteSpace(emailSettings?.Host)
                 && !string.IsNullOrWhiteSpace(emailSettings.SenderEmail))
@@ -47,13 +46,13 @@ namespace AnimalClassifier.Extensions
 
         public static IServiceCollection AddApplicationStorage(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
-            var uploadSettings = configuration.GetSection(FileUploadSettings).Get<UploadSettings>();
+            var uploadSettings = configuration.GetSection(UploadSettings.SectionName).Get<UploadSettings>();
             if (string.IsNullOrWhiteSpace(uploadSettings?.UploadPath))
             {
                 throw new InvalidOperationException(MissingUploadPath);
             }
 
-            services.Configure<UploadSettings>(configuration.GetSection(FileUploadSettings));
+            services.Configure<UploadSettings>(configuration.GetSection(UploadSettings.SectionName));
 
             // Uploads are configured relative to the content root.
             services.PostConfigure<UploadSettings>(settings =>
@@ -66,11 +65,11 @@ namespace AnimalClassifier.Extensions
 
         public static IServiceCollection AddApplicationFrontend(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<FrontendSettings>(configuration.GetSection(Frontend));
+            services.Configure<FrontendSettings>(configuration.GetSection(FrontendSettings.SectionName));
 
             // Emailed links are built from this, and a link to nowhere is only
             // discovered by the user who cannot get back into their account.
-            var frontendSettings = configuration.GetSection(Frontend).Get<FrontendSettings>();
+            var frontendSettings = configuration.GetSection(FrontendSettings.SectionName).Get<FrontendSettings>();
             if (string.IsNullOrWhiteSpace(frontendSettings?.BaseUrl))
             {
                 throw new InvalidOperationException(MissingFrontendBaseUrl);

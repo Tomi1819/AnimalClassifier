@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Cors;
     using AnimalClassifier.Filters;
-    using static Core.Constants.ConfigConstants;
 
     /// <summary>
     /// How the API itself answers: its controllers, how a failure is put to
@@ -18,12 +18,12 @@ namespace AnimalClassifier.Extensions
 
         public static IServiceCollection AddApplicationCors(this IServiceCollection services, IConfiguration configuration)
         {
-            var allowedOrigins = configuration.GetSection(CorsAllowedOrigins).Get<string[]>()
-                ?? Array.Empty<string>();
+            var allowedOrigins = configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>()?.AllowedOrigins
+                ?? [];
 
             services.AddCors(options =>
             {
-                options.AddPolicy(CorsPolicy, policy => policy
+                options.AddPolicy(CorsSettings.PolicyName, policy => policy
                     .WithOrigins(allowedOrigins)
                     .AllowAnyMethod()
                     .AllowAnyHeader());

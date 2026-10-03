@@ -8,7 +8,6 @@ namespace AnimalClassifier.Extensions
     using Microsoft.Extensions.ML;
     using Microsoft.ML;
     using static Constants.MessageConstants;
-    using static Core.Constants.ConfigConstants;
 
     /// <summary>
     /// Recognising animals in what users upload, and everything read back from
@@ -25,9 +24,9 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IAnimalService, AnimalService>();
             services.AddSingleton<MLContext>();
 
-            services.Configure<MLModelSettings>(configuration.GetSection(MLModel));
+            services.Configure<MLModelSettings>(configuration.GetSection(MLModelSettings.SectionName));
 
-            var mlModelSettings = configuration.GetSection(MLModel).Get<MLModelSettings>();
+            var mlModelSettings = configuration.GetSection(MLModelSettings.SectionName).Get<MLModelSettings>();
             if (string.IsNullOrWhiteSpace(mlModelSettings?.Path))
             {
                 throw new InvalidOperationException(MissingMLModelPath);

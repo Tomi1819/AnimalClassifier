@@ -1,9 +1,12 @@
 namespace AnimalClassifier.Core.Identity.Passkeys
 {
+    using AnimalClassifier.Core.Common.Settings;
     using AnimalClassifier.Core.Configurations;
 
-    public class PasskeySettings
+    public class PasskeySettings : ISettings
     {
+        public static string SectionName => "Passkey";
+
         /// <summary>
         /// The relying party id passkeys are bound to. Left empty, it is taken
         /// from the host in <see cref="FrontendSettings.BaseUrl"/>, which is
