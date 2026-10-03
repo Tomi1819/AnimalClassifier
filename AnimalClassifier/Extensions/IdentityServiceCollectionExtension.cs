@@ -2,7 +2,7 @@ namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity.Authentication;
-    using AnimalClassifier.Core.Services.Helpers;
+    using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Authentication.JwtBearer;

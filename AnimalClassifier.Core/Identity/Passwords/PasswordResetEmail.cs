@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Services.Helpers
+﻿namespace AnimalClassifier.Core.Identity.Passwords
 {
     using System.Net;
 

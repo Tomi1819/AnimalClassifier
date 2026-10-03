@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Contracts
+namespace AnimalClassifier.Core.Identity.Passwords
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
