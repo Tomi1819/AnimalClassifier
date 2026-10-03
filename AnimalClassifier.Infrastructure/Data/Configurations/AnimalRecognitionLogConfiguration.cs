@@ -16,6 +16,10 @@
             builder.Property(a => a.DateRecognized)
                 .IsRequired();
 
+            // The statistics read the recognitions made since a date, which
+            // would otherwise mean reading every one ever made to find them.
+            builder.HasIndex(a => a.DateRecognized);
+
             builder.Property(a => a.IsDeleted)
                 .HasDefaultValue(false);
 
