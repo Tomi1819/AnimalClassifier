@@ -3,6 +3,8 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Identity.Authentication.Models;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
     using static Constants.MessageConstants;

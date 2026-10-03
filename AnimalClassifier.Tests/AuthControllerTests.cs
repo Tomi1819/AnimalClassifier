@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Tests
 {
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Authentication.Models;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;

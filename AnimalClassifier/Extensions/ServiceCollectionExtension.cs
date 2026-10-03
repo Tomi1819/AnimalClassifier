@@ -5,6 +5,7 @@
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data;

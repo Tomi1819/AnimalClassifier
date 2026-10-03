@@ -1,6 +1,6 @@
-namespace AnimalClassifier.Core.Contracts
+namespace AnimalClassifier.Core.Identity.Authentication
 {
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Infrastructure.Data.Models;
 
     public interface IAccessTokenIssuer

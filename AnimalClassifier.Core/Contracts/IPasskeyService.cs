@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Contracts
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Authentication.Models;
     using Microsoft.AspNetCore.Http;
 
     /// <summary>

@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Configurations;
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
