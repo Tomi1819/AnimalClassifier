@@ -1,18 +1,18 @@
 ﻿namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Recognitions.Statistics;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.ComponentModel.DataAnnotations;
-    using System.Threading.Tasks;
-    using static Constants.MessageConstants;
 
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class StatisticsController : ControllerBase
     {
+        // A year, which is as far back as the activity chart goes.
+        private const int MaxActivityDays = 365;
+
         private readonly IStatisticsService statisticsService;
 
         public StatisticsController(IStatisticsService statisticsService)
@@ -21,28 +21,22 @@
         }
 
         [HttpGet("total")]
-        public async Task<IActionResult> GetTotal() =>
-            Ok(await statisticsService.GetTotalClassificationAsync());
+        public async Task<IActionResult> GetTotal(CancellationToken cancellationToken) =>
+            Ok(await statisticsService.GetTotalRecognitionsAsync(cancellationToken));
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetUniqueUsers() =>
-            Ok(await statisticsService.GetUniqueUserCountAsync());
+        public async Task<IActionResult> GetUniqueUsers(CancellationToken cancellationToken) =>
+            Ok(await statisticsService.GetUserCountAsync(cancellationToken));
 
         [HttpGet("top-animal")]
-        public async Task<IActionResult> GetTopAnimals() =>
-            Ok(await statisticsService.GetMostCommonAnimalAsync());
+        public async Task<IActionResult> GetTopAnimals(CancellationToken cancellationToken) =>
+            Ok(await statisticsService.GetMostCommonAnimalsAsync(cancellationToken));
 
         [HttpGet("activity")]
-        public async Task<IActionResult> GetActivity([FromQuery, Range(1, 365)] int days = 30, [FromQuery] string? timeZone = null)
-        {
-            TimeZoneInfo? zone = TimeZoneInfo.Utc;
-
-            if (timeZone is not null && !TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out zone))
-            {
-                return BadRequest(new MessageResponse { Message = UnknownTimeZone });
-            }
-
-            return Ok(await statisticsService.GetDailyRecognitionCountsAsync(days, zone));
-        }
+        public async Task<IActionResult> GetActivity(
+            [FromQuery, Range(1, MaxActivityDays)] int days = 30,
+            [FromQuery] string? timeZone = null,
+            CancellationToken cancellationToken = default) =>
+            Ok(await statisticsService.GetDailyRecognitionCountsAsync(days, timeZone, cancellationToken));
     }
 }

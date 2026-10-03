@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Tests.Support
 {
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -83,6 +84,39 @@ namespace AnimalClassifier.Tests.Support
             response.EnsureSuccessStatusCode();
 
             return (await response.Content.ReadFromJsonAsync<T>())!;
+        }
+
+        /// <summary>
+        /// Adds a recognition straight to the database, as an upload would
+        /// leave one, without the file or the model an upload needs.
+        /// </summary>
+        /// <param name="fileName">
+        /// The name of the file it was made from, which is one of its own
+        /// unless given.
+        /// </param>
+        protected async Task<AnimalRecognitionLog> AddRecognitionAsync(
+            string userId,
+            string animalName = "Cat",
+            string? fileName = null,
+            DateTime? dateRecognized = null,
+            bool isCleared = false)
+        {
+            await using var scope = Factory.Services.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
+
+            var log = new AnimalRecognitionLog
+            {
+                AnimalName = animalName,
+                ImagePath = $"/uploads/{userId}/{fileName ?? $"{Guid.NewGuid():N}.jpg"}",
+                DateRecognized = dateRecognized ?? DateTime.UtcNow,
+                UserId = userId,
+                IsDeleted = isCleared
+            };
+
+            context.AnimalRecognitionLogs.Add(log);
+            await context.SaveChangesAsync();
+
+            return log;
         }
 
         protected async Task MakeAdministratorAsync(string userId)

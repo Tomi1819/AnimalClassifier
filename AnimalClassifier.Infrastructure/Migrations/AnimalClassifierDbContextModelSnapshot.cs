@@ -53,36 +53,6 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.ToTable("AdminAuditLogs", (string)null);
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AnimalName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageData")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AnimalImages");
-                });
-
             modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalRecognitionLog", b =>
                 {
                     b.Property<int>("Id")
@@ -119,6 +89,8 @@ namespace AnimalClassifier.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DateRecognized");
 
                     b.HasIndex("UserId");
 
@@ -365,17 +337,6 @@ namespace AnimalClassifier.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Admin");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalImage", b =>
-                {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User");
                 });
