@@ -10,7 +10,7 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
 
     [Route("api/[controller]")]
     [ApiController]
@@ -68,7 +68,7 @@ namespace AnimalClassifier.Controllers
         {
             await passwordResetService.ResetPasswordAsync(request);
 
-            return Ok(new MessageResponse { Message = PasswordChanged });
+            return Ok(new MessageResponse { Message = PasswordReset });
         }
     }
 }
