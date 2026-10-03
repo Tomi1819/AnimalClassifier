@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using System.Security.Claims;
+
     public interface IAuthService
     {
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);

@@ -5,7 +5,6 @@
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
     using AnimalClassifier.Tests.Support;
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
     using System.Net.Http.Json;
