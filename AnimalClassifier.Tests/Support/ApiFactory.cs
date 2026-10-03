@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Common.Settings;
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Infrastructure.Data;

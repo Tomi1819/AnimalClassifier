@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Tests.Settings
 {
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.RateLimiting;
