@@ -1,5 +1,7 @@
-namespace AnimalClassifier.Core.Configurations
+namespace AnimalClassifier.Core.Identity.Passkeys
 {
+    using AnimalClassifier.Core.Configurations;
+
     public class PasskeySettings
     {
         /// <summary>

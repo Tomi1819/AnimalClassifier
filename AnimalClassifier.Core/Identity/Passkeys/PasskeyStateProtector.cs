@@ -1,7 +1,6 @@
-namespace AnimalClassifier.Core.Services.Helpers
+namespace AnimalClassifier.Core.Identity.Passkeys
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Contracts;
     using Microsoft.AspNetCore.DataProtection;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;

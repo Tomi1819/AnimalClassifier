@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Passkeys;
+    using AnimalClassifier.Core.Identity.Passkeys.Models;
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;

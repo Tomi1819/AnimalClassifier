@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Contracts
+namespace AnimalClassifier.Core.Identity.Passkeys
 {
     /// <summary>
     /// The two halves of passkey use: registering a new credential, and

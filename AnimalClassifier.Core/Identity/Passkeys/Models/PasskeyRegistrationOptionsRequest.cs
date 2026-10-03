@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.DTO
+namespace AnimalClassifier.Core.Identity.Passkeys.Models
 {
     public class PasskeyRegistrationOptionsRequest
     {

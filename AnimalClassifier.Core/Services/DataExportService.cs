@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Services
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
     using System.IO.Compression;
