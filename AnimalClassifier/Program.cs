@@ -31,6 +31,9 @@ var app = builder.Build();
 
 await app.SeedRolesAsync();
 
+// First, so that a failure anywhere after it is answered in the same shape.
+app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
 
 app.UseApplicationUploads();
