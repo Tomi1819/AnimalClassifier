@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Admin;
-    using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.DependencyInjection;

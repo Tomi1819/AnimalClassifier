@@ -1,5 +1,6 @@
 ﻿namespace AnimalClassifier.Core.Services
 {
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -33,7 +34,7 @@
         {
             fileValidator.ValidateImage(formFile);
 
-            var storedFile = await fileStorageService.SaveFileAsync(formFile, userId);
+            var storedFile = await SaveAsync(formFile, userId);
 
             var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalFromImageAsync(storedFile.PhysicalPath);
 
@@ -62,7 +63,7 @@
         {
             fileValidator.ValidateVideo(formFile);
 
-            var storedFile = await fileStorageService.SaveFileAsync(formFile, userId);
+            var storedFile = await SaveAsync(formFile, userId);
 
             var recognitionResults = await recognitionService.PredictAnimalsFromVideoAsync(storedFile.PhysicalPath);
 
@@ -128,6 +129,13 @@
         }
 
         private const string UnrecognisedAnimal = "Unknown";
+
+        private async Task<StoredFile> SaveAsync(IFormFile file, string userId)
+        {
+            await using var content = file.OpenReadStream();
+
+            return await fileStorageService.SaveAsync(userId, content, Path.GetExtension(file.FileName));
+        }
 
         private static float ParseScore(string? averageScore)
         {

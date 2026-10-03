@@ -1,9 +1,5 @@
-﻿namespace AnimalClassifier.Core.Services
+﻿namespace AnimalClassifier.Core.Common.Storage
 {
-    using AnimalClassifier.Core.Configurations;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Options;
 
     public class FileStorageService : IFileStorageService
@@ -17,30 +13,33 @@
             requestPath = options.Value.RequestPath;
         }
 
-        public async Task<StoredFileResult> SaveFileAsync(IFormFile file, string userId)
+        public async Task<StoredFile> SaveAsync(string userId, Stream content, string extension)
         {
-            string userDirectory = GetUserDirectory(userId);
+            var userDirectory = GetUserDirectory(userId);
             Directory.CreateDirectory(userDirectory);
 
-            string extension = Path.GetExtension(file.FileName).ToLower();
-            string uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            string physicalPath = Path.Combine(userDirectory, uniqueFileName);
+            // Named afresh rather than as uploaded, so that one upload can
+            // never overwrite another or name a path of its own choosing.
+            var fileName = $"{Guid.NewGuid()}{extension.ToLowerInvariant()}";
+            var physicalPath = Path.Combine(userDirectory, fileName);
 
-            await using (var stream = new FileStream(physicalPath, FileMode.Create))
+            await using (var file = new FileStream(physicalPath, FileMode.CreateNew))
             {
-                await file.CopyToAsync(stream);
+                await content.CopyToAsync(file);
             }
 
-            return new StoredFileResult
+            return new StoredFile
             {
                 PhysicalPath = physicalPath,
-                PublicPath = $"{requestPath}/{userId}/{uniqueFileName}"
+                PublicPath = $"{requestPath}/{userId}/{fileName}"
             };
         }
 
+        public void Delete(StoredFile file) => File.Delete(file.PhysicalPath);
+
         public IEnumerable<string> GetUserFiles(string userId)
         {
-            string userDirectory = GetUserDirectory(userId);
+            var userDirectory = GetUserDirectory(userId);
 
             return Directory.Exists(userDirectory)
                 ? Directory.GetFiles(userDirectory)
@@ -49,7 +48,7 @@
 
         public void DeleteUserFiles(string userId)
         {
-            string userDirectory = GetUserDirectory(userId);
+            var userDirectory = GetUserDirectory(userId);
 
             if (Directory.Exists(userDirectory))
             {

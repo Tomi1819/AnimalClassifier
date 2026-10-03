@@ -1,9 +1,8 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Email;
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Configurations;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.Services;
 
     /// <summary>
     /// What more than one area uses: sending email, storing uploaded files, and

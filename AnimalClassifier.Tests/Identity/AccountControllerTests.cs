@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Tests.Identity
 {
-    using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account.Models;
