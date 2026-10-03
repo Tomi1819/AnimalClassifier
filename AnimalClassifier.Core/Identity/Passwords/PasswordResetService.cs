@@ -2,7 +2,7 @@
 {
     using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Configurations;
+    using AnimalClassifier.Core.Common.Settings;
     using AnimalClassifier.Core.Identity.Passwords.Models;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
     using AnimalClassifier.Infrastructure.Data.Models;

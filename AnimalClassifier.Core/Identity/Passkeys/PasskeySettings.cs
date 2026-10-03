@@ -1,7 +1,6 @@
 namespace AnimalClassifier.Core.Identity.Passkeys
 {
     using AnimalClassifier.Core.Common.Settings;
-    using AnimalClassifier.Core.Configurations;
 
     public class PasskeySettings : ISettings
     {

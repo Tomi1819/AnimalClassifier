@@ -1,6 +1,5 @@
-﻿namespace AnimalClassifier.Core.Configurations
+﻿namespace AnimalClassifier.Core.Common.Settings
 {
-    using AnimalClassifier.Core.Common.Settings;
     using System.ComponentModel.DataAnnotations;
 
     public class FrontendSettings : ISettings
