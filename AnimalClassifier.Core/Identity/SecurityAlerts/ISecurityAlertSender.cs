@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Contracts
+namespace AnimalClassifier.Core.Identity.SecurityAlerts
 {
     using AnimalClassifier.Infrastructure.Data.Models;
 

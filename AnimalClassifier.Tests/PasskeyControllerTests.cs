@@ -12,7 +12,7 @@ namespace AnimalClassifier.Tests
     using System.Net.Http.Json;
     using System.Text.Json.Nodes;
     using static AnimalClassifier.Core.Constants.MessageConstants;
-    using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
+    using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
     public class PasskeyControllerTests : ApiTest
     {

@@ -16,7 +16,7 @@ namespace AnimalClassifier.Tests
     using static AnimalClassifier.Core.Constants.ConfigConstants;
     using static AnimalClassifier.Core.Constants.MessageConstants;
     using static AnimalClassifier.Core.Constants.ValidationConstants;
-    using static AnimalClassifier.Core.Services.Helpers.SecurityAlertEmail;
+    using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
     public class AccountControllerTests : ApiTest
     {

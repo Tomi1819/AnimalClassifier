@@ -6,6 +6,7 @@
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity;
+    using AnimalClassifier.Core.Identity.SecurityAlerts;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Http;
