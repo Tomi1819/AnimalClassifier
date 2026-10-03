@@ -8,7 +8,6 @@ namespace AnimalClassifier.Tests.Identity
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Mvc.Testing;
