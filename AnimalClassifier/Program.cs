@@ -17,7 +17,7 @@ builder.Services.AddApplicationAuthentication();
 
 builder.Services.AddApplicationPasskeys();
 
-builder.Services.AddApplicationRecognitions(builder.Configuration);
+builder.Services.AddApplicationRecognitions(builder.Configuration, builder.Environment);
 
 builder.Services.AddApplicationAdmin();
 
