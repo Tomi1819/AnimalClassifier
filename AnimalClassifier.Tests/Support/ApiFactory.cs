@@ -6,6 +6,7 @@
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Identity;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Identity;

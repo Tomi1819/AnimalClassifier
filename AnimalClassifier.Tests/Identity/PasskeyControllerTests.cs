@@ -3,6 +3,7 @@ namespace AnimalClassifier.Tests.Identity
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passkeys.Models;
+    using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Identity;
@@ -74,7 +75,7 @@ namespace AnimalClassifier.Tests.Identity
         {
             var client = await SignInAsync((await RegisterAsync()).Email);
             var permitLimit = Factory.Services
-                .GetRequiredService<IOptions<RateLimitSettings>>().Value.PasswordConfirmationPermitLimit;
+                .GetRequiredService<IOptions<PasswordConfirmationSettings>>().Value.PasswordConfirmationPermitLimit;
 
             for (var attempt = 0; attempt < permitLimit; attempt++)
             {

@@ -151,6 +151,7 @@ namespace AnimalClassifier.Extensions
 
             // Kept for as long as the app runs, since it is what remembers
             // the checks already made.
+            services.AddSettings<PasswordConfirmationSettings>();
             services.AddSingleton<IPasswordConfirmationLimiter, PasswordConfirmationLimiter>();
 
             services.AddScoped<IPasskeyService, PasskeyService>();

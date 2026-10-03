@@ -1,8 +1,14 @@
-﻿namespace AnimalClassifier.Core.Configurations
+namespace AnimalClassifier.RateLimiting
 {
     using AnimalClassifier.Core.Common.Settings;
     using System.ComponentModel.DataAnnotations;
 
+    /// <summary>
+    /// The limits on the API's endpoints, each enforced by the policy of the
+    /// same name in <see cref="RateLimitPolicies"/>. How often a password may
+    /// be confirmed is in the same section, and read by the service that
+    /// confirms it.
+    /// </summary>
     public class RateLimitSettings : ISettings
     {
         public static string SectionName => "RateLimiting";
@@ -18,19 +24,6 @@
 
         [Range(1, int.MaxValue)]
         public int LoginWindowMinutes { get; set; } = 15;
-
-        /// <summary>
-        /// How many times one account's password may be checked from inside
-        /// a session per window, right or wrong: before a password change, a
-        /// new passkey, or the account being deleted. It has to leave room
-        /// for a few typos and a passkey prompt cancelled a few times, and
-        /// still be far too few to guess with.
-        /// </summary>
-        [Range(1, int.MaxValue)]
-        public int PasswordConfirmationPermitLimit { get; set; } = 10;
-
-        [Range(1, int.MaxValue)]
-        public int PasswordConfirmationWindowMinutes { get; set; } = 15;
 
         /// <summary>
         /// How many password reset requests one caller may make per window.
