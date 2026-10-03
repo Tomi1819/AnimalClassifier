@@ -6,8 +6,8 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Options;
+    using static AnimalClassifier.Core.Identity.RoleConstants;
     using static Core.Constants.ConfigConstants;
-    using static Core.Constants.RoleConstants;
 
     public static class WebApplicationExtension
     {

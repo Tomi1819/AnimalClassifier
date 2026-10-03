@@ -3,13 +3,13 @@ namespace AnimalClassifier.Core.Services
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Extensions;
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Services.Helpers;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using System.Security.Claims;
     using System.Threading.Tasks;
-    using static Constants.RoleConstants;
+    using static AnimalClassifier.Core.Identity.RoleConstants;
     using static Constants.MessageConstants;
 
     public class AuthService : IAuthService

@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Extensions
+namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;

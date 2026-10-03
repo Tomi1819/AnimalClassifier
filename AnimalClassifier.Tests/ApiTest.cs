@@ -9,7 +9,7 @@ namespace AnimalClassifier.Tests
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Constants.MessageConstants;
-    using static AnimalClassifier.Core.Constants.RoleConstants;
+    using static AnimalClassifier.Core.Identity.RoleConstants;
 
     /// <summary>
     /// What the tests of every controller start from: an account, and a client

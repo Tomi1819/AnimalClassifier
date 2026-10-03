@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Constants
+﻿namespace AnimalClassifier.Core.Identity
 {
     public static class RoleConstants
     {
