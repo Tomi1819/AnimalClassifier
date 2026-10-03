@@ -1,5 +1,6 @@
 ﻿namespace AnimalClassifier.Controllers
 {
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Contracts;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -38,7 +39,7 @@
 
             if (timeZone is not null && !TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out zone))
             {
-                return BadRequest(new { message = UnknownTimeZone });
+                return BadRequest(new MessageResponse { Message = UnknownTimeZone });
             }
 
             return Ok(await statisticsService.GetDailyRecognitionCountsAsync(days, zone));

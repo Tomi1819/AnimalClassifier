@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Constants;
     using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -51,19 +51,9 @@
 
         private async Task<IActionResult> ChangeUserAsync(Func<string, string, Task> change, string userId)
         {
-            try
-            {
-                await change(User.Id()!, userId);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            await change(User.RequiredId(), userId);
+
+            return NoContent();
         }
     }
 }

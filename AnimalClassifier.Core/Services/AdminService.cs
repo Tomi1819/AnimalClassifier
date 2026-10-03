@@ -1,13 +1,14 @@
 ﻿namespace AnimalClassifier.Core.Services
 {
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Extensions;
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Infrastructure.Data.Common;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
+    using static AnimalClassifier.Core.Identity.RoleConstants;
     using static Constants.MessageConstants;
-    using static Constants.RoleConstants;
 
     public class AdminService : IAdminService
     {
@@ -49,14 +50,14 @@
         public Task LockUserAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.Lock,
                 user => user.LockoutEnd == DateTimeOffset.MaxValue
-                    ? throw new InvalidOperationException(UserAlreadyLocked)
+                    ? throw new RequestRefusedException(UserAlreadyLocked)
                     : userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue));
 
         public Task UnlockUserAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.Unlock,
                 user => user.LockoutEnd > DateTimeOffset.UtcNow
                     ? userManager.SetLockoutEndDateAsync(user, null)
-                    : throw new InvalidOperationException(UserNotLocked));
+                    : throw new RequestRefusedException(UserNotLocked));
 
         public Task GrantAdminAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.GrantAdmin,
@@ -89,11 +90,10 @@
         {
             if (adminId == userId)
             {
-                throw new InvalidOperationException(OwnAccountChange);
+                throw new RequestRefusedException(OwnAccountChange);
             }
 
-            var user = await userManager.FindByIdAsync(userId)
-                ?? throw new KeyNotFoundException(UserNotFound);
+            var user = await userManager.GetByIdAsync(userId);
 
             await using var transaction = await repository.BeginTransactionAsync();
 

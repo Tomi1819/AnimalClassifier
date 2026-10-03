@@ -1,0 +1,26 @@
+﻿namespace AnimalClassifier.Core.Identity
+{
+    using AnimalClassifier.Core.Common.Exceptions;
+    using Microsoft.AspNetCore.Identity;
+
+    public static class IdentityResultExtension
+    {
+        private const char DescriptionSeparator = ' ';
+
+        /// <summary>
+        /// Turns what Identity turned down into a refusal the caller is told
+        /// about. Its descriptions are written for the user, such as which
+        /// rule a new password fails.
+        /// </summary>
+        /// <exception cref="RequestRefusedException">
+        /// When the result is a failure.
+        /// </exception>
+        public static void ThrowIfFailed(this IdentityResult result)
+        {
+            if (!result.Succeeded)
+            {
+                throw new RequestRefusedException(string.Join(DescriptionSeparator, result.Errors.Select(e => e.Description)));
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Identity.Passkeys;
+    using AnimalClassifier.Core.Identity.Passkeys.Models;
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -24,43 +24,27 @@ namespace AnimalClassifier.Controllers
         }
 
         [HttpGet]
-        public Task<IActionResult> GetPasskeys() =>
-            RunAsync(async () => Ok(await passkeyService.GetPasskeysAsync(User.Id()!)));
+        public async Task<IActionResult> GetPasskeys() =>
+            Ok(await passkeyService.GetPasskeysAsync(User.RequiredId()));
 
         /// <summary>
         /// Takes the account's password, since a passkey outlasts the session
         /// that adds it.
         /// </summary>
         [HttpPost("options")]
-        public Task<IActionResult> CreateOptions([FromBody] PasskeyRegistrationOptionsRequest request) =>
-            RunAsync(async () => Ok(await passkeyService.CreateRegistrationOptionsAsync(User.Id()!, request, HttpContext)));
+        public async Task<IActionResult> CreateOptions([FromBody] PasskeyRegistrationOptionsRequest request) =>
+            Ok(await passkeyService.CreateRegistrationOptionsAsync(User.RequiredId(), request, HttpContext));
 
         [HttpPost]
-        public Task<IActionResult> Register([FromBody] PasskeyRegistrationRequest request) =>
-            RunAsync(async () => Ok(await passkeyService.RegisterAsync(User.Id()!, request, HttpContext)));
+        public async Task<IActionResult> Register([FromBody] PasskeyRegistrationRequest request) =>
+            Ok(await passkeyService.RegisterAsync(User.RequiredId(), request, HttpContext));
 
         [HttpDelete("{id}")]
-        public Task<IActionResult> Remove(string id) =>
-            RunAsync(async () =>
-            {
-                await passkeyService.RemoveAsync(User.Id()!, id);
-                return NoContent();
-            });
-
-        private static async Task<IActionResult> RunAsync(Func<Task<IActionResult>> action)
+        public async Task<IActionResult> Remove(string id)
         {
-            try
-            {
-                return await action();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return new NotFoundObjectResult(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return new BadRequestObjectResult(new { message = ex.Message });
-            }
+            await passkeyService.RemoveAsync(User.RequiredId(), id);
+
+            return NoContent();
         }
     }
 }

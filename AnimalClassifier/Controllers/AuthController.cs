@@ -1,7 +1,12 @@
-﻿namespace AnimalClassifier.Controllers
+namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.Passkeys;
+    using AnimalClassifier.Core.Identity.Passkeys.Models;
+    using AnimalClassifier.Core.Identity.Passwords;
+    using AnimalClassifier.Core.Identity.Passwords.Models;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
     using static Constants.MessageConstants;
@@ -25,33 +30,13 @@
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-        {
-            try
-            {
-                var response = await authService.RegisterAsync(request);
-                return Ok(response);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request) =>
+            Ok(await authService.RegisterAsync(request));
 
         [HttpPost("login")]
         [EnableRateLimiting(LoginPolicy)]
-        public async Task<IActionResult> Login([FromBody] LogInRequest request)
-        {
-            try
-            {
-                var response = await authService.LoginAsync(request);
-                return Ok(response);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-        }
+        public async Task<IActionResult> Login([FromBody] LoginRequest request) =>
+            Ok(await authService.LoginAsync(request));
 
         /// <summary>
         /// The options for signing in with a passkey. Anonymous, and it takes
@@ -59,27 +44,12 @@
         /// who has an account or which of them use passkeys.
         /// </summary>
         [HttpPost("passkey/options")]
-        public async Task<IActionResult> PasskeyOptions()
-        {
-            return Ok(await passkeyService.CreateLoginOptionsAsync(HttpContext));
-        }
+        public async Task<IActionResult> PasskeyOptions() =>
+            Ok(await passkeyService.CreateLoginOptionsAsync(HttpContext));
 
         [HttpPost("passkey/login")]
-        public async Task<IActionResult> PasskeyLogin([FromBody] PasskeyCredentialRequest request)
-        {
-            try
-            {
-                return Ok(await passkeyService.LoginAsync(request, HttpContext));
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        public async Task<IActionResult> PasskeyLogin([FromBody] PasskeyCredentialRequest request) =>
+            Ok(await passkeyService.LoginAsync(request, HttpContext));
 
         [HttpPost("forgot-password")]
         [EnableRateLimiting(PasswordResetPolicy)]
@@ -89,22 +59,16 @@
 
             // Deliberately the same answer whether or not the address has an
             // account, so that nobody can use this to learn who is registered.
-            return Ok(new { message = PasswordResetEmailSent });
+            return Ok(new MessageResponse { Message = PasswordResetEmailSent });
         }
 
         [HttpPost("reset-password")]
         [EnableRateLimiting(PasswordResetPolicy)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            try
-            {
-                await passwordResetService.ResetPasswordAsync(request);
-                return Ok(new { message = PasswordChanged });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            await passwordResetService.ResetPasswordAsync(request);
+
+            return Ok(new MessageResponse { Message = PasswordChanged });
         }
     }
 }
