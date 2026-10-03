@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Tests
+﻿namespace AnimalClassifier.Tests.Admin
 {
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity.Authentication.Models;

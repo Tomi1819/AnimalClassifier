@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Tests
+namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Infrastructure.Data;
