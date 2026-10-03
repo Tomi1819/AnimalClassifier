@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Filters
+namespace AnimalClassifier.ErrorHandling
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
