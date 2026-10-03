@@ -1,6 +1,6 @@
 ﻿namespace AnimalClassifier.Controllers
 {
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Admin;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Extensions;
@@ -23,8 +23,11 @@
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetUsers([FromQuery] string? search, [FromQuery, Range(1, int.MaxValue)] int page = 1) =>
-            Ok(await adminService.GetUsersAsync(search, page));
+        public async Task<IActionResult> GetUsers(
+            [FromQuery] string? search,
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await adminService.GetUsersAsync(search, page, cancellationToken));
 
         [HttpGet("users/{id}/history")]
         public async Task<IActionResult> GetUserHistory(string id, CancellationToken cancellationToken) =>
@@ -47,8 +50,10 @@
             ChangeUserAsync(adminService.RevokeAdminAsync, id);
 
         [HttpGet("audit")]
-        public async Task<IActionResult> GetAuditLog([FromQuery, Range(1, int.MaxValue)] int page = 1) =>
-            Ok(await adminService.GetAuditLogAsync(page));
+        public async Task<IActionResult> GetAuditLog(
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await adminService.GetAuditLogAsync(page, cancellationToken));
 
         private async Task<IActionResult> ChangeUserAsync(Func<string, string, Task> change, string userId)
         {

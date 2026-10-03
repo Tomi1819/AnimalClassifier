@@ -1,7 +1,8 @@
 namespace AnimalClassifier.Tests.Identity
 {
+    using AnimalClassifier.Core.Admin.Models;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Common.Storage;
-    using AnimalClassifier.Core.DTO;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication.Models;
@@ -18,7 +19,7 @@ namespace AnimalClassifier.Tests.Identity
     using System.Net;
     using System.Net.Http.Json;
     using System.Text.Json;
-    using static AnimalClassifier.Core.Constants.MessageConstants;
+    using static AnimalClassifier.Core.Admin.AdminMessages;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;

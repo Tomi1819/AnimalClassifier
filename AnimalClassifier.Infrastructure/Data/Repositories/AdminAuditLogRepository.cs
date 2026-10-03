@@ -14,9 +14,9 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         public void Add(AdminAuditLog log) => context.AdminAuditLogs.Add(log);
 
-        public async Task<(IReadOnlyList<AdminAuditLog> Logs, int TotalCount)> GetPageAsync(int page, int pageSize)
+        public async Task<(IReadOnlyList<AdminAuditLog> Logs, int TotalCount)> GetPageAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var totalCount = await context.AdminAuditLogs.CountAsync();
+            var totalCount = await context.AdminAuditLogs.CountAsync(cancellationToken);
             var logs = await context.AdminAuditLogs
                 .AsNoTracking()
                 .Include(l => l.Admin)
@@ -24,7 +24,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 .OrderByDescending(l => l.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             return (logs, totalCount);
         }

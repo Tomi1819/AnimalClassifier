@@ -17,7 +17,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// One page of the log, most recent first, with the accounts each
         /// entry names and the total number of entries.
         /// </summary>
-        Task<(IReadOnlyList<AdminAuditLog> Logs, int TotalCount)> GetPageAsync(int page, int pageSize);
+        Task<(IReadOnlyList<AdminAuditLog> Logs, int TotalCount)> GetPageAsync(int page, int pageSize, CancellationToken cancellationToken);
 
         /// <summary>
         /// Takes one user out of the log, whether they made a change or had

@@ -1,14 +1,14 @@
-﻿namespace AnimalClassifier.Core.Services
+﻿namespace AnimalClassifier.Core.Admin
 {
+    using AnimalClassifier.Core.Admin.Models;
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Identity;
     using static AnimalClassifier.Core.Identity.RoleConstants;
-    using static Constants.MessageConstants;
+    using static AnimalClassifier.Core.Admin.AdminMessages;
 
     public class AdminService : IAdminService
     {
@@ -33,10 +33,10 @@
             this.unitOfWork = unitOfWork;
         }
 
-        public async Task<PagedResult<AdminUserItem>> GetUsersAsync(string? search, int page)
+        public async Task<PagedResult<AdminUserItem>> GetUsersAsync(string? search, int page, CancellationToken cancellationToken)
         {
-            var (pageOfUsers, totalCount) = await users.GetPageAsync(search, page, PageSize);
-            var recognitionCounts = await recognitionLogs.CountHistoryByUserAsync(pageOfUsers.Select(u => u.Id));
+            var (pageOfUsers, totalCount) = await users.GetPageAsync(search, page, PageSize, cancellationToken);
+            var recognitionCounts = await recognitionLogs.CountHistoryByUserAsync(pageOfUsers.Select(u => u.Id), cancellationToken);
             var adminIds = (await userManager.GetUsersInRoleAsync(Admin)).Select(u => u.Id).ToHashSet();
 
             return new PagedResult<AdminUserItem>
@@ -77,9 +77,9 @@
             ChangeUserAsync(adminId, userId, AdminAction.RevokeAdmin,
                 user => userManager.RemoveFromRoleAsync(user, Admin));
 
-        public async Task<PagedResult<AdminAuditLogItem>> GetAuditLogAsync(int page)
+        public async Task<PagedResult<AdminAuditLogItem>> GetAuditLogAsync(int page, CancellationToken cancellationToken)
         {
-            var (logs, totalCount) = await auditLogs.GetPageAsync(page, PageSize);
+            var (logs, totalCount) = await auditLogs.GetPageAsync(page, PageSize, cancellationToken);
 
             return new PagedResult<AdminAuditLogItem>
             {

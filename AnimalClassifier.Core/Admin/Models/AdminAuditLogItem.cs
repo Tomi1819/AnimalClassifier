@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.DTO
+﻿namespace AnimalClassifier.Core.Admin.Models
 {
     public class AdminAuditLogItem
     {
