@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Configurations
+namespace AnimalClassifier.Core.Identity.Authentication
 {
     using Microsoft.IdentityModel.Tokens;
     using System.Text;

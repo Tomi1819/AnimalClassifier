@@ -1,9 +1,6 @@
-namespace AnimalClassifier.Core.Services
+namespace AnimalClassifier.Core.Identity.Authentication
 {
-    using AnimalClassifier.Core.Configurations;
-    using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Core.Services.Helpers;
+    using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;

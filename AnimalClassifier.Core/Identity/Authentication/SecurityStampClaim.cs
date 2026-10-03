@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.Services.Helpers
+namespace AnimalClassifier.Core.Identity.Authentication
 {
     using System.Security.Cryptography;
     using System.Text;
