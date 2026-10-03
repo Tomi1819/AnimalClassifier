@@ -1,6 +1,8 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Recognitions.Search;
+    using AnimalClassifier.Core.Recognitions.Search.Models;
     using AnimalClassifier.Tests.Support;
     using System.Net;
     using System.Net.Http.Json;
@@ -36,6 +38,50 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var result = Assert.Single(results!);
             Assert.Equal(animalName, result.AnimalName);
+        }
+
+        [Fact]
+        public async Task Search_WithoutATerm_ReturnsBadRequest()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.GetAsync($"{SearchPath}?searchTerm=%20");
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(SearchMessages.EnterSearchTerm, (await response.Content.ReadFromJsonAsync<MessageResponse>())!.Message);
+        }
+
+        // The page shows images, and a video has none to show.
+        [Fact]
+        public async Task Search_LeavesOutVideos()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var animalName = $"animal{Guid.NewGuid():N}";
+            await AddRecognitionAsync(account.UserId, animalName, fileName: "clip.mp4");
+
+            var response = await user.GetAsync($"{SearchPath}?searchTerm={animalName}");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task Search_LeavesOutMatchesRecognisedFarLessOften()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var term = $"animal{Guid.NewGuid():N}";
+            for (var i = 0; i < 3; i++)
+            {
+                await AddRecognitionAsync(account.UserId, $"{term}-often");
+            }
+            await AddRecognitionAsync(account.UserId, $"{term}-rarely");
+
+            var results = await user.GetFromJsonAsync<List<AnimalSearchResult>>($"{SearchPath}?searchTerm={term}");
+
+            var result = Assert.Single(results!);
+            Assert.Equal($"{term}-often", result.AnimalName);
+            Assert.Equal(3, result.ImagePaths.Count);
         }
     }
 }

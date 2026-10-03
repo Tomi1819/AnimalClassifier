@@ -24,6 +24,13 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since);
 
         /// <summary>
+        /// Every recognition, by every user and cleared ones included, of an
+        /// animal whose name contains the term. Whether case matters is the
+        /// database's collation's to say, and SQL Server's default ignores it.
+        /// </summary>
+        Task<IReadOnlyList<AnimalRecognitionLog>> FindByAnimalNameAsync(string term, CancellationToken cancellationToken);
+
+        /// <summary>
         /// The recognitions belonging to one user that they have not cleared,
         /// most recent first.
         /// </summary>
