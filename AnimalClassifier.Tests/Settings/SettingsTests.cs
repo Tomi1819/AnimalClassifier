@@ -6,7 +6,6 @@ namespace AnimalClassifier.Tests.Settings
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
-    using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Options;
 
     /// <summary>
