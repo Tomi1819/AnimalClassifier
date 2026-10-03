@@ -13,8 +13,8 @@ namespace AnimalClassifier.Core.Recognitions.Classification
         /// each encoded as an image. They are read as they are enumerated.
         /// </summary>
         /// <exception cref="RequestRefusedException">
-        /// When the file cannot be read as a video, which is reported once
-        /// enumerating starts.
+        /// When the file cannot be read as a video, or holds no frame that can
+        /// be, which is found out as the frames are enumerated.
         /// </exception>
         IEnumerable<byte[]> SampleFrames(string videoPath);
     }

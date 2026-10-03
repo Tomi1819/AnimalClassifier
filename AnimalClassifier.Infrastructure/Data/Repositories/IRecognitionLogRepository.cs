@@ -14,7 +14,10 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// </summary>
         void Add(AnimalRecognitionLog log);
 
-        Task<AnimalRecognitionLog?> GetByIdAsync(int id);
+        /// <summary>
+        /// One recognition, if it exists and belongs to the user.
+        /// </summary>
+        Task<AnimalRecognitionLog?> GetForUserAsync(string userId, int id, CancellationToken cancellationToken);
 
         Task<IReadOnlyList<AnimalRecognitionLog>> GetAllAsync();
 
