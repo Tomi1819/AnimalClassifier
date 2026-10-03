@@ -2,7 +2,6 @@ namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using static AnimalClassifier.Core.Identity.IdentityMessages;
-    using static Constants.ValidationConstants;
 
     /// <summary>
     /// The name an account goes by, in the form it is kept in. Registering
@@ -11,6 +10,17 @@ namespace AnimalClassifier.Core.Identity
     /// </summary>
     public static class AccountName
     {
+        /// <summary>
+        /// The longest name an account can go by, whether it is given at
+        /// registration or changed later. The frontend's fields match it.
+        /// </summary>
+        public const int MaxLength = 100;
+
+        /// <summary>
+        /// The name of an account registered without one.
+        /// </summary>
+        public const string Unknown = "Unknown user";
+
         private const char Space = ' ';
 
         /// <summary>
@@ -28,9 +38,9 @@ namespace AnimalClassifier.Core.Identity
             var words = name.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
             var tidied = string.Join(Space, words);
 
-            if (tidied.Length > FullNameMaxLength)
+            if (tidied.Length > MaxLength)
             {
-                throw new RequestRefusedException(string.Format(FullNameTooLong, FullNameMaxLength));
+                throw new RequestRefusedException(string.Format(FullNameTooLong, MaxLength));
             }
 
             return tidied;

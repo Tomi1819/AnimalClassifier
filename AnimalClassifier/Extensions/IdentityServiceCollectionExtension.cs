@@ -11,8 +11,6 @@ namespace AnimalClassifier.Extensions
     using Microsoft.IdentityModel.Tokens;
     using static Constants.MessageConstants;
     using static Core.Constants.ConfigConstants;
-    using static Core.Constants.SecurityConstants;
-    using static Core.Constants.ValidationConstants;
 
     /// <summary>
     /// Sets up who the users are and how a request shows which of them it
@@ -42,7 +40,7 @@ namespace AnimalClassifier.Extensions
                     // Length is what makes a password hard to guess. Rules
                     // about which characters it holds mostly produce the same
                     // few patterns, so there are none.
-                    options.Password.RequiredLength = PasswordMinLength;
+                    options.Password.RequiredLength = PasswordPolicy.MinLength;
                     options.Password.RequireDigit = false;
                     options.Password.RequireLowercase = false;
                     options.Password.RequireNonAlphanumeric = false;
@@ -57,7 +55,7 @@ namespace AnimalClassifier.Extensions
                 .AddDefaultTokenProviders();
 
             services.Configure<DataProtectionTokenProviderOptions>(options =>
-                options.TokenLifespan = PasswordResetTokenLifespan);
+                options.TokenLifespan = PasswordPolicy.ResetTokenLifespan);
 
             return services;
         }

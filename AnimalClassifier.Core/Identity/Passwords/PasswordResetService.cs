@@ -13,7 +13,6 @@
     using Microsoft.Extensions.Options;
     using System.Text;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
-    using static Constants.SecurityConstants;
 
     public class PasswordResetService : IPasswordResetService
     {
@@ -58,7 +57,7 @@
                 await emailSender.SendAsync(
                     user.Email,
                     PasswordResetEmail.Subject,
-                    PasswordResetEmail.BuildBody(user.FullName, link, PasswordResetTokenLifespan));
+                    PasswordResetEmail.BuildBody(user.FullName, link, PasswordPolicy.ResetTokenLifespan));
             }
             catch (Exception exception)
             {
