@@ -1,10 +1,7 @@
 ﻿namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.DTO;
-    using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
-    using Microsoft.Extensions.DependencyInjection;
     using System.Net;
     using System.Net.Http.Json;
 
@@ -51,7 +48,7 @@
             var day = DateOnly.FromDateTime(dateRecognized);
             var before = await GetActivityAsync(user);
 
-            await AddRecognitionLogAsync(account.UserId, dateRecognized);
+            await AddRecognitionAsync(account.UserId, dateRecognized: dateRecognized);
 
             var after = await GetActivityAsync(user);
             Assert.Equal(before[day] + 1, after[day]);
@@ -68,7 +65,7 @@
             var tokyoDay = utcDay.AddDays(1);
             var before = await GetActivityAsync(user, TokyoTimeZone);
 
-            await AddRecognitionLogAsync(account.UserId, dateRecognized);
+            await AddRecognitionAsync(account.UserId, dateRecognized: dateRecognized);
 
             var after = await GetActivityAsync(user, TokyoTimeZone);
             Assert.Equal(before[tokyoDay] + 1, after[tokyoDay]);
@@ -103,21 +100,6 @@
 
             var activity = await client.GetFromJsonAsync<List<DailyRecognitionCount>>(path);
             return activity!.ToDictionary(day => day.Date, day => day.Count);
-        }
-
-        private async Task AddRecognitionLogAsync(string userId, DateTime dateRecognized)
-        {
-            using var scope = Factory.Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
-
-            context.AnimalRecognitionLogs.Add(new AnimalRecognitionLog
-            {
-                AnimalName = "cat",
-                ImagePath = $"/uploads/{Guid.NewGuid():N}.jpg",
-                DateRecognized = dateRecognized,
-                UserId = userId
-            });
-            await context.SaveChangesAsync();
         }
     }
 }

@@ -37,7 +37,8 @@ namespace AnimalClassifier.Tests.Identity
         private const string AccountEntry = "account.json";
         private const string RecognitionsEntry = "recognitions.json";
         private const string UploadsFolder = "uploads/";
-        private const string UploadedFileEntry = "uploads/cat.jpg";
+        private const string UploadedFileName = "cat.jpg";
+        private const string UploadedFileEntry = UploadsFolder + UploadedFileName;
 
         // A token keeps its expiry to the second, so two issued within one
         // would look alike whether or not the lifetime started again.
@@ -479,8 +480,8 @@ namespace AnimalClassifier.Tests.Identity
         public async Task ExportData_ContainsClearedRecognitionsToo()
         {
             var account = await RegisterAsync();
-            await AddRecognitionAsync(account.UserId, isDeleted: false);
-            await AddRecognitionAsync(account.UserId, isDeleted: true);
+            await AddRecognitionAsync(account.UserId, fileName: UploadedFileName);
+            await AddRecognitionAsync(account.UserId, fileName: UploadedFileName, isCleared: true);
             var client = await SignInAsync(account.Email, Password);
 
             using var archive = await ExportDataAsync(client);
@@ -506,14 +507,14 @@ namespace AnimalClassifier.Tests.Identity
             {
                 await contents.CopyToAsync(exported);
             }
-            Assert.Equal(await File.ReadAllBytesAsync(Path.Combine(uploadDirectory, "cat.jpg")), exported.ToArray());
+            Assert.Equal(await File.ReadAllBytesAsync(Path.Combine(uploadDirectory, UploadedFileName)), exported.ToArray());
         }
 
         [Fact]
         public async Task ExportData_PointsEachRecognitionAtItsFile()
         {
             var account = await RegisterAsync();
-            await AddRecognitionAsync(account.UserId, isDeleted: false);
+            await AddRecognitionAsync(account.UserId, fileName: UploadedFileName);
             await AddUploadAsync(account.UserId);
             var client = await SignInAsync(account.Email, Password);
 
@@ -528,7 +529,7 @@ namespace AnimalClassifier.Tests.Identity
         public async Task ExportData_LeavesOutOtherAccounts()
         {
             var other = await RegisterAsync();
-            await AddRecognitionAsync(other.UserId, isDeleted: false);
+            await AddRecognitionAsync(other.UserId, fileName: UploadedFileName);
             await AddUploadAsync(other.UserId);
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
@@ -648,8 +649,8 @@ namespace AnimalClassifier.Tests.Identity
         public async Task DeleteAccount_RemovesTheRecognitions()
         {
             var account = await RegisterAsync();
-            await AddRecognitionAsync(account.UserId, isDeleted: false);
-            await AddRecognitionAsync(account.UserId, isDeleted: true);
+            await AddRecognitionAsync(account.UserId, fileName: UploadedFileName);
+            await AddRecognitionAsync(account.UserId, fileName: UploadedFileName, isCleared: true);
             var client = await SignInAsync(account.Email, Password);
 
             (await DeleteAccountAsync(client, Password)).EnsureSuccessStatusCode();
@@ -681,7 +682,7 @@ namespace AnimalClassifier.Tests.Identity
             var client = await SignInAsync(account.Email, Password);
 
             HttpResponseMessage response;
-            await using (File.Open(Path.Combine(uploadDirectory, "cat.jpg"), FileMode.Open, FileAccess.Read, FileShare.None))
+            await using (File.Open(Path.Combine(uploadDirectory, UploadedFileName), FileMode.Open, FileAccess.Read, FileShare.None))
             {
                 response = await DeleteAccountAsync(client, Password);
             }
@@ -775,23 +776,6 @@ namespace AnimalClassifier.Tests.Identity
             Factory.WithWebHostBuilder(builder =>
                 builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.DataExportPermitLimit)), permitLimit.ToString()));
 
-        // Added directly, since uploading would need the recognition model.
-        private async Task AddRecognitionAsync(string userId, bool isDeleted)
-        {
-            await using var scope = Factory.Services.CreateAsyncScope();
-            var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
-
-            context.AnimalRecognitionLogs.Add(new AnimalRecognitionLog
-            {
-                AnimalName = "Cat",
-                ImagePath = $"/uploads/{userId}/cat.jpg",
-                DateRecognized = DateTime.UtcNow,
-                UserId = userId,
-                IsDeleted = isDeleted
-            });
-            await context.SaveChangesAsync();
-        }
-
         /// <returns>The directory the user's uploads are kept in.</returns>
         private async Task<string> AddUploadAsync(string userId)
         {
@@ -799,7 +783,7 @@ namespace AnimalClassifier.Tests.Identity
             var userDirectory = Path.Combine(uploadPath, userId);
 
             Directory.CreateDirectory(userDirectory);
-            await File.WriteAllBytesAsync(Path.Combine(userDirectory, "cat.jpg"), [0xFF, 0xD8]);
+            await File.WriteAllBytesAsync(Path.Combine(userDirectory, UploadedFileName), [0xFF, 0xD8]);
 
             return userDirectory;
         }
