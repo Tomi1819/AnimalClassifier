@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Identity;
+    using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,12 @@
     public class AdminController : ControllerBase
     {
         private readonly IAdminService adminService;
-        private readonly IUploadService uploadService;
+        private readonly IRecognitionHistoryService historyService;
 
-        public AdminController(IAdminService adminService, IUploadService uploadService)
+        public AdminController(IAdminService adminService, IRecognitionHistoryService historyService)
         {
             this.adminService = adminService;
-            this.uploadService = uploadService;
+            this.historyService = historyService;
         }
 
         [HttpGet("users")]
@@ -26,8 +27,8 @@
             Ok(await adminService.GetUsersAsync(search, page));
 
         [HttpGet("users/{id}/history")]
-        public async Task<IActionResult> GetUserHistory(string id) =>
-            Ok(await uploadService.GetHistoryAsync(id));
+        public async Task<IActionResult> GetUserHistory(string id, CancellationToken cancellationToken) =>
+            Ok(await historyService.GetHistoryAsync(id, cancellationToken));
 
         [HttpPost("users/{id}/lock")]
         public Task<IActionResult> LockUser(string id) =>

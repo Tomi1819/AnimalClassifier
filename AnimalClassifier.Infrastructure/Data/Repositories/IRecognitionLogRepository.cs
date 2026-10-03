@@ -24,7 +24,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// The recognitions belonging to one user that they have not cleared,
         /// most recent first.
         /// </summary>
-        Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId);
+        Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Every recognition one user made, cleared ones included, most recent

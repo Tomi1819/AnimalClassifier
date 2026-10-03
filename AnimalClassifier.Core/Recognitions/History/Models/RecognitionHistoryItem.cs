@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.DTO
+﻿namespace AnimalClassifier.Core.Recognitions.History.Models
 {
     /// <summary>
     /// One entry in a user's own recognition history.
