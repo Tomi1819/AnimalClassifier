@@ -3,10 +3,11 @@
     using Microsoft.IdentityModel.JsonWebTokens;
     using System.Globalization;
     using System.Security.Claims;
-    using static Constants.MessageConstants;
 
     public static class ClaimsPrincipalExtension
     {
+        private const string MissingUserId = "The caller is not signed in.";
+
         public static string? Id(this ClaimsPrincipal user)
             => user.FindFirstValue(ClaimTypes.NameIdentifier);
 
