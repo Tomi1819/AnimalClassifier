@@ -36,6 +36,7 @@ namespace AnimalClassifier.Core.Recognitions.Classification
             }
 
             var step = FramesBetweenSamples(capture.Fps, capture.FrameCount);
+            var sampledAny = false;
 
             for (var position = 0; position < capture.FrameCount; position += step)
             {
@@ -47,8 +48,16 @@ namespace AnimalClassifier.Core.Recognitions.Classification
                 // failing the whole video.
                 if (capture.Read(frame) && !frame.Empty())
                 {
+                    sampledAny = true;
                     yield return frame.ToBytes(FrameFormat);
                 }
+            }
+
+            // A video without a single frame that can be read is of no more
+            // use than one that cannot be opened.
+            if (!sampledAny)
+            {
+                throw new RequestRefusedException(UnreadableVideo);
             }
         }
 

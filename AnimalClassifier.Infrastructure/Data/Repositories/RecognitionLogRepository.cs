@@ -18,8 +18,8 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         public void Add(AnimalRecognitionLog log) => context.AnimalRecognitionLogs.Add(log);
 
-        public Task<AnimalRecognitionLog?> GetByIdAsync(int id) =>
-            Logs.FirstOrDefaultAsync(l => l.Id == id);
+        public Task<AnimalRecognitionLog?> GetForUserAsync(string userId, int id, CancellationToken cancellationToken) =>
+            Logs.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId, cancellationToken);
 
         public async Task<IReadOnlyList<AnimalRecognitionLog>> GetAllAsync() =>
             await Logs.ToListAsync();

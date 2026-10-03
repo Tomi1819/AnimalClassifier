@@ -2,17 +2,16 @@
 {
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Recognitions;
     using AnimalClassifier.Infrastructure.Data.Repositories;
 
     public class AnimalService : IAnimalService
     {
         private readonly IRecognitionLogRepository recognitionLogs;
-        private readonly IFileValidator fileValidator;
 
-        public AnimalService(IRecognitionLogRepository recognitionLogs, IFileValidator fileValidator)
+        public AnimalService(IRecognitionLogRepository recognitionLogs)
         {
             this.recognitionLogs = recognitionLogs;
-            this.fileValidator = fileValidator;
         }
         public async Task<List<AnimalSearchResult>> SearchAnimalByNameAsync(string searchTerm)
         {
@@ -23,7 +22,7 @@
 
             var filtered = logs
                 .Where(l => l.AnimalName.Contains(searchTerm.Trim(), StringComparison.OrdinalIgnoreCase))
-                .Where(l => fileValidator.IsImage(l.ImagePath))
+                .Where(l => MediaFile.IsImage(l.ImagePath))
                 .GroupBy(l => l.AnimalName)
                 .Select(g => new
                 {
