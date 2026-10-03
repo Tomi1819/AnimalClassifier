@@ -19,9 +19,24 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// </summary>
         Task<AnimalRecognitionLog?> GetForUserAsync(string userId, int id, CancellationToken cancellationToken);
 
-        Task<IReadOnlyList<AnimalRecognitionLog>> GetAllAsync();
+        Task<int> CountAsync(CancellationToken cancellationToken);
 
-        Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since);
+        /// <summary>
+        /// How many users have made a recognition, cleared ones included.
+        /// </summary>
+        Task<int> CountUsersAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// The animals recognised most, with how often each was, most first.
+        /// </summary>
+        /// <param name="count">How many animals to read.</param>
+        Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(int count, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// When each recognition since the date was made, and nothing else
+        /// about them.
+        /// </summary>
+        Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since, CancellationToken cancellationToken);
 
         /// <summary>
         /// Every recognition, by every user and cleared ones included, of an

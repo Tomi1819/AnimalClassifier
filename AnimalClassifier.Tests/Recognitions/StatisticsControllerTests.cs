@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Tests.Recognitions
 {
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Recognitions.Statistics;
+    using AnimalClassifier.Core.Recognitions.Statistics.Models;
     using AnimalClassifier.Tests.Support;
     using System.Net;
     using System.Net.Http.Json;
@@ -17,6 +18,51 @@
         public StatisticsControllerTests(ApiFactory factory)
             : base(factory)
         {
+        }
+
+        // A cleared recognition was still made, so it is still counted.
+        [Fact]
+        public async Task GetTotal_CountsEveryRecognition_ClearedOnesToo()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var before = await user.GetFromJsonAsync<int>("/api/statistics/total");
+
+            await AddRecognitionAsync(account.UserId);
+            await AddRecognitionAsync(account.UserId, isCleared: true);
+
+            Assert.Equal(before + 2, await user.GetFromJsonAsync<int>("/api/statistics/total"));
+        }
+
+        [Fact]
+        public async Task GetUniqueUsers_CountsEachUserOnce()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var before = await user.GetFromJsonAsync<int>("/api/statistics/users");
+
+            await AddRecognitionAsync(account.UserId);
+            await AddRecognitionAsync(account.UserId);
+
+            Assert.Equal(before + 1, await user.GetFromJsonAsync<int>("/api/statistics/users"));
+        }
+
+        [Fact]
+        public async Task GetTopAnimals_ListsTheAnimalRecognisedMostFirst()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var animalName = $"animal{Guid.NewGuid():N}";
+            for (var i = 0; i < 10; i++)
+            {
+                await AddRecognitionAsync(account.UserId, animalName);
+            }
+
+            var topAnimals = await user.GetFromJsonAsync<List<MostCommonAnimal>>("/api/statistics/top-animal");
+
+            Assert.Equal(animalName, topAnimals![0].AnimalName);
+            Assert.Equal(10, topAnimals[0].Count);
+            Assert.True(topAnimals.Count <= StatisticsService.MostCommonAnimalCount);
         }
 
         [Fact]

@@ -1,12 +1,11 @@
 namespace AnimalClassifier.Extensions
 {
-    using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.Search;
+    using AnimalClassifier.Core.Recognitions.Statistics;
     using AnimalClassifier.Core.Recognitions.Uploads;
-    using AnimalClassifier.Core.Services;
     using Microsoft.Extensions.ML;
 
     /// <summary>
