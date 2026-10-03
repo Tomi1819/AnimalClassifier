@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Configurations
+﻿namespace AnimalClassifier.Core.Recognitions.Classification
 {
     using AnimalClassifier.Core.Common.Settings;
     using System.ComponentModel.DataAnnotations;

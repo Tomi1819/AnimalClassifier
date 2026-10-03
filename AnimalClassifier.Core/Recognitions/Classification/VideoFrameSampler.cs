@@ -1,0 +1,69 @@
+namespace AnimalClassifier.Core.Recognitions.Classification
+{
+    using AnimalClassifier.Core.Common.Exceptions;
+    using OpenCvSharp;
+    using static AnimalClassifier.Core.Recognitions.Classification.ClassificationMessages;
+
+    /// <summary>
+    /// Reads the frames with OpenCV.
+    /// </summary>
+    public class VideoFrameSampler : IVideoFrameSampler
+    {
+        /// <summary>
+        /// The most frames read from one video, two minutes' worth at one a
+        /// second. A longer video is sampled further apart instead, so that
+        /// how long it takes to recognise has a bound however long it is.
+        /// </summary>
+        public const int MaxFrames = 120;
+
+        /// <summary>
+        /// Taken for a video that does not say how many frames it shows a
+        /// second, which is the rate most video is recorded at.
+        /// </summary>
+        public const int AssumedFramesPerSecond = 30;
+
+        // The form the frames are handed on in, which is the form of the
+        // images the model was trained with.
+        private const string FrameFormat = ".jpg";
+
+        public IEnumerable<byte[]> SampleFrames(string videoPath)
+        {
+            using var capture = new VideoCapture(videoPath);
+
+            if (!capture.IsOpened())
+            {
+                throw new RequestRefusedException(UnreadableVideo);
+            }
+
+            var step = FramesBetweenSamples(capture.Fps, capture.FrameCount);
+
+            for (var position = 0; position < capture.FrameCount; position += step)
+            {
+                capture.PosFrames = position;
+
+                using var frame = new Mat();
+
+                // A frame that cannot be decoded is passed over rather than
+                // failing the whole video.
+                if (capture.Read(frame) && !frame.Empty())
+                {
+                    yield return frame.ToBytes(FrameFormat);
+                }
+            }
+        }
+
+        /// <summary>
+        /// How many frames apart the samples are: a second's worth, or more
+        /// for a video that would otherwise give more than
+        /// <see cref="MaxFrames"/>. Never less than one, which a video that
+        /// gives no frame rate would otherwise get, and never move on.
+        /// </summary>
+        public static int FramesBetweenSamples(double framesPerSecond, int frameCount)
+        {
+            var oneSecond = framesPerSecond >= 1 ? (int)Math.Round(framesPerSecond) : AssumedFramesPerSecond;
+            var spreadOverMax = (int)Math.Ceiling(frameCount / (double)MaxFrames);
+
+            return Math.Max(oneSecond, spreadOverMax);
+        }
+    }
+}

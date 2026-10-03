@@ -3,6 +3,7 @@
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Http;
@@ -12,20 +13,23 @@
     {
         private readonly IFileValidator fileValidator;
         private readonly IFileStorageService fileStorageService;
-        private readonly IRecognitionService recognitionService;
+        private readonly IImageClassifier classifier;
+        private readonly IVideoFrameSampler frameSampler;
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IUnitOfWork unitOfWork;
 
         public UploadService(
             IFileValidator fileValidator,
             IFileStorageService fileStorageService,
-            IRecognitionService recognitionService,
+            IImageClassifier classifier,
+            IVideoFrameSampler frameSampler,
             IRecognitionLogRepository recognitionLogs,
             IUnitOfWork unitOfWork)
         {
             this.fileValidator = fileValidator;
             this.fileStorageService = fileStorageService;
-            this.recognitionService = recognitionService;
+            this.classifier = classifier;
+            this.frameSampler = frameSampler;
             this.recognitionLogs = recognitionLogs;
             this.unitOfWork = unitOfWork;
         }
@@ -36,7 +40,8 @@
 
             var storedFile = await SaveAsync(formFile, userId);
 
-            var (predictedAnimal, predictionScore) = await recognitionService.PredictAnimalFromImageAsync(storedFile.PhysicalPath);
+            var prediction = classifier.Classify(await File.ReadAllBytesAsync(storedFile.PhysicalPath));
+            var (predictedAnimal, predictionScore) = (prediction.Animal, prediction.Score);
 
             var log = new AnimalRecognitionLog
             {
@@ -65,16 +70,18 @@
 
             var storedFile = await SaveAsync(formFile, userId);
 
-            var recognitionResults = await recognitionService.PredictAnimalsFromVideoAsync(storedFile.PhysicalPath);
+            var recognitionResults = frameSampler.SampleFrames(storedFile.PhysicalPath)
+                .Select(classifier.Classify)
+                .ToList();
 
             var topAnimals = recognitionResults
-                .Where(r => r.PredictionScore >= 0.6f)
-                .GroupBy(r => r.PredictedAnimal)
+                .Where(r => r.Score >= 0.6f)
+                .GroupBy(r => r.Animal)
                 .Where(g => g.Count() >= 3)
                 .Select(g => new AnimalSummary
                 {
                     Animal = g.Key,
-                    AverageScore = g.Average(x => x.PredictionScore)
+                    AverageScore = g.Average(x => x.Score)
                         .ToString("0.00", CultureInfo.InvariantCulture)
                 })
                 .OrderByDescending(a => a.AverageScore)

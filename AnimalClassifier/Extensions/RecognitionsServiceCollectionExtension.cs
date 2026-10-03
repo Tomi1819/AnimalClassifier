@@ -1,12 +1,11 @@
 namespace AnimalClassifier.Extensions
 {
-    using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
+    using AnimalClassifier.Core.Recognitions.Classification;
+    using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Core.Services.Helpers;
     using Microsoft.Extensions.ML;
-    using Microsoft.ML;
 
     /// <summary>
     /// Recognising animals in what users upload, and everything read back from
@@ -17,11 +16,14 @@ namespace AnimalClassifier.Extensions
         public static IServiceCollection AddApplicationRecognitions(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
             services.AddScoped<IUploadService, UploadService>();
-            services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFileValidator, FileValidator>();
             services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddScoped<IAnimalService, AnimalService>();
-            services.AddSingleton<MLContext>();
+
+            // Both are safe to share: the classifier takes an engine from the
+            // pool for each image, and the sampler keeps nothing between videos.
+            services.AddSingleton<IImageClassifier, MLImageClassifier>();
+            services.AddSingleton<IVideoFrameSampler, VideoFrameSampler>();
 
             // The pool is built from the model's path, so the settings are read
             // here rather than once the app starts.
