@@ -8,7 +8,8 @@
         public static string SectionName => "MLModel";
 
         /// <summary>
-        /// The trained model's file.
+        /// The trained model's file, relative to the content root unless it
+        /// is absolute.
         /// </summary>
         [Required]
         public string Path { get; set; } = string.Empty;

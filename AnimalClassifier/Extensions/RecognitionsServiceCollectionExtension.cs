@@ -14,7 +14,7 @@ namespace AnimalClassifier.Extensions
     /// </summary>
     public static class RecognitionsServiceCollectionExtension
     {
-        public static IServiceCollection AddApplicationRecognitions(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationRecognitions(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IRecognitionService, RecognitionService>();
@@ -27,8 +27,10 @@ namespace AnimalClassifier.Extensions
             // here rather than once the app starts.
             var modelSettings = configuration.GetValidatedSettings<MLModelSettings>();
 
+            // Relative to the content root, as the uploads are, rather than to
+            // whichever folder the app happened to be started from.
             services.AddPredictionEnginePool<ImageData, ImagePrediction>()
-                .FromFile(modelSettings.Path);
+                .FromFile(Path.GetFullPath(modelSettings.Path, environment.ContentRootPath));
 
             return services;
         }
