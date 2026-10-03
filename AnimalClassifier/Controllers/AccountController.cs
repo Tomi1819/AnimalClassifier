@@ -21,11 +21,15 @@ namespace AnimalClassifier.Controllers
     {
         private readonly IAccountService accountService;
         private readonly IDataExportService dataExportService;
+        private readonly IAccountDeletionService accountDeletionService;
 
-        public AccountController(IAccountService accountService, IDataExportService dataExportService)
+        public AccountController(IAccountService accountService,
+                                 IDataExportService dataExportService,
+                                 IAccountDeletionService accountDeletionService)
         {
             this.accountService = accountService;
             this.dataExportService = dataExportService;
+            this.accountDeletionService = accountDeletionService;
         }
 
         [HttpGet]
@@ -68,7 +72,7 @@ namespace AnimalClassifier.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest request)
         {
-            await accountService.DeleteAccountAsync(User.RequiredId(), request);
+            await accountDeletionService.DeleteAccountAsync(User.RequiredId(), request);
 
             return NoContent();
         }

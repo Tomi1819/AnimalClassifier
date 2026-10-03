@@ -145,6 +145,7 @@ namespace AnimalClassifier.Extensions
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IDataExportService, DataExportService>();
+            services.AddScoped<IAccountDeletionService, AccountDeletionService>();
 
             services.AddScoped<IPasswordConfirmer, PasswordConfirmer>();
             services.AddScoped<IPasswordResetService, PasswordResetService>();
