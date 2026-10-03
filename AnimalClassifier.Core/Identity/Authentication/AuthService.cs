@@ -5,7 +5,6 @@ namespace AnimalClassifier.Core.Identity.Authentication
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using System.Security.Claims;
-    using System.Threading.Tasks;
     using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
 

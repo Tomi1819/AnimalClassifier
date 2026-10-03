@@ -10,7 +10,6 @@
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Common;
     using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.RateLimiting;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
