@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Controllers
 {
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Contracts;
-    using AnimalClassifier.Core.DTO;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.ComponentModel.DataAnnotations;

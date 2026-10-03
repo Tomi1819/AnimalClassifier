@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Contracts
+﻿namespace AnimalClassifier.Core.Common.Email
 {
     public interface IEmailSender
     {

@@ -1,6 +1,6 @@
 ﻿namespace AnimalClassifier.Core.Extensions
 {
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
     using Microsoft.AspNetCore.Identity;
 
     public static class IdentityResultExtension

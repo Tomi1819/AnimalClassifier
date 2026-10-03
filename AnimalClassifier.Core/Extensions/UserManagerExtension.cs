@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Extensions
 {
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using static Constants.MessageConstants;

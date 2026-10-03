@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Contracts
 {
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Infrastructure.Data.Models;
 
     public interface IPasswordConfirmer

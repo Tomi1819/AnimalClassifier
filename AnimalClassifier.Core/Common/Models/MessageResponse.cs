@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Core.DTO
+namespace AnimalClassifier.Core.Common.Models
 {
     /// <summary>
     /// An answer that is only a message for the user, whether it reports a

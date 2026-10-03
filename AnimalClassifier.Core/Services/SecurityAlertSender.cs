@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Core.Services
 {
+    using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Contracts;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.Extensions.Logging;

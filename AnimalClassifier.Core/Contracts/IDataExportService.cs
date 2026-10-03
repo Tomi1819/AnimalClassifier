@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Contracts
 {
-    using AnimalClassifier.Core.Exceptions;
+    using AnimalClassifier.Core.Common.Exceptions;
 
     /// <summary>
     /// A copy of everything an account holds, for its owner to keep.

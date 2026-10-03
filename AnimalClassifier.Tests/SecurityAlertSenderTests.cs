@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Tests
 {
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Services;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.Extensions.Logging.Abstractions;

@@ -1,6 +1,6 @@
 ﻿namespace AnimalClassifier.Tests
 {
-    using AnimalClassifier.Core.Contracts;
+    using AnimalClassifier.Core.Common.Email;
     using System.Collections.Concurrent;
     using System.Net;
     using System.Text.RegularExpressions;
