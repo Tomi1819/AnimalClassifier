@@ -271,3 +271,61 @@ The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-u
 ```bash
 dotnet test
 ```
+
+## 📁 Project Structure
+
+```
+AnimalClassifier/                  The API: controllers, filters, and how the app is put together
+  Extensions/                      Service registration, a file per area, such as IdentityServiceCollectionExtension
+  Filters/                         DomainExceptionFilter, which answers what the services refuse
+AnimalClassifier.Core/             What the app does
+  Common/                          What every feature uses
+    Email/                         Sending email over SMTP, or into the log in development
+    Exceptions/                    The refusals a service reports to the caller
+    Models/                        Responses shared by every feature
+  Identity/                        Accounts and signing in; AccountName and the roles sit here
+    Authentication/                Registering, signing in, and the tokens a session runs on
+    SecurityAlerts/                The emails sent when how an account signs in changes
+    Passwords/                     The password rules, confirming one, and resetting a forgotten one
+    Passkeys/                      Registering, using and removing passkeys
+    Account/                       A signed-in user's own account: profile, name, password, export, deletion
+  Configurations/ Constants/       The rest of the app, until it moves into features of its own
+  Contracts/ DTO/ Services/
+AnimalClassifier.Infrastructure/   The database: entities, migrations and the repository
+AnimalClassifier.Tests/            Integration tests, each class against a database of its own
+  Identity/                        The tests of identity, and the passkey authenticator they stand in
+  Support/                         The test app, ApiTest that every test class signs in with, and the recorded email
+```
+
+Core is split by feature rather than by kind of file. Everything a feature
+needs sits in its folder, and the namespaces follow the folders:
+
+- the interface beside the service that implements it,
+- the requests and responses it takes in `Models/`,
+- its settings, and the texts it shows the user in a `<Feature>Messages` class,
+- any limit it enforces, on the class that enforces it, as with
+  `AccountName.MaxLength` and `PasswordPolicy.MinLength`.
+
+The entities stay in Infrastructure, since the migrations name each by its
+full type name and moving one would read as a change to the schema.
+
+### Adding a feature
+
+1. Give it a folder of its own: `Core/Identity/<Feature>/` for a part of
+   identity, or a new area beside `Identity/`.
+2. Have its services throw `RequestRefusedException`, `NotFoundException` or
+   `AuthenticationFailedException` for anything the user should be told.
+   `DomainExceptionFilter` answers them with 400, 404 and 401 and the message,
+   so a controller has nothing to catch. Any other exception is a server error,
+   and its message never reaches the caller.
+3. Register its services in its area's file in `AnimalClassifier/Extensions`,
+   such as `AddIdentityServices`.
+4. Test it from `AnimalClassifier.Tests/<Area>/` with a class deriving from
+   `ApiTest`.
+
+The parts of identity depend on each other in one direction, in this order:
+SecurityAlerts, Authentication, Passwords, Passkeys, Account. Each may use
+those before it and none after, so Account uses all four and nothing uses
+Account. What they share sits in `Identity/` and uses none of them.
+`IdentityLayoutTests` holds that order and fails, naming the types, when a
+change breaks it; a new part goes into its list after what it uses.
