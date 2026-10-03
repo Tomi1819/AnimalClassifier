@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Tests
+namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Core.Configurations;
     using AnimalClassifier.Core.DTO;
@@ -8,6 +8,7 @@ namespace AnimalClassifier.Tests
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Mvc.Testing;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;

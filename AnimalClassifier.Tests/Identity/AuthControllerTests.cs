@@ -1,9 +1,10 @@
-﻿namespace AnimalClassifier.Tests
+﻿namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
+    using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
