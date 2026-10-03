@@ -1,22 +1,27 @@
 using AnimalClassifier.Extensions;
-using AnimalClassifier.Filters;
 using static AnimalClassifier.Core.Constants.ConfigConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationDbContext(builder.Configuration);
+builder.Services.AddApplicationPersistence(builder.Configuration);
+
+builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
+
+builder.Services.AddApplicationStorage(builder.Configuration, builder.Environment);
+
+builder.Services.AddApplicationFrontend(builder.Configuration);
 
 builder.Services.AddApplicationIdentity();
 
 builder.Services.AddApplicationAuthentication(builder.Configuration);
 
-builder.Services.AddControllers(options => options.Filters.Add<DomainExceptionFilter>());
-
-builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
-
 builder.Services.AddApplicationPasskeys(builder.Configuration);
 
-builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
+builder.Services.AddApplicationRecognitions(builder.Configuration);
+
+builder.Services.AddApplicationAdmin();
+
+builder.Services.AddApplicationApi();
 
 builder.Services.AddApplicationRateLimiting(builder.Configuration);
 
