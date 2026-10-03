@@ -1,6 +1,5 @@
 ﻿namespace AnimalClassifier.Infrastructure.Data
 {
-    using AnimalClassifier.Infrastructure.Data.Configurations;
     using AnimalClassifier.Infrastructure.Data.Converters;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -16,8 +15,10 @@
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.ApplyConfiguration(new AnimalRecognitionLogConfiguration());
-            builder.ApplyConfiguration(new AdminAuditLogConfiguration());
+
+            // Every IEntityTypeConfiguration in this assembly, so that a new
+            // table's configuration takes effect by being written.
+            builder.ApplyConfigurationsFromAssembly(typeof(AnimalClassifierDbContext).Assembly);
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
