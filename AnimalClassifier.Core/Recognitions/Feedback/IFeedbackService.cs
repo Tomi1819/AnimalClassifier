@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Recognitions.Feedback
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
 
     /// <summary>
@@ -17,6 +18,13 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
         /// alphabetically.
         /// </summary>
         IReadOnlyList<string> GetKnownAnimals();
+
+        /// <summary>
+        /// One page of the feedback the user has given, most recently given
+        /// first, including on recognitions they have cleared from their
+        /// history, so that they can still withdraw it.
+        /// </summary>
+        Task<PagedResult<FeedbackItem>> GetFeedbackAsync(string userId, int page, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gives feedback on one of the user's recognitions, in place of any

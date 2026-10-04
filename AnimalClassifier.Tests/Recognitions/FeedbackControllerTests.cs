@@ -2,6 +2,7 @@ namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
+    using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
@@ -19,6 +20,7 @@ namespace AnimalClassifier.Tests.Recognitions
     public class FeedbackControllerTests : ApiTest
     {
         private const string FeedbackPath = "/api/feedback";
+        private const string HistoryPath = "/api/upload/history";
 
         public FeedbackControllerTests(ApiFactory factory)
             : base(factory)
@@ -269,6 +271,65 @@ namespace AnimalClassifier.Tests.Recognitions
 
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             Assert.NotNull(await FindFeedbackAsync(recognition.Id));
+        }
+
+        [Fact]
+        public async Task GetFeedback_ListsTheUsersOwn_MostRecentlyGivenFirst()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var first = await AddRecognitionAsync(account.UserId);
+            var second = await AddRecognitionAsync(account.UserId);
+            (await GiveFeedbackAsync(user, second, Correct())).EnsureSuccessStatusCode();
+            (await GiveFeedbackAsync(user, first, WrongAnimal("Wolf"))).EnsureSuccessStatusCode();
+            var (other, othersRecognition) = await SignInWithRecognitionAsync();
+            (await GiveFeedbackAsync(other, othersRecognition, Correct())).EnsureSuccessStatusCode();
+
+            var result = await user.GetFromJsonAsync<PagedResult<FeedbackItem>>(FeedbackPath);
+
+            Assert.Equal(2, result!.TotalCount);
+            Assert.Equal([first.Id, second.Id], result.Items.Select(item => item.RecognitionId));
+            Assert.Equal(first.AnimalName, result.Items[0].RecognizedAnimal);
+            Assert.Equal("Wolf", result.Items[0].Feedback.ActualAnimal);
+        }
+
+        // So that the user can still withdraw it.
+        [Fact]
+        public async Task GetFeedback_IncludesClearedRecognitions()
+        {
+            var (user, recognition) = await SignInWithRecognitionAsync();
+            (await GiveFeedbackAsync(user, recognition, Correct())).EnsureSuccessStatusCode();
+
+            (await user.DeleteAsync(HistoryPath)).EnsureSuccessStatusCode();
+
+            var result = await user.GetFromJsonAsync<PagedResult<FeedbackItem>>(FeedbackPath);
+            Assert.Equal(recognition.Id, Assert.Single(result!.Items).RecognitionId);
+        }
+
+        [Fact]
+        public async Task GetFeedback_OnAPageBeforeTheFirst_IsABadRequest()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.GetAsync($"{FeedbackPath}?page=0");
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GiveFeedback_IsShownInTheHistory()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var withFeedback = await AddRecognitionAsync(account.UserId);
+            var without = await AddRecognitionAsync(account.UserId, dateRecognized: DateTime.UtcNow.AddMinutes(-1));
+            (await GiveFeedbackAsync(user, withFeedback, UnlistedAnimal("Capybara"))).EnsureSuccessStatusCode();
+
+            var history = (await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!;
+
+            Assert.Equal([withFeedback.Id, without.Id], history.Select(item => item.Id));
+            Assert.Equal("capybara", history[0].Feedback!.ActualAnimal);
+            Assert.Null(history[1].Feedback);
         }
 
         private static FeedbackRequest Correct(bool allowsTraining = false) =>
