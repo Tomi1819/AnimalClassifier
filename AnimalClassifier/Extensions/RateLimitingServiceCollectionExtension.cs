@@ -17,14 +17,17 @@ namespace AnimalClassifier.Extensions
         /// one may register or ask for a password reset, since the endpoints
         /// mail an address the caller picks and hand out attempts at a token;
         /// how often one account may export its data, since each export reads
-        /// every file the account uploaded; and how often one may ask for
-        /// another link to confirm its email, for the same reason as
-        /// registering.
+        /// every file the account uploaded; how often one may ask for another
+        /// link to confirm its email, for the same reason as registering; and
+        /// how often one may upload, since each upload is stored and takes a
+        /// processor for as long as the model runs on it.
         ///
         /// How often an account's password may be confirmed from inside a
         /// session is capped as well, by the service that confirms it rather
         /// than by an endpoint, so that nothing asking for the password can
-        /// leave the cap out.
+        /// leave the cap out. So is how many uploads are worked on at once,
+        /// by the service that works on them, so that only an upload this
+        /// limit let through ever waits for a turn.
         /// </summary>
         public static IServiceCollection AddApplicationRateLimiting(this IServiceCollection services)
         {
@@ -61,6 +64,9 @@ namespace AnimalClassifier.Extensions
 
             options.AddPolicy<string>(RateLimitPolicies.ConfirmationEmail, context => FixedWindow(
                 context.User.Id() ?? UnknownClient, settings.ConfirmationEmailPermitLimit, settings.ConfirmationEmailWindowMinutes));
+
+            options.AddPolicy<string>(RateLimitPolicies.Upload, context => FixedWindow(
+                context.User.Id() ?? UnknownClient, settings.UploadPermitLimit, settings.UploadWindowMinutes));
         }
 
         // Callers sharing an address share a window. Counting them all as one

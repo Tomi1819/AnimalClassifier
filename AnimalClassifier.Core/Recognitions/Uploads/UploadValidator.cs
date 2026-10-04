@@ -20,6 +20,13 @@
         /// </summary>
         public const long MaxFileSize = 5 * BytesPerMegabyte;
 
+        /// <summary>
+        /// The largest request an upload is read from, in bytes. It leaves room
+        /// for the form around the file, so that a file a little too large is
+        /// still told how large it can be. A larger request is cut off unread.
+        /// </summary>
+        public const long MaxRequestSize = MaxFileSize + BytesPerMegabyte;
+
         private const long BytesPerMegabyte = 1024 * 1024;
 
         private const int MovieTypeBoxOffset = 4;

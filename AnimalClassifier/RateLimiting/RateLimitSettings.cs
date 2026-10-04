@@ -6,8 +6,8 @@ namespace AnimalClassifier.RateLimiting
     /// <summary>
     /// The limits on the API's endpoints, each enforced by the policy of the
     /// same name in <see cref="RateLimitPolicies"/>. How often a password may
-    /// be confirmed is in the same section, and read by the service that
-    /// confirms it.
+    /// be confirmed, and how many uploads are worked on at once, are in the
+    /// same section, and read by the services that enforce them.
     /// </summary>
     public class RateLimitSettings : ISettings
     {
@@ -58,6 +58,16 @@ namespace AnimalClassifier.RateLimiting
 
         [Range(1, int.MaxValue)]
         public int DataExportWindowMinutes { get; set; } = 15;
+
+        /// <summary>
+        /// How many images and videos one account may upload per window. Each
+        /// is stored, and worked on for as long as the model takes.
+        /// </summary>
+        [Range(1, int.MaxValue)]
+        public int UploadPermitLimit { get; set; } = 20;
+
+        [Range(1, int.MaxValue)]
+        public int UploadWindowMinutes { get; set; } = 15;
 
         /// <summary>
         /// How many links to confirm its email one account may ask for per

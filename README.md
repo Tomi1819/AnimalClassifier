@@ -318,6 +318,24 @@ glimpse; a video in which none does is recorded as `Unknown`.
 An upload that fails at any step leaves nothing behind: no file, and no
 recognition in the history.
 
+A request more than a megabyte larger than the largest file is cut off unread
+and answered `413 Payload Too Large`; one just over the limit is still read, so
+that it can be told how large a file may be. One account may upload only so
+many files a while, and is answered `429 Too Many Requests` beyond that.
+
+Decoding and classifying take a processor for as long as they last, and a video
+for a run per frame, so only so many uploads are worked on at once, whoever
+sends them. The rest wait their turn, and once too many are waiting, an upload
+is answered `503 Service Unavailable` at once rather than kept waiting. A caller
+who goes away gives up their turn, and a video stops between frames, as nothing
+has been recorded by then.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `RateLimiting:UploadPermitLimit`, `RateLimiting:UploadWindowMinutes` | How many files one account may upload per window, 20 every 15 minutes unless set. |
+| `RateLimiting:ConcurrentClassificationLimit` | How many uploads are worked on at once, one for each processor unless set. |
+| `RateLimiting:ClassificationQueueLimit` | How many more may wait for a turn, 20 unless set. |
+
 ### Loading uploaded images and videos
 
 Nothing serves the upload folder. Every answer that shows an upload, such as
@@ -351,8 +369,10 @@ Every failure is answered with a message for the user, in one shape:
 | `400 Bad Request` | The request was understood and refused, such as a wrong password or an unsupported file, or it could not be read, such as a number out of range. |
 | `401 Unauthorized` | Signing in failed, or the request's token is missing or no longer valid. |
 | `404 Not Found` | What the request names does not exist, or is not the caller's to see. |
+| `413 Payload Too Large` | The request was larger than the endpoint reads, and was cut off unread. |
 | `429 Too Many Requests` | A rate limit was reached. |
 | `500 Internal Server Error` | Something failed inside the app. It is logged, and the message says only that something went wrong. |
+| `503 Service Unavailable` | Too many uploads are waiting to be worked on already. Trying again shortly may well succeed. |
 
 ### Settings
 
