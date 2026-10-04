@@ -3,6 +3,8 @@ using AnimalClassifier.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplicationHosting(builder.Environment);
+
 builder.Services.AddApplicationPersistence(builder.Configuration);
 
 builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
@@ -31,8 +33,19 @@ var app = builder.Build();
 
 await app.SeedRolesAsync();
 
-// First, so that a failure anywhere after it is answered in the same shape.
+// First, so that everything after it sees the caller's own address and scheme
+// rather than a reverse proxy's.
+app.UseForwardedHeaders();
+
+// Next, so that a failure anywhere after it is answered in the same shape.
 app.UseExceptionHandler();
+
+app.UseSecurityHeaders();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 

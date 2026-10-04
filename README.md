@@ -86,9 +86,11 @@ in with a passkey is not limited, as there is nothing to guess.
 | `RateLimiting:LoginPermitLimit`, `RateLimiting:LoginWindowMinutes` | How many sign-in attempts one address may make per window, 10 every 15 minutes unless set. |
 
 The address is the one the connection comes from. Behind a reverse proxy that
-is the proxy's, and every caller would share one allowance, so forwarded headers
-have to be set up before the app is deployed that way. The same goes for the
-password reset limit below.
+is the proxy's, which would have every caller share one allowance, so the
+caller's own is taken from the `X-Forwarded-For` header the proxy adds. Only a
+proxy on this machine, or one named in `ForwardedHeaders:KnownProxies`, is
+believed; see [Deploying](#deploying). The same goes for every other limit
+kept per address.
 
 The limit slows an address down rather than stopping it: one address can still
 lock an account for part of each window, and many addresses are not slowed at
@@ -381,6 +383,38 @@ one it needs is missing or wrong, naming it, rather than failing later on the
 first request that needs it. A signing key in `Jwt:SecretKey` has to be at
 least 32 characters long, for example, and every rate limit at least 1.
 
+### Deploying
+
+Outside development the app refuses to start until each of these is set:
+
+| Setting | Meaning |
+| ------- | ------- |
+| `ConnectionStrings:DefaultConnection` | The database. |
+| `Jwt:SecretKey` | The key tokens are signed with, a secret of at least 32 characters. |
+| `Email:Host`, `Email:SenderEmail` | The SMTP server; see [Password reset emails](#password-reset-emails). |
+| `Frontend:BaseUrl` | Where the frontend is served from, which the emailed links lead to. |
+| `FileUploadSettings:UploadPath` | A folder outside the app's own, which a new deployment may replace whole, along with anything kept in it. |
+| `DataProtection:KeysPath` | A folder outside the app's own, for the keys that sign and encrypt the emailed links, the passkey ceremonies' state and the media links. |
+
+The keys are encrypted with the machine's own key, so a copy of the folder is
+of no use elsewhere, but the folder should still be readable by the app's
+account alone. It has to be kept for as long as the app runs: losing it stops
+every link and passkey ceremony in flight, though nothing kept for longer.
+
+Beside those:
+
+| Setting | Meaning |
+| ------- | ------- |
+| `Cors:AllowedOrigins` | The frontend's origin, when it is served from another than the API's. |
+| `AllowedHosts` | The API's host names, such as `api.example.com`, so that a request naming any other is refused. Any host is let through unless set. |
+| `ForwardedHeaders:KnownProxies` | The address of a reverse proxy on another machine, so that the caller's address and scheme are taken from the headers it adds. One on this machine, such as IIS, needs nothing. |
+
+The API is meant to be reached over HTTPS: a request over HTTP is redirected,
+and a browser that has reached the API over HTTPS is told to keep to it for a
+year. Every answer says that it is never to be read as another type than its
+own, run as a page, or shown in a frame, as the API serves JSON, images and
+videos, and never a page.
+
 ### Updating the database
 
 Every change to the schema is a migration, which an existing database needs
@@ -417,6 +451,7 @@ AnimalClassifier/                  The API: controllers, and how the app is put 
   ErrorHandling/                   How every failure is answered, always as { message }
   Extensions/                      Service registration, a file per area, such as IdentityServiceCollectionExtension
   Cors/ RateLimiting/              Which origins may call the API, and the limits on its endpoints
+  Hosting/                         The keys' folder and the proxies, which running deployed needs
 AnimalClassifier.Core/             What the app does
   Common/                          What every area uses
     Email/                         Sending email over SMTP, or into the log in development
@@ -444,6 +479,7 @@ AnimalClassifier.Tests/            Tests; each class that calls the API has an a
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/
   ErrorHandling/ Settings/         How failures are answered, and the settings the app refuses to start without
+  Hosting/                         The headers every answer carries, and the caller's address behind a proxy
   Support/                         The test app, ApiTest that most test classes start from, and DependencyOrder
 ```
 

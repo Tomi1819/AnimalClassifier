@@ -9,6 +9,34 @@
 
     public static class WebApplicationExtension
     {
+        // The API answers with JSON, images and videos, never a page, so
+        // nothing it sends may run a script, be read as another type, or be
+        // shown inside another site's frame.
+        private const string NoSniff = "nosniff";
+        private const string ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
+
+        /// <summary>
+        /// Adds the headers every answer carries, the error ones included,
+        /// whose headers are cleared on the way.
+        /// </summary>
+        public static WebApplication UseSecurityHeaders(this WebApplication app)
+        {
+            app.Use((context, next) =>
+            {
+                context.Response.OnStarting(() =>
+                {
+                    context.Response.Headers.XContentTypeOptions = NoSniff;
+                    context.Response.Headers.ContentSecurityPolicy = ContentSecurityPolicy;
+
+                    return Task.CompletedTask;
+                });
+
+                return next(context);
+            });
+
+            return app;
+        }
+
         /// <summary>
         /// Creates the roles, and makes the account configured as Admin:Email an
         /// administrator while there is none, so that a new installation has
