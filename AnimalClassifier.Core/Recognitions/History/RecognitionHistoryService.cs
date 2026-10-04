@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Core.Recognitions.History
 {
+    using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Infrastructure.Data.Models;
@@ -43,7 +44,8 @@ namespace AnimalClassifier.Core.Recognitions.History
             DateRecognized = log.DateRecognized,
             PredictionScore = log.PredictionScore,
             FramesProcessed = log.FramesProcessed,
-            IsVideo = !MediaFile.IsImage(log.FileName)
+            IsVideo = !MediaFile.IsImage(log.FileName),
+            Feedback = log.Feedback is null ? null : FeedbackDetails.From(log.Feedback)
         };
     }
 }

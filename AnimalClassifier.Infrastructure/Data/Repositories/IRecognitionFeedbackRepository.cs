@@ -25,5 +25,12 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// it is stored on the next save.
         /// </summary>
         Task<RecognitionFeedback?> FindForUserAsync(string userId, int recognitionId);
+
+        /// <summary>
+        /// One page of the feedback a user has given, most recently given
+        /// first, each with its recognition, cleared ones included, and how
+        /// much they have given in all.
+        /// </summary>
+        Task<(IReadOnlyList<RecognitionFeedback> Feedback, int TotalCount)> GetPageForUserAsync(string userId, int page, int pageSize, CancellationToken cancellationToken);
     }
 }

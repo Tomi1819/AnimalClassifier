@@ -1,31 +1,51 @@
 namespace AnimalClassifier.Core.Recognitions.Feedback
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
+    using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using static AnimalClassifier.Core.Recognitions.Feedback.FeedbackMessages;
 
     public class FeedbackService : IFeedbackService
     {
+        private const int PageSize = 20;
+
         private readonly IImageClassifier classifier;
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IRecognitionFeedbackRepository feedbackRepository;
+        private readonly IMediaLinkService mediaLinks;
         private readonly IUnitOfWork unitOfWork;
 
         public FeedbackService(IImageClassifier classifier,
                                IRecognitionLogRepository recognitionLogs,
                                IRecognitionFeedbackRepository feedbackRepository,
+                               IMediaLinkService mediaLinks,
                                IUnitOfWork unitOfWork)
         {
             this.classifier = classifier;
             this.recognitionLogs = recognitionLogs;
             this.feedbackRepository = feedbackRepository;
+            this.mediaLinks = mediaLinks;
             this.unitOfWork = unitOfWork;
         }
 
         public IReadOnlyList<string> GetKnownAnimals() => classifier.KnownAnimals;
+
+        public async Task<PagedResult<FeedbackItem>> GetFeedbackAsync(string userId, int page, CancellationToken cancellationToken)
+        {
+            var (feedback, totalCount) = await feedbackRepository.GetPageForUserAsync(userId, page, PageSize, cancellationToken);
+
+            return new PagedResult<FeedbackItem>
+            {
+                Items = feedback.Select(ToFeedbackItem).ToList(),
+                Page = page,
+                PageSize = PageSize,
+                TotalCount = totalCount
+            };
+        }
 
         // A caller who goes away stops it before anything is written.
         public async Task<FeedbackDetails> GiveFeedbackAsync(string userId, int recognitionId, FeedbackRequest request, CancellationToken cancellationToken)
@@ -76,5 +96,15 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
             feedbackRepository.Remove(feedback);
             await unitOfWork.SaveChangesAsync();
         }
+
+        private FeedbackItem ToFeedbackItem(RecognitionFeedback feedback) => new()
+        {
+            RecognitionId = feedback.RecognitionId,
+            ImagePath = mediaLinks.CreateLink(feedback.Recognition.UserId, feedback.Recognition.FileName),
+            RecognizedAnimal = feedback.Recognition.AnimalName,
+            PredictionScore = feedback.Recognition.PredictionScore,
+            DateRecognized = feedback.Recognition.DateRecognized,
+            Feedback = FeedbackDetails.From(feedback)
+        };
     }
 }

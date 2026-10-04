@@ -47,7 +47,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         /// <summary>
         /// The recognitions belonging to one user that they have not cleared,
-        /// most recent first.
+        /// most recent first, each with any feedback they gave on it.
         /// </summary>
         Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken);
 

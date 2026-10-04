@@ -53,6 +53,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         public async Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken) =>
             await Logs.Where(l => l.UserId == userId && !l.IsDeleted)
+                      .Include(l => l.Feedback)
                       .OrderByDescending(l => l.DateRecognized)
                       .ToListAsync(cancellationToken);
 

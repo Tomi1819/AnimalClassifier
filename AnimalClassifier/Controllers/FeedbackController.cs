@@ -5,6 +5,7 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using System.ComponentModel.DataAnnotations;
 
     /// <summary>
     /// What a signed-in user says of the animals recognised in their images.
@@ -20,6 +21,16 @@ namespace AnimalClassifier.Controllers
         {
             this.feedbackService = feedbackService;
         }
+
+        /// <summary>
+        /// One page of the feedback the user has given, most recently given
+        /// first.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetFeedback(
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await feedbackService.GetFeedbackAsync(User.RequiredId(), page, cancellationToken));
 
         /// <summary>
         /// The animals a correction can name, alphabetically.
