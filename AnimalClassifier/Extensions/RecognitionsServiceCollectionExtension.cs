@@ -28,6 +28,7 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IAnimalSearchService, AnimalSearchService>();
             services.AddScoped<IFeedbackReviewService, FeedbackReviewService>();
             services.AddScoped<IFeedbackSummaryService, FeedbackSummaryService>();
+            services.AddScoped<ITrainingDataExporter, TrainingDataExporter>();
 
             // Both are safe to share: the classifier takes an engine from the
             // pool for each image, and the sampler keeps nothing between videos.

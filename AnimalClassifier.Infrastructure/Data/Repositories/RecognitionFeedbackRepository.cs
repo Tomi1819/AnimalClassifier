@@ -62,6 +62,15 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         public Task<RecognitionFeedback?> FindForReviewAsync(int id) =>
             ForReview.FirstOrDefaultAsync(f => f.Id == id);
 
+        public async Task<IReadOnlyList<RecognitionFeedback>> GetAcceptedForTrainingAsync(CancellationToken cancellationToken) =>
+            await ForReview
+                .Where(f => f.ReviewStatus == FeedbackReviewStatus.Accepted)
+                .AsNoTracking()
+                .Include(f => f.Recognition)
+                .OrderBy(f => f.DateSubmitted)
+                .ThenBy(f => f.Id)
+                .ToListAsync(cancellationToken);
+
         public Task<Dictionary<FeedbackVerdict, int>> CountByVerdictAsync(CancellationToken cancellationToken) =>
             context.RecognitionFeedback
                 .GroupBy(f => f.Verdict)
