@@ -24,8 +24,8 @@ namespace AnimalClassifier.Infrastructure.Data.Configurations
             builder.Property(f => f.Comment)
                 .HasMaxLength(RecognitionFeedback.MaxCommentLength);
 
-            // The review reads the feedback in one state at a time, newest
-            // first.
+            // The review reads the feedback in one state at a time, in the
+            // order it was given.
             builder.HasIndex(f => new { f.ReviewStatus, f.DateSubmitted });
 
             // Removed with its recognition by the database itself, so that

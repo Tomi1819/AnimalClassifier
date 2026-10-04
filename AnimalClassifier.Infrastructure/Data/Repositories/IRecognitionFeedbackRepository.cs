@@ -32,5 +32,18 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         /// much they have given in all.
         /// </summary>
         Task<(IReadOnlyList<RecognitionFeedback> Feedback, int TotalCount)> GetPageForUserAsync(string userId, int page, int pageSize, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// One page of the feedback that allows training and is in one state
+        /// of review, in the order it was given, each with its recognition,
+        /// and how much there is in that state in all.
+        /// </summary>
+        Task<(IReadOnlyList<RecognitionFeedback> Feedback, int TotalCount)> GetPageForReviewAsync(FeedbackReviewStatus status, int page, int pageSize, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// One feedback, if it exists and allows training. It is tracked, so a
+        /// review of it is stored on the next save.
+        /// </summary>
+        Task<RecognitionFeedback?> FindForReviewAsync(int id);
     }
 }
