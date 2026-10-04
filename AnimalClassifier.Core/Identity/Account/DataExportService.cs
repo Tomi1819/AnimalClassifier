@@ -43,20 +43,9 @@ namespace AnimalClassifier.Core.Identity.Account
             var recognitions = await ReadRecognitionsAsync(userId);
             var files = fileStorageService.GetUserFiles(userId);
 
-            var archive = CreateTemporaryFile();
-
-            try
-            {
-                await WriteArchiveAsync(archive, account, recognitions, files);
-                archive.Position = 0;
-
-                return archive;
-            }
-            catch
-            {
-                await archive.DisposeAsync();
-                throw;
-            }
+            // On disk rather than in memory, since uploaded videos can make
+            // the archive large.
+            return await TemporaryFile.WriteAsync(archive => WriteArchiveAsync(archive, account, recognitions, files));
         }
 
         private async Task<ExportedAccount> ReadAccountAsync(string userId)
@@ -107,17 +96,6 @@ namespace AnimalClassifier.Core.Identity.Account
 
             await JsonSerializer.SerializeAsync(entry, value, JsonOptions);
         }
-
-        // On disk rather than in memory, since uploaded videos can make the
-        // archive large. The file deletes itself once the stream is closed,
-        // which is after the response has been sent.
-        private static FileStream CreateTemporaryFile() =>
-            new(Path.GetTempFileName(), new FileStreamOptions
-            {
-                Mode = FileMode.Create,
-                Access = FileAccess.ReadWrite,
-                Options = FileOptions.DeleteOnClose | FileOptions.Asynchronous
-            });
 
         private static ExportedRecognition ToExportedRecognition(AnimalRecognitionLog log) => new()
         {
