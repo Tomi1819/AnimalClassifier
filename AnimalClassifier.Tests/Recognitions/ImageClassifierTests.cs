@@ -24,14 +24,26 @@ namespace AnimalClassifier.Tests.Recognitions
         [Fact]
         public void AnImage_IsClassifiedAsOneAnimal()
         {
-            var classifier = new MLImageClassifier(
-                factory.Services.GetRequiredService<PredictionEnginePool<ImageData, ImagePrediction>>());
-
-            var prediction = classifier.Classify(SolidImage());
+            var prediction = CreateClassifier().Classify(SolidImage());
 
             Assert.False(string.IsNullOrWhiteSpace(prediction.Animal));
             Assert.InRange(prediction.Score, 0f, 1f);
         }
+
+        [Fact]
+        public void TheKnownAnimals_AreTheOnesTheModelNames()
+        {
+            var classifier = CreateClassifier();
+
+            var prediction = classifier.Classify(SolidImage());
+
+            Assert.Contains(prediction.Animal, classifier.KnownAnimals);
+            Assert.Equal(classifier.KnownAnimals.Order(StringComparer.OrdinalIgnoreCase), classifier.KnownAnimals);
+            Assert.Equal(classifier.KnownAnimals.Distinct().Count(), classifier.KnownAnimals.Count);
+        }
+
+        private MLImageClassifier CreateClassifier() =>
+            new(factory.Services.GetRequiredService<PredictionEnginePool<ImageData, ImagePrediction>>());
 
         private static byte[] SolidImage()
         {

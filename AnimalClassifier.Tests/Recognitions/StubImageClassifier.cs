@@ -10,6 +10,8 @@ namespace AnimalClassifier.Tests.Recognitions
     /// </summary>
     public class StubImageClassifier : IImageClassifier
     {
+        public IReadOnlyList<string> KnownAnimals { get; } = ["Cat", "Coyote", "Dog", "Fox", "Wolf"];
+
         public string Animal { get; set; } = "Cat";
 
         public float Score { get; set; } = 0.9f;

@@ -22,6 +22,7 @@ namespace AnimalClassifier.Extensions
                 options.UseSqlServer(connectionString));
 
             services.AddScoped<IRecognitionLogRepository, RecognitionLogRepository>();
+            services.AddScoped<IRecognitionFeedbackRepository, RecognitionFeedbackRepository>();
             services.AddScoped<IAdminAuditLogRepository, AdminAuditLogRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();

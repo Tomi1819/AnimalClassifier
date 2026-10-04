@@ -8,7 +8,9 @@ namespace AnimalClassifier.Tests.Identity
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Core.Identity.Passwords;
+    using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Infrastructure.Data;
+    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Mvc.Testing;
@@ -539,6 +541,22 @@ namespace AnimalClassifier.Tests.Identity
         }
 
         [Fact]
+        public async Task ExportData_ContainsTheFeedbackGiven()
+        {
+            var account = await RegisterAsync();
+            var recognition = await AddRecognitionAsync(account.UserId, animalName: "Cat", fileName: UploadedFileName);
+            var client = await SignInAsync(account.Email, Password);
+            (await GiveFeedbackAsync(client, recognition.Id, "Dog")).EnsureSuccessStatusCode();
+
+            using var archive = await ExportDataAsync(client);
+
+            var exported = Assert.Single(await ReadJsonEntryAsync<List<ExportedRecognition>>(archive, RecognitionsEntry));
+            Assert.Equal(FeedbackVerdict.WrongAnimal, exported.Feedback!.Verdict);
+            Assert.Equal("Dog", exported.Feedback.ActualAnimal);
+            Assert.True(exported.Feedback.AllowsTraining);
+        }
+
+        [Fact]
         public async Task ExportData_ContainsTheUploadedFiles()
         {
             var account = await RegisterAsync();
@@ -708,6 +726,21 @@ namespace AnimalClassifier.Tests.Identity
         }
 
         [Fact]
+        public async Task DeleteAccount_RemovesTheFeedbackGiven()
+        {
+            var account = await RegisterAsync();
+            var recognition = await AddRecognitionAsync(account.UserId, animalName: "Cat", fileName: UploadedFileName);
+            var client = await SignInAsync(account.Email, Password);
+            (await GiveFeedbackAsync(client, recognition.Id, "Dog")).EnsureSuccessStatusCode();
+
+            (await DeleteAccountAsync(client, Password)).EnsureSuccessStatusCode();
+
+            await using var scope = Factory.Services.CreateAsyncScope();
+            var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
+            Assert.False(await context.RecognitionFeedback.AnyAsync(f => f.RecognitionId == recognition.Id));
+        }
+
+        [Fact]
         public async Task DeleteAccount_RemovesTheUploadedFiles()
         {
             var account = await RegisterAsync();
@@ -800,6 +833,15 @@ namespace AnimalClassifier.Tests.Identity
             client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, AccountPath)
             {
                 Content = JsonContent.Create(new DeleteAccountRequest { Password = password })
+            });
+
+        // Through the API, as a user gives it.
+        private static Task<HttpResponseMessage> GiveFeedbackAsync(HttpClient client, int recognitionId, string actualAnimal) =>
+            client.PutAsJsonAsync($"/api/feedback/{recognitionId}", new FeedbackRequest
+            {
+                Verdict = FeedbackVerdict.WrongAnimal,
+                ActualAnimal = actualAnimal,
+                AllowsTraining = true
             });
 
         private static async Task<ZipArchive> ExportDataAsync(HttpClient client)

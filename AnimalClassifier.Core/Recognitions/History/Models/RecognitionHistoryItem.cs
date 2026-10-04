@@ -1,5 +1,6 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.History.Models
 {
+    using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.Media;
 
     /// <summary>
@@ -27,5 +28,11 @@
         public int? FramesProcessed { get; set; }
 
         public bool IsVideo { get; set; }
+
+        /// <summary>
+        /// What its user said of it; null when they said nothing, which a
+        /// video's always is.
+        /// </summary>
+        public FeedbackDetails? Feedback { get; set; }
     }
 }
