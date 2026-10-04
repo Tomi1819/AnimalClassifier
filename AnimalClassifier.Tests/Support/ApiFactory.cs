@@ -5,6 +5,7 @@
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Recognitions.Classification;
+    using AnimalClassifier.Hosting;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.RateLimiting;
@@ -47,7 +48,10 @@
         private readonly string connectionString =
             $@"Server=(localdb)\MSSQLLocalDB;Database=AnimalClassifierTests_{Guid.NewGuid():N};Trusted_Connection=True;TrustServerCertificate=True;";
 
-        private readonly string uploadPath =
+        // Where the uploads and the keys are kept, apart from the app's own
+        // folder, as outside Development they have to be, and removed with
+        // the database.
+        private readonly string dataPath =
             Path.Combine(Path.GetTempPath(), $"AnimalClassifierTests_{Guid.NewGuid():N}");
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -57,8 +61,8 @@
             builder.UseEnvironment("Testing");
             builder.UseSetting($"ConnectionStrings:{AnimalClassifierDbContext.ConnectionStringName}", connectionString);
 
-            // Kept apart from the app's own uploads, and removed with the database.
-            builder.UseSetting(Key<UploadSettings>(nameof(UploadSettings.UploadPath)), uploadPath);
+            builder.UseSetting(Key<UploadSettings>(nameof(UploadSettings.UploadPath)), Path.Combine(dataPath, "uploads"));
+            builder.UseSetting(Key<DataProtectionSettings>(nameof(DataProtectionSettings.KeysPath)), Path.Combine(dataPath, "keys"));
             builder.UseSetting(Key<JwtSettings>(nameof(JwtSettings.SecretKey)), "TEST-ONLY-SIGNING-KEY-NOT-FOR-PRODUCTION-USE");
 
             // The app refuses to start outside Development without these, and
@@ -124,9 +128,9 @@
             await using var context = CreateContext();
             await context.Database.EnsureDeletedAsync();
 
-            if (Directory.Exists(uploadPath))
+            if (Directory.Exists(dataPath))
             {
-                Directory.Delete(uploadPath, recursive: true);
+                Directory.Delete(dataPath, recursive: true);
             }
         }
 

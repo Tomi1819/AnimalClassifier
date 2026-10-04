@@ -4,6 +4,7 @@ namespace AnimalClassifier.Tests.Settings
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Recognitions.Classification;
+    using AnimalClassifier.Hosting;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.Options;
@@ -28,6 +29,17 @@ namespace AnimalClassifier.Tests.Settings
 
             // Resolved, it would be the content root, where the app itself is.
             { ApiFactory.Key<UploadSettings>(nameof(UploadSettings.UploadPath)), "" },
+
+            // A new deployment may replace the app's folder whole, and
+            // everything kept in it.
+            { ApiFactory.Key<UploadSettings>(nameof(UploadSettings.UploadPath)), "App_Data/uploads" },
+            { ApiFactory.Key<DataProtectionSettings>(nameof(DataProtectionSettings.KeysPath)), "App_Data/keys" },
+
+            // Without it every link and passkey ceremony in flight dies with
+            // each restart.
+            { ApiFactory.Key<DataProtectionSettings>(nameof(DataProtectionSettings.KeysPath)), "" },
+
+            { $"{ApiFactory.Key<ForwardedHeadersSettings>(nameof(ForwardedHeadersSettings.KnownProxies))}:0", "not-an-address" },
 
             // The emailed links and the passkeys' domain are made from it.
             { ApiFactory.Key<FrontendSettings>(nameof(FrontendSettings.BaseUrl)), "" },
