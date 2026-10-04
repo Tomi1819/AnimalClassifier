@@ -1,13 +1,16 @@
 namespace AnimalClassifier.Controllers
 {
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Account.Models;
+    using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Extensions;
     using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
     using System.Net.Mime;
+    using static AnimalClassifier.Core.Identity.EmailConfirmation.EmailConfirmationMessages;
 
     /// <summary>
     /// A signed-in user's own account: what it holds, and the changes they make
@@ -22,19 +25,31 @@ namespace AnimalClassifier.Controllers
         private readonly IAccountService accountService;
         private readonly IDataExportService dataExportService;
         private readonly IAccountDeletionService accountDeletionService;
+        private readonly IEmailConfirmationService emailConfirmationService;
 
         public AccountController(IAccountService accountService,
                                  IDataExportService dataExportService,
-                                 IAccountDeletionService accountDeletionService)
+                                 IAccountDeletionService accountDeletionService,
+                                 IEmailConfirmationService emailConfirmationService)
         {
             this.accountService = accountService;
             this.dataExportService = dataExportService;
             this.accountDeletionService = accountDeletionService;
+            this.emailConfirmationService = emailConfirmationService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetProfile() =>
             Ok(await accountService.GetProfileAsync(User.RequiredId()));
+
+        [HttpPost("resend-confirmation-email")]
+        [EnableRateLimiting(RateLimitPolicies.ConfirmationEmail)]
+        public async Task<IActionResult> ResendConfirmationEmail()
+        {
+            await emailConfirmationService.ResendLinkAsync(User.RequiredId());
+
+            return Ok(new MessageResponse { Message = EmailConfirmationLinkSent });
+        }
 
         [HttpPut("name")]
         public async Task<IActionResult> ChangeName([FromBody] ChangeNameRequest request) =>

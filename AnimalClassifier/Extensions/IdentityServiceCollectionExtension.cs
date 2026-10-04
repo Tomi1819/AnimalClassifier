@@ -1,8 +1,10 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Settings;
+    using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
@@ -63,12 +65,12 @@ namespace AnimalClassifier.Extensions
                 .AddEntityFrameworkStores<AnimalClassifierDbContext>()
                 .AddSignInManager()
                 .AddPasswordValidator<EmailAsPasswordValidator>()
-                // Nothing generates the one-time tokens a password reset needs
+                // Nothing generates the one-time tokens an emailed link needs
                 // until these are registered.
                 .AddDefaultTokenProviders();
 
             services.Configure<DataProtectionTokenProviderOptions>(options =>
-                options.TokenLifespan = PasswordPolicy.ResetTokenLifespan);
+                options.TokenLifespan = EmailedLink.Lifespan);
 
             return services.AddIdentityServices();
         }
@@ -143,6 +145,8 @@ namespace AnimalClassifier.Extensions
         // identity and what it registers are found the same way.
         private static IServiceCollection AddIdentityServices(this IServiceCollection services)
         {
+            services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
+
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
 

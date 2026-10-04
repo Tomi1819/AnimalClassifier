@@ -2,7 +2,9 @@
 {
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
     using AnimalClassifier.RateLimiting;
@@ -11,6 +13,7 @@
     using System.Net;
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
+    using static AnimalClassifier.Core.Identity.EmailConfirmation.EmailConfirmationMessages;
     using static AnimalClassifier.Core.Identity.IdentityMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
@@ -22,6 +25,8 @@
         private const string ForgotPasswordPath = "/api/auth/forgot-password";
         private const string ResetPasswordPath = "/api/auth/reset-password";
         private const string HistoryPath = "/api/upload/history";
+        private const string AccountPath = "/api/account";
+        private const string RegisterPath = "/api/auth/register";
 
         public AuthControllerTests(ApiFactory factory)
             : base(factory)
@@ -104,6 +109,69 @@
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(PasswordIsEmail, await response.Content.ReadAsStringAsync());
+        }
+
+        // Each registration mails an address the caller picks.
+        [Fact]
+        public async Task Register_BeyondTheLimit_IsRefused()
+        {
+            using var limited = Factory.WithWebHostBuilder(builder =>
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.RegisterPermitLimit)), "1"));
+
+            var client = limited.CreateClient();
+
+            var allowed = await client.PostAsJsonAsync(RegisterPath, new RegisterRequest { Email = UniqueEmail(), Password = Password });
+            var refused = await client.PostAsJsonAsync(RegisterPath, new RegisterRequest { Email = UniqueEmail(), Password = Password });
+
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
+        }
+
+        [Fact]
+        public async Task Register_EmailsALinkToConfirmTheAddress()
+        {
+            var account = await RegisterAsync();
+
+            Assert.Contains(EmailConfirmationEmail.Subject, Factory.Emails.SubjectsSentTo(account.Email));
+
+            var link = Factory.Emails.LinkSentTo(account.Email);
+            Assert.NotNull(link);
+            Assert.Equal(account.Email, QueryHelpers.ParseQuery(new Uri(link).Query)["email"]);
+        }
+
+        [Fact]
+        public async Task ConfirmEmail_WithTheEmailedToken_ConfirmsIt()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email);
+
+            var response = await ConfirmEmailAsync(account.Email, TokenSentTo(account.Email));
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.True((await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.EmailConfirmed);
+        }
+
+        [Fact]
+        public async Task ConfirmEmail_WithAnotherAccountsToken_IsRefused()
+        {
+            var account = await RegisterAsync();
+            var other = await RegisterAsync();
+            var client = await SignInAsync(account.Email);
+
+            var response = await ConfirmEmailAsync(account.Email, TokenSentTo(other.Email));
+
+            await AssertInvalidConfirmationLinkAsync(response);
+            Assert.False((await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.EmailConfirmed);
+        }
+
+        [Fact]
+        public async Task ConfirmEmail_WithAMalformedToken_IsRefused()
+        {
+            var account = await RegisterAsync();
+
+            var response = await ConfirmEmailAsync(account.Email, "not-a-real-token");
+
+            await AssertInvalidConfirmationLinkAsync(response);
         }
 
         // A lockout guards only the account a wrong password was tried on,
@@ -294,10 +362,13 @@
         {
             (await ForgotPasswordAsync(email)).EnsureSuccessStatusCode();
 
-            var link = Factory.Emails.LinkSentTo(email);
-            Assert.NotNull(link);
+            return TokenSentTo(email);
+        }
 
-            return QueryHelpers.ParseQuery(new Uri(link).Query)["token"].ToString();
+        private static async Task AssertInvalidConfirmationLinkAsync(HttpResponseMessage response)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(InvalidEmailConfirmationLink, await response.Content.ReadAsStringAsync());
         }
 
         private Task<HttpResponseMessage> ResetPasswordAsync(string email, string token, string newPassword) =>

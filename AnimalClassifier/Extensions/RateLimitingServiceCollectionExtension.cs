@@ -14,10 +14,12 @@ namespace AnimalClassifier.Extensions
         /// <summary>
         /// Caps how often one caller may try to sign in, since a lockout
         /// guards only the account a wrong password was tried on; how often
-        /// one may ask for a password reset, since the endpoints mail an
-        /// address the caller picks and hand out attempts at a token; and how
-        /// often one account may export its data, since each export reads
-        /// every file the account uploaded.
+        /// one may register or ask for a password reset, since the endpoints
+        /// mail an address the caller picks and hand out attempts at a token;
+        /// how often one account may export its data, since each export reads
+        /// every file the account uploaded; and how often one may ask for
+        /// another link to confirm its email, for the same reason as
+        /// registering.
         ///
         /// How often an account's password may be confirmed from inside a
         /// session is capped as well, by the service that confirms it rather
@@ -45,6 +47,9 @@ namespace AnimalClassifier.Extensions
             options.AddPolicy<string>(RateLimitPolicies.Login, context => LimitPerAddress(
                 context, settings.LoginPermitLimit, settings.LoginWindowMinutes));
 
+            options.AddPolicy<string>(RateLimitPolicies.Register, context => LimitPerAddress(
+                context, settings.RegisterPermitLimit, settings.RegisterWindowMinutes));
+
             options.AddPolicy<string>(RateLimitPolicies.PasswordReset, context => LimitPerAddress(
                 context, settings.PasswordResetPermitLimit, settings.PasswordResetWindowMinutes));
 
@@ -53,6 +58,9 @@ namespace AnimalClassifier.Extensions
             // should not use up each other's exports.
             options.AddPolicy<string>(RateLimitPolicies.DataExport, context => FixedWindow(
                 context.User.Id() ?? UnknownClient, settings.DataExportPermitLimit, settings.DataExportWindowMinutes));
+
+            options.AddPolicy<string>(RateLimitPolicies.ConfirmationEmail, context => FixedWindow(
+                context.User.Id() ?? UnknownClient, settings.ConfirmationEmailPermitLimit, settings.ConfirmationEmailWindowMinutes));
         }
 
         // Callers sharing an address share a window. Counting them all as one

@@ -6,6 +6,7 @@ namespace AnimalClassifier.Tests.Identity
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.RateLimiting;
@@ -20,6 +21,7 @@ namespace AnimalClassifier.Tests.Identity
     using System.Text.Json;
     using static AnimalClassifier.Core.Admin.AdminMessages;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
+    using static AnimalClassifier.Core.Identity.EmailConfirmation.EmailConfirmationMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
@@ -31,6 +33,7 @@ namespace AnimalClassifier.Tests.Identity
         private const string ChangePasswordPath = "/api/account/change-password";
         private const string SignOutOtherSessionsPath = "/api/account/sign-out-other-sessions";
         private const string ExportPath = "/api/account/export";
+        private const string ResendConfirmationEmailPath = "/api/account/resend-confirmation-email";
         private const string HistoryPath = "/api/upload/history";
 
         // The archive's layout, which is what a user reading their copy relies on.
@@ -67,6 +70,7 @@ namespace AnimalClassifier.Tests.Identity
 
             Assert.Equal(account.FullName, profile!.FullName);
             Assert.Equal(account.Email, profile.Email);
+            Assert.False(profile.EmailConfirmed);
         }
 
         // Without its "Z", a browser would read the date as local time.
@@ -79,6 +83,49 @@ namespace AnimalClassifier.Tests.Identity
             var profile = await client.GetFromJsonAsync<AccountProfile>(AccountPath);
 
             Assert.Equal(DateTimeKind.Utc, profile!.DateRegistered.Kind);
+        }
+
+        [Fact]
+        public async Task ResendConfirmationEmail_EmailsALinkThatConfirmsIt()
+        {
+            var account = await RegisterAsync();
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await client.PostAsync(ResendConfirmationEmailPath, null);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(2, Factory.Emails.SubjectsSentTo(account.Email).Count(subject => subject == EmailConfirmationEmail.Subject));
+
+            await ConfirmEmailAsync(account.Email);
+            Assert.True((await client.GetFromJsonAsync<AccountProfile>(AccountPath))!.EmailConfirmed);
+        }
+
+        [Fact]
+        public async Task ResendConfirmationEmail_OnceConfirmed_IsRefused()
+        {
+            var account = await RegisterAsync();
+            await ConfirmEmailAsync(account.Email);
+            var client = await SignInAsync(account.Email, Password);
+
+            var response = await client.PostAsync(ResendConfirmationEmailPath, null);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(EmailAlreadyConfirmed, await response.Content.ReadAsStringAsync());
+        }
+
+        // The address is not known to be the caller's until it is confirmed.
+        [Fact]
+        public async Task ResendConfirmationEmail_BeyondTheLimit_IsRefused()
+        {
+            using var limited = Factory.WithWebHostBuilder(builder =>
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.ConfirmationEmailPermitLimit)), "1"));
+            var client = await SignInAsync(limited, (await RegisterAsync()).Email, Password);
+
+            var allowed = await client.PostAsync(ResendConfirmationEmailPath, null);
+            var refused = await client.PostAsync(ResendConfirmationEmailPath, null);
+
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
         }
 
         [Fact]
@@ -305,14 +352,14 @@ namespace AnimalClassifier.Tests.Identity
         }
 
         [Fact]
-        public async Task ChangePassword_ThatIsRefused_EmailsNothing()
+        public async Task ChangePassword_ThatIsRefused_SendsNoAlert()
         {
             var account = await RegisterAsync();
             var client = await SignInAsync(account.Email, Password);
 
             await ChangePasswordAsync(client, WrongPassword, NewPassword);
 
-            Assert.False(Factory.Emails.AnySentTo(account.Email));
+            Assert.DoesNotContain(PasswordChangedSubject, Factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]
@@ -356,7 +403,7 @@ namespace AnimalClassifier.Tests.Identity
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(UnchangedPassword, await response.Content.ReadAsStringAsync());
             Assert.Equal(HttpStatusCode.OK, (await elsewhere.GetAsync(HistoryPath)).StatusCode);
-            Assert.False(Factory.Emails.AnySentTo(account.Email));
+            Assert.DoesNotContain(PasswordChangedSubject, Factory.Emails.SubjectsSentTo(account.Email));
         }
 
         [Fact]

@@ -7,7 +7,8 @@
     public interface IAuthService
     {
         /// <summary>
-        /// Creates an account in the User role. Nobody is signed in by it.
+        /// Creates an account in the User role, and emails it a link to
+        /// confirm its address. Nobody is signed in by it.
         /// The name is tidied and each word capitalised; an account given
         /// none goes by <see cref="AccountName.Unknown"/>.
         /// </summary>

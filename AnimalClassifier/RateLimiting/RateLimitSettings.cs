@@ -26,6 +26,17 @@ namespace AnimalClassifier.RateLimiting
         public int LoginWindowMinutes { get; set; } = 15;
 
         /// <summary>
+        /// How many accounts one address may register per window. Each is
+        /// mailed a link at an address the caller picks, so this is what keeps
+        /// registering from being a way to send mail to anyone.
+        /// </summary>
+        [Range(1, int.MaxValue)]
+        public int RegisterPermitLimit { get; set; } = 10;
+
+        [Range(1, int.MaxValue)]
+        public int RegisterWindowMinutes { get; set; } = 60;
+
+        /// <summary>
         /// How many password reset requests one caller may make per window.
         /// Asking for a link and using it share the allowance, so it has to
         /// cover a user who needs a second link and then a few attempts at a
@@ -47,5 +58,15 @@ namespace AnimalClassifier.RateLimiting
 
         [Range(1, int.MaxValue)]
         public int DataExportWindowMinutes { get; set; } = 15;
+
+        /// <summary>
+        /// How many links to confirm its email one account may ask for per
+        /// window. The address may not be the caller's own until it is confirmed.
+        /// </summary>
+        [Range(1, int.MaxValue)]
+        public int ConfirmationEmailPermitLimit { get; set; } = 3;
+
+        [Range(1, int.MaxValue)]
+        public int ConfirmationEmailWindowMinutes { get; set; } = 15;
     }
 }

@@ -37,12 +37,40 @@ This application enables users to upload images of animals and receive classific
 
 ### First administrator
 
-Register an account, set its email as `Admin:Email`, and restart the backend. On startup that account is made an administrator; sign in again for the role to take effect.
+Register an account, confirm its email with the link mailed to it, set the email as `Admin:Email`, and restart the backend. On startup that account is made an administrator; sign in again for the role to take effect.
 
 ```bash
 cd AnimalClassifier
 dotnet user-secrets set "Admin:Email" "you@example.com"
 ```
+
+The setting acts only while there is no administrator, and only on a confirmed
+email. Whoever registers the address before its owner is not given the role,
+and an administrator whose role another revoked does not get it back on the
+next start. Removing the setting demotes no one.
+
+### Registering and confirming the email
+
+`POST /api/auth/register` takes `{ fullName, email, password }`. The email has
+to be one, of at most 256 characters. The account is then emailed a link to
+the frontend's `Frontend:ConfirmEmailPath` page, carrying the address and a
+token, which the page sends to `POST /api/auth/confirm-email` as
+`{ email, token }`. Like a password reset link, it lasts an hour.
+
+Signing in does not wait for the confirmation. What does is anything that
+trusts the address, such as `Admin:Email`. `GET /api/account` says whether the
+email is confirmed, and `POST /api/account/resend-confirmation-email` mails a
+signed-in user another link.
+
+Each registration mails an address its caller picks, so one address may
+register only so many accounts, and one account may ask for only so many
+links. Beyond either, the answer is `429 Too Many Requests`.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `Frontend:ConfirmEmailPath` | The page that receives the token, which has to match the frontend. |
+| `RateLimiting:RegisterPermitLimit`, `RateLimiting:RegisterWindowMinutes` | How many accounts one address may register per window, 10 an hour unless set. |
+| `RateLimiting:ConfirmationEmailPermitLimit`, `RateLimiting:ConfirmationEmailWindowMinutes` | How many links one account may ask for per window, 3 every 15 minutes unless set. |
 
 ### Sign-in attempts
 
@@ -127,9 +155,9 @@ here writes to.
 
 ### The profile and the name
 
-`GET /api/account` answers with the account's name, email and registration
-date. The token carries only the email, so this is where a client reads the
-rest.
+`GET /api/account` answers with the account's name, email, whether the email
+is confirmed, and its registration date. The token carries only the email, so
+this is where a client reads the rest.
 
 `PUT /api/account/name` takes `{ fullName }` and answers with the profile as it
 now stands. The name is kept as typed apart from its spacing, so a name such as
@@ -348,6 +376,7 @@ AnimalClassifier.Core/             What the app does
     Storage/                       Storing uploaded files, a folder per user
   Identity/                        Accounts and signing in; AccountName and the roles sit here
     SecurityAlerts/                The emails sent when how an account signs in changes
+    EmailConfirmation/             Confirming an account's email with a link mailed to it
     Authentication/                Registering, signing in, and the tokens a session runs on
     Passwords/                     The password rules, confirming one, and resetting a forgotten one
     Passkeys/                      Registering, using and removing passkeys
@@ -411,7 +440,7 @@ held to an order of their own in the same way:
 
 | Area | Order of its parts |
 | ---- | ------------------ |
-| Identity | SecurityAlerts, Authentication, Passwords, Passkeys, Account |
+| Identity | SecurityAlerts, EmailConfirmation, Authentication, Passwords, Passkeys, Account |
 | Recognitions | Classification, Uploads, History, Search, Statistics |
 
 What an area's parts share sits in the area's own folder and uses none of

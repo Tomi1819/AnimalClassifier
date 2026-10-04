@@ -13,7 +13,8 @@ namespace AnimalClassifier.Core.Identity.Account
     public interface IAccountService
     {
         /// <summary>
-        /// The account's name, email and registration date. The token carries
+        /// The account's name, email, whether the email is confirmed, and its
+        /// registration date. The token carries
         /// only the email, so this is where a page reads the rest.
         /// </summary>
         Task<AccountProfile> GetProfileAsync(string userId);

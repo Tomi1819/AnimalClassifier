@@ -90,6 +90,7 @@ namespace AnimalClassifier.Core.Identity.Account
         {
             FullName = user.FullName,
             Email = user.Email ?? string.Empty,
+            EmailConfirmed = user.EmailConfirmed,
             DateRegistered = user.DateRegistered
         };
     }
