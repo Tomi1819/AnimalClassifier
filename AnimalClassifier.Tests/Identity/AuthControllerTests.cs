@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Core.Identity;
+    using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.Passwords.Models;
@@ -9,6 +10,7 @@
     using Microsoft.AspNetCore.WebUtilities;
     using System.Net;
     using System.Net.Http.Json;
+    using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.IdentityMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
@@ -56,6 +58,28 @@
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.Contains(string.Format(FullNameTooLong, AccountName.MaxLength), await response.Content.ReadAsStringAsync());
+        }
+
+        [Theory]
+        [InlineData("not-an-email")]
+        [InlineData("@example.test")]
+        public async Task Register_WithSomethingOtherThanAnEmail_IsABadRequest(string email)
+        {
+            var response = await RegisterAsync(email, Password);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await LogInAsync(email)).StatusCode);
+        }
+
+        [Fact]
+        public async Task Register_WithATooLongEmail_IsABadRequest()
+        {
+            var email = $"{new string('a', AuthService.MaxEmailLength)}@example.test";
+
+            var response = await RegisterAsync(email, Password);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Contains(string.Format(EmailTooLong, AuthService.MaxEmailLength), await response.Content.ReadAsStringAsync());
         }
 
         [Fact]
