@@ -238,7 +238,7 @@ The messages go out over SMTP wherever one is configured. Development may leave 
 
 | Setting | Meaning |
 | ------- | ------- |
-| `Email:Host`, `Email:Port` | The SMTP server. Port 465 is treated as implicit TLS, anything else upgrades with STARTTLS. |
+| `Email:Host`, `Email:Port` | The SMTP server. Port 465 is treated as implicit TLS, and any other port has to upgrade with STARTTLS, so a server that cannot is refused rather than sent the credentials and links in the clear. A server on this machine, such as a mail catcher, may go without. |
 | `Email:UserName`, `Email:Password` | Credentials, left empty for a server that wants none. |
 | `Email:SenderEmail`, `Email:SenderName` | Who the messages come from. Providers deliver reliably only for a domain they have been given permission to send for. |
 | `Frontend:BaseUrl` | Where the frontend is served from. The emailed links are built from this rather than from the request, whose host header is chosen by its caller. |
@@ -361,7 +361,8 @@ AnimalClassifier.Core/             What the app does
   Admin/                           Locking users, granting the administrator role, and the audit log
 AnimalClassifier.Infrastructure/   The database: entities, migrations, and a repository per table
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
-  Identity/ Recognitions/ Admin/   The tests of each area, and the stand-ins they use
+  Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
+  Admin/
   ErrorHandling/ Settings/         How failures are answered, and the settings the app refuses to start without
   Support/                         The test app, ApiTest that most test classes start from, and DependencyOrder
 ```
