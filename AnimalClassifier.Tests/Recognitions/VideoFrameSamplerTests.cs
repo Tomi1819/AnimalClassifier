@@ -18,6 +18,16 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(3, frames.Count);
         }
 
+        // Each frame is decoded whole, whatever size the file claims for it.
+        [Fact]
+        public void AVideoLargerThan4K_IsRefused()
+        {
+            var video = WriteVideo(seconds: 1, framesPerSecond: 1, new Size(4096, 2168));
+
+            var refusal = Assert.Throws<RequestRefusedException>(() => new VideoFrameSampler().SampleFrames(video).ToList());
+            Assert.Equal(ClassificationMessages.VideoTooLarge, refusal.Message);
+        }
+
         [Fact]
         public void AFileThatIsNoVideo_IsRefused()
         {
@@ -52,13 +62,16 @@ namespace AnimalClassifier.Tests.Recognitions
 
         // Motion JPEG, which OpenCV writes and reads without a codec of the
         // system's own.
-        private string WriteVideo(int seconds, int framesPerSecond)
+        private string WriteVideo(int seconds, int framesPerSecond) =>
+            WriteVideo(seconds, framesPerSecond, new Size(64, 64));
+
+        private string WriteVideo(int seconds, int framesPerSecond, Size size)
         {
             var path = Path.Combine(directory, "video.avi");
 
-            using (var writer = new VideoWriter(path, FourCC.MJPG, framesPerSecond, new Size(64, 64)))
+            using (var writer = new VideoWriter(path, FourCC.MJPG, framesPerSecond, size))
             {
-                using var frame = new Mat(64, 64, MatType.CV_8UC3, new Scalar(40, 120, 200));
+                using var frame = new Mat(size, MatType.CV_8UC3, new Scalar(40, 120, 200));
 
                 for (var i = 0; i < seconds * framesPerSecond; i++)
                 {

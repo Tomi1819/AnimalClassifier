@@ -7,5 +7,6 @@ namespace AnimalClassifier.Core.Recognitions.Classification
     public static class ClassificationMessages
     {
         public const string UnreadableVideo = "The video could not be read. Please try another one.";
+        public const string VideoTooLarge = "The video's resolution is too high. It can be at most 4K.";
     }
 }

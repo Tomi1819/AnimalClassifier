@@ -297,8 +297,16 @@ A link stays valid for an hour, is spent once it is used, and changing a passwor
 `POST /api/upload/image` takes a JPEG or PNG image in the `formFile` field,
 and `POST /api/upload/video` an MP4, MOV or AVI video in the `videoFile` field,
 each of at most 5 MB. A file's name and content type are whatever its sender
-says they are, so an image's first bytes are checked as well, and a file that
-is not really one is refused before the model ever reads it.
+says they are, so its first bytes are checked as well, and a file that is not
+really one is refused before anything reads it.
+
+An image is then decoded and encoded afresh, which is what is classified,
+stored and shown. Only the pixels make it across: what the camera wrote beside
+them, such as where the photo was taken, is left behind, and the rotation it
+recorded is made to the pixels instead. Decoding takes the memory of every
+pixel the image's header claims, so one of more than 50 megapixels is refused
+before it is decoded, and a video whose frames are larger than 4K before any
+frame is read.
 
 A video is classified a frame at a time, one frame for every second of it. A
 video long enough to give more than 120 frames is sampled further apart, so

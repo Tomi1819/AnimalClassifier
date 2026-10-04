@@ -10,6 +10,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
+    using OpenCvSharp;
     using System.Net;
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
@@ -28,10 +29,22 @@ namespace AnimalClassifier.Tests.Recognitions
         private const string JpegContentType = "image/jpeg";
         private const string Mp4ContentType = "video/mp4";
 
-        // What a JPEG file starts with, which is all that is checked of one
-        // before the model reads it.
-        private static readonly byte[] Jpeg = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46];
-        private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+        // Real images, since each is decoded and encoded afresh before the
+        // model reads it.
+        private static readonly byte[] Jpeg = Image(".jpg", width: 64, height: 32);
+        private static readonly byte[] Png = Image(".png", width: 64, height: 32);
+
+        // What a camera writes beside the pixels: that the photo is to be
+        // turned a quarter clockwise to be seen as it was taken, and anything
+        // else, such as where it was taken.
+        private static readonly byte[] Metadata =
+        [
+            .. "Exif\0\0"u8,
+            .. "II"u8, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00,
+            0x01, 0x00, 0x12, 0x01, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            .. "GPS 42.6977 N, 23.3219 E"u8
+        ];
 
         public UploadControllerTests(ApiFactory factory)
             : base(factory)
@@ -105,6 +118,60 @@ namespace AnimalClassifier.Tests.Recognitions
         }
 
         [Fact]
+        public async Task UploadImage_ThatCannotBeDecoded_IsRefused()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.PostAsync(ImagePath, ImageForm([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46]));
+
+            await AssertRefusedAsync(response, UploadMessages.UnreadableImage);
+        }
+
+        // Decoding takes the memory of every pixel the header claims, which a
+        // file of a few bytes can put at billions.
+        [Theory]
+        [InlineData("cat.png")]
+        [InlineData("cat.jpg")]
+        public async Task UploadImage_WithTooManyPixels_IsRefused(string fileName)
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+            byte[] header = fileName.EndsWith(".png")
+                ? [.. Png[..16], 0x00, 0x00, 0x27, 0x10, 0x00, 0x00, 0x27, 0x10, .. Png[24..]]
+                : [0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x27, 0x10, 0x27, 0x10, 0x03];
+
+            var response = await user.PostAsync(ImagePath, ImageForm(header, fileName));
+
+            await AssertRefusedAsync(response, string.Format(UploadMessages.ImageTooLarge, ImageSanitizer.MaxMegapixels));
+        }
+
+        [Fact]
+        public async Task UploadImage_IsStoredWithoutItsMetadata()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+
+            (await user.PostAsync(ImagePath, ImageForm(WithMetadata(Jpeg)))).EnsureSuccessStatusCode();
+
+            var stored = await File.ReadAllBytesAsync(Assert.Single(UploadedFiles(account.UserId)));
+            Assert.Equal(-1, stored.AsSpan().IndexOf("GPS"u8));
+            Assert.Equal(-1, stored.AsSpan().IndexOf("Exif"u8));
+        }
+
+        // The turn the camera recorded goes with the metadata, so it is made
+        // to the pixels instead.
+        [Fact]
+        public async Task UploadImage_IsStoredTheWayUpItWasTaken()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+
+            (await user.PostAsync(ImagePath, ImageForm(WithMetadata(Jpeg)))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            Assert.Equal(new Size(32, 64), stored.Size());
+        }
+
+        [Fact]
         public async Task UploadImage_TooLarge_IsRefused()
         {
             var user = await SignInAsync((await RegisterAsync()).Email);
@@ -162,6 +229,20 @@ namespace AnimalClassifier.Tests.Recognitions
             var response = await user.PostAsync(VideoPath, VideoForm());
 
             await AssertRefusedAsync(response, ClassificationMessages.UnreadableVideo);
+            Assert.Empty(UploadedFiles(account.UserId));
+        }
+
+        // A decoder that knows a great many formats reads it, and some of them,
+        // such as a playlist, can point it at other files.
+        [Fact]
+        public async Task UploadVideo_ThatIsNoVideo_IsRefused()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+
+            var response = await user.PostAsync(VideoPath, VideoForm("#EXTM3U\n#EXTINF:1,\nfile:///etc/hosts\n"u8.ToArray()));
+
+            await AssertRefusedAsync(response, UploadMessages.UnsupportedVideo);
             Assert.Empty(UploadedFiles(account.UserId));
         }
 
@@ -224,8 +305,13 @@ namespace AnimalClassifier.Tests.Recognitions
         private static MultipartFormDataContent ImageForm(byte[] content, string fileName = "cat.jpg", string contentType = JpegContentType) =>
             Form("formFile", content, fileName, contentType);
 
+        // What an MP4 file starts with, which is all that is checked of one
+        // before its frames are read, which the stand-in does.
         private static MultipartFormDataContent VideoForm() =>
-            Form("videoFile", [0x00, 0x00, 0x00, 0x18], "clip.mp4", Mp4ContentType);
+            VideoForm([0x00, 0x00, 0x00, 0x18, .. "ftypmp42"u8]);
+
+        private static MultipartFormDataContent VideoForm(byte[] content) =>
+            Form("videoFile", content, "clip.mp4", Mp4ContentType);
 
         private static MultipartFormDataContent Form(string field, byte[] content, string fileName, string contentType)
         {
@@ -233,6 +319,21 @@ namespace AnimalClassifier.Tests.Recognitions
             file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
             return new MultipartFormDataContent { { file, field, fileName } };
+        }
+
+        private static byte[] Image(string extension, int width, int height)
+        {
+            using var image = new Mat(height, width, MatType.CV_8UC3, new Scalar(40, 120, 200));
+
+            return image.ToBytes(extension);
+        }
+
+        // As an APP1 segment, right after the marker every JPEG starts with.
+        private static byte[] WithMetadata(byte[] jpeg)
+        {
+            var length = Metadata.Length + 2;
+
+            return [.. jpeg[..2], 0xFF, 0xE1, (byte)(length >> 8), (byte)length, .. Metadata, .. jpeg[2..]];
         }
 
         private static async Task AssertRefusedAsync(HttpResponseMessage response, string message)
