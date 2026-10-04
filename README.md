@@ -18,6 +18,7 @@ This application enables users to upload images of animals and receive classific
 - 📦 Exporting an account's data, uploads included
 - 🗑️ Deleting an account, along with everything it uploaded
 - 🕓 History tracking of recognized images
+- 💬 Feedback on each image's recognition, reviewed and exported to retrain the model
 - 🔗 RESTful API for integration with other applications
 
 ## 🛠️ Technologies Used
@@ -215,7 +216,7 @@ holds, named after the day it was made, such as
 | Entry | Contents |
 | ----- | -------- |
 | `account.json` | The name, email and registration date, and each passkey's name and the date it was added |
-| `recognitions.json` | Every recognition, most recent first, with the animal, score, date, frames for a video, and the file it was made from |
+| `recognitions.json` | Every recognition, most recent first, with the animal, score, date, frames for a video, the file it was made from, and any feedback given on it |
 | `uploads/` | The images and videos as they were uploaded |
 
 Recognitions cleared from the history are included with `isCleared` set, since
@@ -238,7 +239,8 @@ so often like any other confirmation of it, and answers `204 No Content`. The ac
 goes at once, with nothing to undo, and every session goes with it.
 
 Its recognitions are removed, cleared ones included, so they leave the
-statistics too; its uploaded files and passkeys go as well.
+statistics too; the feedback given on them, its uploaded files and its
+passkeys go as well.
 The admin audit log keeps its entries, showing `Deleted user` where the account
 was named, so the log still covers everything that was done.
 
@@ -358,6 +360,87 @@ Clearing the history keeps the recognitions, which the statistics still count,
 but takes them out of the history and the search, so no new link is made to
 them. Their files stay, private, in the owner's copy of their data.
 
+### Feedback on a recognition
+
+A user can say of each image's recognition whether the model named the right
+animal. `PUT /api/feedback/{recognitionId}` takes:
+
+```json
+{ "verdict": "WrongAnimal", "actualAnimal": "coyote", "comment": "", "allowsTraining": true }
+```
+
+| Verdict | Means | `actualAnimal` |
+| ------- | ----- | -------------- |
+| `Correct` | The model was right. | Left out. |
+| `WrongAnimal` | The image shows another animal the model knows. | One of `GET /api/feedback/animals`, in any case; it is kept as the model writes it. |
+| `UnlistedAnimal` | The image shows an animal the model does not know. | Any other, in letters, with spaces, hyphens or apostrophes between them, of at most 50 characters; it is kept in lower case. |
+
+A comment is optional, of at most 500 characters. The answer is the feedback as
+it is kept. A recognition has one feedback at most, so giving it again replaces
+it, and `DELETE /api/feedback/{recognitionId}` withdraws it. `GET /api/feedback`
+lists one page of what the user has given, most recently given first, and each
+history entry carries its feedback as well.
+
+Only an image's recognition takes feedback. A video's names only the animal
+seen in it most, so it cannot say which frames were wrong, and has no image of
+its own to train on.
+
+The animals the model knows are read from the model itself, so a model trained
+on more animals offers them without a change here.
+
+Feedback is used to train the model only if `allowsTraining` says so, and only
+once an administrator has accepted it. Without it, the feedback still counts
+towards what administrators are told of the model's mistakes, which names no
+one. Changing a feedback has it reviewed again, and withdrawing it, or deleting
+the account, keeps it out of every export after. A model already trained on it
+keeps what it learnt, as there is no taking that back.
+
+Clearing the history leaves the feedback where it is, so that it can still be
+withdrawn, and the account's copy of its data includes it.
+
+### Reviewing feedback and retraining the model
+
+An administrator reviews the feedback users allowed training on, under
+`/api/admin/feedback`, since a user can be as mistaken about an animal as the
+model:
+
+| Endpoint | Does |
+| -------- | ---- |
+| `GET /api/admin/feedback?status=Pending&page=1` | One page of the feedback in one state of review, `Pending`, `Accepted` or `Rejected`, in the order it was given. Each has its image, what the model said and how sure it was, and the animal it would be trained as, but not whose it is. |
+| `POST /api/admin/feedback/{id}/accept`, `.../reject` | Decides one, whatever was decided before. |
+| `GET /api/admin/feedback/summary` | How often users agree with the model, the animals it takes for others most often, and the animals it does not know that users named most, counting every feedback. |
+| `GET /api/admin/feedback/export` | A ZIP archive of the accepted images, named after the day it was made, such as `animal-classifier-training-2026-10-04.zip`. |
+
+The export reads every accepted image, so it is limited like an account's own
+export, by `RateLimiting:DataExportPermitLimit`. It holds:
+
+| Entry | Contents |
+| ----- | -------- |
+| `dataset/<animal>/<id>.jpg` | An image of an animal the model knows, in a folder named after it |
+| `unlisted/<animal>/<id>.jpg` | An image of one it does not |
+| `manifest.csv` | Each image's animal, what the model took it for and how sure it was, and what its user said |
+
+The model is not trained here: training takes a processor for many minutes,
+and a new model should be checked before it replaces the old one. To retrain
+it:
+
+1. Copy the folder the model was trained from, which `MLModel.mbconfig` names,
+   and merge the export's `dataset/` into the copy. Each image goes into the
+   folder of its animal.
+2. Leave `unlisted/` out until an animal has enough images to be learnt, a few
+   dozen at least, and then add its folder as a new animal.
+3. Open `MLModel.mbconfig` in Visual Studio's Model Builder, point it at the
+   copy, and train.
+4. Compare the new model with the old on the same images, ones neither was
+   trained on, such as a set of exported images kept back for it. Model
+   Builder's own score is measured on a part of the folder it picks at random,
+   so two of its scores do not compare.
+5. Replace `MLModel.mlnet` with the new model, and restart the app, which loads
+   it once as it starts.
+
+The accepted feedback stays accepted, so each export holds all of it, and each
+model is trained on the original folder and every accepted image together.
+
 ### Errors
 
 Every failure is answered with a message for the user, in one shape:
@@ -428,7 +511,8 @@ dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
 to, and `IndexRecognitionDates` indexes when each recognition was made, which
 the activity chart reads by. `StoreRecognitionFileNames` keeps each
 recognition's file by its name alone, where it kept the path it was served
-under, as nothing serves that path any more.
+under, as nothing serves that path any more. `AddRecognitionFeedback` adds the
+table of feedback, whose rows go with their recognition.
 
 ### Running the tests
 
@@ -439,7 +523,8 @@ dotnet test
 ```
 
 Uploads are recognised by stand-ins for the model and for reading videos,
-which a test tells what to see. `ImageClassifierTests` alone loads the trained
+which a test tells what to see, and the stand-in for the model knows a handful
+of animals of its own. `ImageClassifierTests` alone loads the trained
 model, to show that the app still reads it correctly, and takes a few seconds
 for it.
 
@@ -470,9 +555,11 @@ AnimalClassifier.Core/             What the app does
     Media/                         The expiring links an uploaded image or video is loaded by
     Classification/                The model, and reading a video's frames for it
     Uploads/                       Checking and storing an upload, and recording what was recognised in it
+    Feedback/                      What users say of their recognitions, and checking it against the animals the model knows
     History/                       A user's own recognitions, and clearing them
     Search/                        Finding animals by name
     Statistics/                    The totals, the animals recognised most, and the daily activity
+    Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
 AnimalClassifier.Infrastructure/   The database: entities, migrations, and a repository per table
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
@@ -528,7 +615,7 @@ held to an order of their own in the same way:
 | Area | Order of its parts |
 | ---- | ------------------ |
 | Identity | SecurityAlerts, EmailConfirmation, Authentication, Passwords, Passkeys, Account |
-| Recognitions | Media, Classification, Uploads, History, Search, Statistics |
+| Recognitions | Media, Classification, Uploads, Feedback, History, Search, Statistics, Training |
 
 What an area's parts share sits in the area's own folder and uses none of
 them. `CoreLayoutTests`, `IdentityLayoutTests` and `RecognitionsLayoutTests`
