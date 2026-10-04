@@ -32,5 +32,10 @@
         /// and the search leave it out.
         /// </summary>
         public bool IsDeleted { get; set; }
+
+        /// <summary>
+        /// What its user said of it, if they said anything.
+        /// </summary>
+        public RecognitionFeedback? Feedback { get; set; }
     }
 }

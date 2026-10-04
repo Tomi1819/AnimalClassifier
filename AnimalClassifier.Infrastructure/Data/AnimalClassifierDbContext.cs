@@ -34,5 +34,6 @@
 
         public DbSet<AnimalRecognitionLog> AnimalRecognitionLogs { get; set; } = null!;
         public DbSet<AdminAuditLog> AdminAuditLogs { get; set; } = null!;
+        public DbSet<RecognitionFeedback> RecognitionFeedback { get; set; } = null!;
     }
 }
