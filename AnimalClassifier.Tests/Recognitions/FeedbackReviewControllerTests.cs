@@ -160,6 +160,41 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
+        // The other tests add to the counts as well, so this compares them
+        // before and after its own feedback.
+        [Fact]
+        public async Task GetSummary_CountsTheVerdictsAndTheMistakes()
+        {
+            var admin = await SignInAdministratorAsync();
+            var before = await GetSummaryAsync(admin);
+
+            await GiveFeedbackAsync(new FeedbackRequest { Verdict = FeedbackVerdict.Correct });
+            await GiveFeedbackAsync(new FeedbackRequest { Verdict = FeedbackVerdict.WrongAnimal, ActualAnimal = "Dog" }, recognizedAnimal: "Coyote");
+            await GiveFeedbackAsync(WrongAnimal("Dog"), recognizedAnimal: "Coyote");
+            await GiveFeedbackAsync(new FeedbackRequest { Verdict = FeedbackVerdict.UnlistedAnimal, ActualAnimal = "Aardwolf" });
+            await GiveFeedbackAsync(new FeedbackRequest { Verdict = FeedbackVerdict.UnlistedAnimal, ActualAnimal = "aardwolf", AllowsTraining = true });
+
+            var after = await GetSummaryAsync(admin);
+
+            Assert.Equal(5, after.TotalCount - before.TotalCount);
+            Assert.Equal(1, after.CorrectCount - before.CorrectCount);
+            Assert.Equal(2, after.WrongAnimalCount - before.WrongAnimalCount);
+            Assert.Equal(2, after.UnlistedAnimalCount - before.UnlistedAnimalCount);
+            Assert.Equal(2, after.PendingCount - before.PendingCount);
+            Assert.Equal(2, CountOf(after.CommonMistakes, "Coyote", "Dog") - CountOf(before.CommonMistakes, "Coyote", "Dog"));
+            Assert.Equal(2, Assert.Single(after.RequestedAnimals, animal => animal.Animal == "aardwolf").Count);
+        }
+
+        [Fact]
+        public async Task GetSummary_AsUser_ReturnsForbidden()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.GetAsync($"{ReviewPath}/summary");
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
         private static FeedbackRequest WrongAnimal(string animal) =>
             new() { Verdict = FeedbackVerdict.WrongAnimal, ActualAnimal = animal, AllowsTraining = true };
 
@@ -178,11 +213,11 @@ namespace AnimalClassifier.Tests.Recognitions
         /// The feedback's id, which the review names it by, and which only the
         /// database tells, as nothing a user is answered with does.
         /// </returns>
-        private async Task<int> GiveFeedbackAsync(FeedbackRequest request)
+        private async Task<int> GiveFeedbackAsync(FeedbackRequest request, string recognizedAnimal = "Cat")
         {
             var account = await RegisterAsync();
             var user = await SignInAsync(account.Email);
-            var recognition = await AddRecognitionAsync(account.UserId);
+            var recognition = await AddRecognitionAsync(account.UserId, recognizedAnimal);
 
             (await user.PutAsJsonAsync($"/api/feedback/{recognition.Id}", request)).EnsureSuccessStatusCode();
 
@@ -214,6 +249,12 @@ namespace AnimalClassifier.Tests.Recognitions
                 }
             }
         }
+
+        private static async Task<FeedbackSummary> GetSummaryAsync(HttpClient admin) =>
+            (await admin.GetFromJsonAsync<FeedbackSummary>($"{ReviewPath}/summary"))!;
+
+        private static int CountOf(IEnumerable<CommonMistake> mistakes, string recognizedAnimal, string actualAnimal) =>
+            mistakes.SingleOrDefault(mistake => mistake.RecognizedAnimal == recognizedAnimal && mistake.ActualAnimal == actualAnimal)?.Count ?? 0;
 
         private static void AssertItem(IEnumerable<FeedbackReviewItem> items, int feedbackId, string label, bool isKnownAnimal)
         {

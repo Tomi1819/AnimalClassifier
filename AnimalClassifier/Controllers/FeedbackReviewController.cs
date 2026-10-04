@@ -17,10 +17,12 @@ namespace AnimalClassifier.Controllers
     public class FeedbackReviewController : ControllerBase
     {
         private readonly IFeedbackReviewService reviewService;
+        private readonly IFeedbackSummaryService summaryService;
 
-        public FeedbackReviewController(IFeedbackReviewService reviewService)
+        public FeedbackReviewController(IFeedbackReviewService reviewService, IFeedbackSummaryService summaryService)
         {
             this.reviewService = reviewService;
+            this.summaryService = summaryService;
         }
 
         /// <summary>
@@ -33,6 +35,15 @@ namespace AnimalClassifier.Controllers
             [FromQuery, Range(1, int.MaxValue)] int page = 1,
             CancellationToken cancellationToken = default) =>
             Ok(await reviewService.GetFeedbackAsync(status, page, cancellationToken));
+
+        /// <summary>
+        /// What the feedback says of the model: how often users agree with it,
+        /// its most common mistakes, and the animals it does not know that
+        /// users named most.
+        /// </summary>
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetSummary(CancellationToken cancellationToken) =>
+            Ok(await summaryService.GetSummaryAsync(cancellationToken));
 
         [HttpPost("{id}/accept")]
         public async Task<IActionResult> Accept(int id)
