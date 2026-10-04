@@ -17,7 +17,8 @@ namespace AnimalClassifier.Tests.ErrorHandling
         {
             { new RequestRefusedException(Message), StatusCodes.Status400BadRequest },
             { new NotFoundException(Message), StatusCodes.Status404NotFound },
-            { new AuthenticationFailedException(Message), StatusCodes.Status401Unauthorized }
+            { new AuthenticationFailedException(Message), StatusCodes.Status401Unauthorized },
+            { new ServiceBusyException(Message), StatusCodes.Status503ServiceUnavailable }
         };
 
         [Theory]

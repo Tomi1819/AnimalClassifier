@@ -7,7 +7,11 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
+    using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Http.Metadata;
+    using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
     using OpenCvSharp;
@@ -181,6 +185,34 @@ namespace AnimalClassifier.Tests.Recognitions
             var response = await user.PostAsync(ImagePath, ImageForm(tooLarge));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        // Cut off by the server once it passes the limit, rather than read
+        // whole to be refused, which the test server does not do itself.
+        [Theory]
+        [InlineData(ImagePath)]
+        [InlineData(VideoPath)]
+        public void Upload_IsReadNoFurtherThanAnUploadCanBe(string path)
+        {
+            var endpoint = Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+                .OfType<RouteEndpoint>()
+                .Single(endpoint => string.Equals($"/{endpoint.RoutePattern.RawText}", path, StringComparison.OrdinalIgnoreCase));
+
+            Assert.Equal(UploadValidator.MaxRequestSize, endpoint.Metadata.GetMetadata<IRequestSizeLimitMetadata>()?.MaxRequestBodySize);
+        }
+
+        [Fact]
+        public async Task Upload_BeyondTheLimit_IsRefused()
+        {
+            using var limited = Factory.WithWebHostBuilder(builder =>
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.UploadPermitLimit)), "1"));
+            var user = await SignInAsync(limited, (await RegisterAsync()).Email);
+
+            var allowed = await user.PostAsync(ImagePath, ImageForm(Jpeg));
+            var refused = await user.PostAsync(VideoPath, VideoForm());
+
+            Assert.Equal(HttpStatusCode.Created, allowed.StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
         }
 
         // Nothing is stored for an image the model fails on, and the caller is

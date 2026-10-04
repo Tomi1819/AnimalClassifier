@@ -1,6 +1,7 @@
 namespace AnimalClassifier.ErrorHandling
 {
     using AnimalClassifier.Core.Common.Models;
+    using Microsoft.AspNetCore.Http.Features;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
@@ -12,6 +13,14 @@ namespace AnimalClassifier.ErrorHandling
     {
         public static IActionResult Create(ActionContext context)
         {
+            if (IsLargerThanAllowed(context.HttpContext))
+            {
+                return new ObjectResult(new MessageResponse { Message = ErrorMessages.RequestTooLarge })
+                {
+                    StatusCode = StatusCodes.Status413PayloadTooLarge
+                };
+            }
+
             var firstError = context.ModelState.Values
                 .SelectMany(entry => entry.Errors)
                 .Select(error => error.ErrorMessage)
@@ -19,5 +28,11 @@ namespace AnimalClassifier.ErrorHandling
 
             return new BadRequestObjectResult(new MessageResponse { Message = firstError ?? ErrorMessages.InvalidRequest });
         }
+
+        // The server stops reading a body once it passes the limit, and when
+        // the form is what was reading it, that reaches here as a form that
+        // could not be read, with the server's own words for why.
+        private static bool IsLargerThanAllowed(HttpContext context) =>
+            context.Request.ContentLength > context.Features.Get<IHttpMaxRequestBodySizeFeature>()?.MaxRequestBodySize;
     }
 }

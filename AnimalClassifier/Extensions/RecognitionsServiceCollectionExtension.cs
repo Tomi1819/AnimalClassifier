@@ -28,6 +28,11 @@ namespace AnimalClassifier.Extensions
             services.AddSingleton<IImageClassifier, MLImageClassifier>();
             services.AddSingleton<IVideoFrameSampler, VideoFrameSampler>();
 
+            // Kept for as long as the app runs, since it is what counts the
+            // uploads at work.
+            services.AddSettings<ClassificationLimitSettings>();
+            services.AddSingleton<IClassificationLimiter, ClassificationLimiter>();
+
             // The pool is built from the model's path, so the settings are read
             // here rather than once the app starts.
             var modelSettings = configuration.GetValidatedSettings<MLModelSettings>();

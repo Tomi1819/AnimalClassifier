@@ -37,6 +37,7 @@ namespace AnimalClassifier.ErrorHandling
         {
             NotFoundException => StatusCodes.Status404NotFound,
             AuthenticationFailedException => StatusCodes.Status401Unauthorized,
+            ServiceBusyException => StatusCodes.Status503ServiceUnavailable,
             _ => StatusCodes.Status400BadRequest
         };
     }

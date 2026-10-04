@@ -10,6 +10,7 @@ namespace AnimalClassifier.RateLimiting
         public const string Register = "RegisterPolicy";
         public const string PasswordReset = "PasswordResetPolicy";
         public const string DataExport = "DataExportPolicy";
+        public const string Upload = "UploadPolicy";
         public const string ConfirmationEmail = "ConfirmationEmailPolicy";
     }
 }
