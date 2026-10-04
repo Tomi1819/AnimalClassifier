@@ -4,12 +4,19 @@ namespace AnimalClassifier.Core.Identity.Authentication
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
+    using System.Globalization;
     using System.Security.Claims;
     using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
 
     public class AuthService : IAuthService
     {
+        /// <summary>
+        /// The longest email an account can have, which is the length of the
+        /// column Identity keeps it in.
+        /// </summary>
+        public const int MaxEmailLength = 256;
+
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IAccessTokenIssuer tokenIssuer;
@@ -25,6 +32,11 @@ namespace AnimalClassifier.Core.Identity.Authentication
 
         public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
         {
+            if (request.Email.Length > MaxEmailLength)
+            {
+                throw new RequestRefusedException(string.Format(CultureInfo.InvariantCulture, EmailTooLong, MaxEmailLength));
+            }
+
             if (await userManager.FindByEmailAsync(request.Email) != null)
             {
                 throw new RequestRefusedException(AlreadyRegisteredEmail);

@@ -12,8 +12,8 @@
         /// none goes by <see cref="AccountName.Unknown"/>.
         /// </summary>
         /// <exception cref="RequestRefusedException">
-        /// When the email is already registered, the name is too long, or the
-        /// password fails the rules.
+        /// When the email is not one, is too long or is already registered, the
+        /// name is too long, or the password fails the rules.
         /// </exception>
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);
 

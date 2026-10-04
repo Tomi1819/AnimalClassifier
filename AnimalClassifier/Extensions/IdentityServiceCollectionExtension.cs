@@ -47,6 +47,9 @@ namespace AnimalClassifier.Extensions
                     options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
                     options.SignIn.RequireConfirmedAccount = false;
 
+                    // Without it Identity never checks that an email is one.
+                    options.User.RequireUniqueEmail = true;
+
                     // Length is what makes a password hard to guess. Rules
                     // about which characters it holds mostly produce the same
                     // few patterns, so there are none.

@@ -10,6 +10,11 @@ namespace AnimalClassifier.Core.Identity.Authentication
         public const string InvalidCredentials = "Invalid email or password.";
 
         /// <summary>
+        /// Formatted with the longest email allowed.
+        /// </summary>
+        public const string EmailTooLong = "The email can be at most {0} characters long.";
+
+        /// <summary>
         /// Given whichever way the user tried to sign in, a password or a
         /// passkey.
         /// </summary>
