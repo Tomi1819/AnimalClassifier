@@ -47,6 +47,12 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         Task<RecognitionFeedback?> FindForReviewAsync(int id);
 
         /// <summary>
+        /// Every feedback that allows training and was accepted, each with its
+        /// recognition, in the order it was given.
+        /// </summary>
+        Task<IReadOnlyList<RecognitionFeedback>> GetAcceptedForTrainingAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// How much feedback says each verdict, leaving out the verdicts none
         /// says.
         /// </summary>

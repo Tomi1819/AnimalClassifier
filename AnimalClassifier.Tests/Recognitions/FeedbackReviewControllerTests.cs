@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.Training.Models;
     using AnimalClassifier.Infrastructure.Data;
@@ -8,8 +9,11 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Tests.Support;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
+    using System.IO.Compression;
     using System.Net;
     using System.Net.Http.Json;
+    using System.Text;
     using static AnimalClassifier.Core.Recognitions.Training.TrainingMessages;
 
     /// <summary>
@@ -195,6 +199,59 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         }
 
+        [Fact]
+        public async Task ExportTrainingData_AsUser_ReturnsForbidden()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.GetAsync($"{ReviewPath}/export");
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task ExportTrainingData_HoldsEachAcceptedImage_InItsAnimalsFolder()
+        {
+            var admin = await SignInAdministratorAsync();
+            var (corrected, correctedImage) = await GiveFeedbackOnUploadAsync(WrongAnimal("Fox"));
+            var (confirmed, _) = await GiveFeedbackOnUploadAsync(new FeedbackRequest { Verdict = FeedbackVerdict.Correct, AllowsTraining = true });
+            var (unlisted, _) = await GiveFeedbackOnUploadAsync(new FeedbackRequest
+            {
+                Verdict = FeedbackVerdict.UnlistedAnimal,
+                ActualAnimal = "Capybara",
+                AllowsTraining = true
+            });
+            foreach (var feedbackId in new[] { corrected, confirmed, unlisted })
+            {
+                (await AcceptAsync(admin, feedbackId)).EnsureSuccessStatusCode();
+            }
+
+            using var archive = await ExportTrainingDataAsync(admin);
+
+            Assert.Equal(correctedImage, await ReadEntryAsync(archive, $"dataset/Fox/{corrected}.jpg"));
+            Assert.NotNull(archive.GetEntry($"dataset/{Factory.Classifier.Animal}/{confirmed}.jpg"));
+            Assert.NotNull(archive.GetEntry($"unlisted/capybara/{unlisted}.jpg"));
+            var manifest = Encoding.UTF8.GetString(await ReadEntryAsync(archive, "manifest.csv"));
+            Assert.Contains($"dataset/Fox/{corrected}.jpg,Fox,{Factory.Classifier.Animal},", manifest);
+        }
+
+        [Fact]
+        public async Task ExportTrainingData_LeavesOutWhatWasNotAccepted()
+        {
+            var admin = await SignInAdministratorAsync();
+            var (pending, _) = await GiveFeedbackOnUploadAsync(WrongAnimal("Fox"));
+            var (rejected, _) = await GiveFeedbackOnUploadAsync(WrongAnimal("Fox"));
+            (await admin.PostAsync($"{ReviewPath}/{rejected}/reject", null)).EnsureSuccessStatusCode();
+            var (withheld, _) = await GiveFeedbackOnUploadAsync(new FeedbackRequest { Verdict = FeedbackVerdict.WrongAnimal, ActualAnimal = "Fox" });
+
+            using var archive = await ExportTrainingDataAsync(admin);
+
+            foreach (var feedbackId in new[] { pending, rejected, withheld })
+            {
+                Assert.Null(archive.GetEntry($"dataset/Fox/{feedbackId}.jpg"));
+            }
+        }
+
         private static FeedbackRequest WrongAnimal(string animal) =>
             new() { Verdict = FeedbackVerdict.WrongAnimal, ActualAnimal = animal, AllowsTraining = true };
 
@@ -221,13 +278,60 @@ namespace AnimalClassifier.Tests.Recognitions
 
             (await user.PutAsJsonAsync($"/api/feedback/{recognition.Id}", request)).EnsureSuccessStatusCode();
 
+            return await FeedbackIdOfAsync(recognition.Id);
+        }
+
+        private async Task<int> FeedbackIdOfAsync(int recognitionId)
+        {
             await using var scope = Factory.Services.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
 
             return await context.RecognitionFeedback
-                .Where(f => f.RecognitionId == recognition.Id)
+                .Where(f => f.RecognitionId == recognitionId)
                 .Select(f => f.Id)
                 .SingleAsync();
+        }
+
+        /// <summary>
+        /// Gives feedback on a new user's recognition of an image they
+        /// uploaded, whose file is there to be exported.
+        /// </summary>
+        /// <returns>The feedback's id, and the image's contents.</returns>
+        private async Task<(int FeedbackId, byte[] Image)> GiveFeedbackOnUploadAsync(FeedbackRequest request)
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var fileName = $"{Guid.NewGuid():N}.jpg";
+            var image = Guid.NewGuid().ToByteArray();
+
+            var uploadPath = Factory.Services.GetRequiredService<IOptions<UploadSettings>>().Value.UploadPath;
+            Directory.CreateDirectory(Path.Combine(uploadPath, account.UserId));
+            await File.WriteAllBytesAsync(Path.Combine(uploadPath, account.UserId, fileName), image);
+
+            var recognition = await AddRecognitionAsync(account.UserId, fileName: fileName);
+            (await user.PutAsJsonAsync($"/api/feedback/{recognition.Id}", request)).EnsureSuccessStatusCode();
+
+            return (await FeedbackIdOfAsync(recognition.Id), image);
+        }
+
+        private static async Task<ZipArchive> ExportTrainingDataAsync(HttpClient admin)
+        {
+            var response = await admin.GetAsync($"{ReviewPath}/export");
+            response.EnsureSuccessStatusCode();
+
+            return new ZipArchive(await response.Content.ReadAsStreamAsync());
+        }
+
+        private static async Task<byte[]> ReadEntryAsync(ZipArchive archive, string entryName)
+        {
+            var entry = archive.GetEntry(entryName);
+            Assert.NotNull(entry);
+
+            await using var contents = await entry.OpenAsync();
+            using var read = new MemoryStream();
+            await contents.CopyToAsync(read);
+
+            return read.ToArray();
         }
 
         private static Task<HttpResponseMessage> AcceptAsync(HttpClient client, int feedbackId) =>
