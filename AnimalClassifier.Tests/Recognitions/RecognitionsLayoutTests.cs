@@ -7,14 +7,14 @@ namespace AnimalClassifier.Tests.Recognitions
     /// Keeps the parts of recognitions depending on each other in one
     /// direction only; see <see cref="DependencyOrder"/> for what counts.
     /// Uploading runs the classifier, and what reads recognitions back uses
-    /// neither.
+    /// neither. Each that hands out an image or a video links to it.
     /// </summary>
     public class RecognitionsLayoutTests
     {
         private static readonly DependencyOrder Order = new(
             typeof(MediaFile).Assembly,
             typeof(MediaFile).Namespace!,
-            "Classification", "Uploads", "History", "Search", "Statistics");
+            "Media", "Classification", "Uploads", "History", "Search", "Statistics");
 
         [Fact]
         public void EveryPartOfRecognitions_IsInTheDependencyOrder() =>

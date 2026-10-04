@@ -1,6 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Search
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Search.Models;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using static AnimalClassifier.Core.Recognitions.Search.SearchMessages;
@@ -15,10 +16,12 @@
         public const float MinAccuracy = 0.7f;
 
         private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IMediaLinkService mediaLinks;
 
-        public AnimalSearchService(IRecognitionLogRepository recognitionLogs)
+        public AnimalSearchService(IRecognitionLogRepository recognitionLogs, IMediaLinkService mediaLinks)
         {
             this.recognitionLogs = recognitionLogs;
+            this.mediaLinks = mediaLinks;
         }
 
         public async Task<IReadOnlyList<AnimalSearchResult>> SearchAsync(string? searchTerm, CancellationToken cancellationToken)
@@ -32,13 +35,13 @@
 
             // Only images can be shown on the page; a video is left out.
             var matches = logs
-                .Where(log => MediaFile.IsImage(log.ImagePath))
+                .Where(log => MediaFile.IsImage(log.FileName))
                 .GroupBy(log => log.AnimalName)
                 .Select(animal => new AnimalSearchResult
                 {
                     AnimalName = animal.Key,
                     Count = animal.Count(),
-                    ImagePaths = animal.Select(log => log.ImagePath).Distinct().ToList()
+                    ImagePaths = animal.Select(log => mediaLinks.CreateLink(log.UserId, log.FileName)).ToList()
                 })
                 .ToList();
 

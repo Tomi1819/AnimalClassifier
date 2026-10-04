@@ -1,8 +1,9 @@
 ﻿namespace AnimalClassifier.Core.Common.Storage
 {
     /// <summary>
-    /// The files users upload, kept in a folder per user and served under
-    /// <see cref="UploadSettings.RequestPath"/>.
+    /// The files users upload, kept in a folder per user. Nothing serves the
+    /// folder, so a file reaches a browser only through whatever reads it
+    /// from here.
     /// </summary>
     public interface IFileStorageService
     {
@@ -12,6 +13,12 @@
         /// </summary>
         /// <param name="extension">The extension, with its dot, such as <c>.jpg</c>.</param>
         Task<StoredFile> SaveAsync(string userId, Stream content, string extension);
+
+        /// <summary>
+        /// Where one of a user's files is on disk, whether or not it is still
+        /// there.
+        /// </summary>
+        string GetPath(string userId, string fileName);
 
         /// <summary>
         /// Removes one stored file, such as one whose upload failed after it

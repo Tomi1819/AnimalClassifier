@@ -3,6 +3,7 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.History;
+    using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Search;
     using AnimalClassifier.Core.Recognitions.Statistics;
     using AnimalClassifier.Core.Recognitions.Uploads;
@@ -16,6 +17,7 @@ namespace AnimalClassifier.Extensions
     {
         public static IServiceCollection AddApplicationRecognitions(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
         {
+            services.AddScoped<IMediaLinkService, MediaLinkService>();
             services.AddScoped<IUploadService, UploadService>();
             services.AddScoped<IRecognitionHistoryService, RecognitionHistoryService>();
             services.AddScoped<IStatisticsService, StatisticsService>();

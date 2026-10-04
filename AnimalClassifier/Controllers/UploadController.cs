@@ -47,8 +47,8 @@
 
         /// <summary>
         /// Clears the signed-in user's history. The recognitions are kept, so
-        /// the statistics and search pages still count them; they are only
-        /// hidden from their owner's history.
+        /// the statistics still count them, but they leave the history and
+        /// the search.
         /// </summary>
         [HttpDelete("history")]
         public async Task<IActionResult> ClearHistory()

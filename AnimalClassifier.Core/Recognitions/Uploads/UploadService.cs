@@ -4,6 +4,7 @@
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
+    using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Infrastructure.Data.Repositories;
@@ -26,6 +27,7 @@
         private readonly IImageClassifier classifier;
         private readonly IVideoFrameSampler frameSampler;
         private readonly IFileStorageService fileStorage;
+        private readonly IMediaLinkService mediaLinks;
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IUnitOfWork unitOfWork;
         private readonly ILogger<UploadService> logger;
@@ -33,6 +35,7 @@
         public UploadService(IImageClassifier classifier,
                              IVideoFrameSampler frameSampler,
                              IFileStorageService fileStorage,
+                             IMediaLinkService mediaLinks,
                              IRecognitionLogRepository recognitionLogs,
                              IUnitOfWork unitOfWork,
                              ILogger<UploadService> logger)
@@ -40,6 +43,7 @@
             this.classifier = classifier;
             this.frameSampler = frameSampler;
             this.fileStorage = fileStorage;
+            this.mediaLinks = mediaLinks;
             this.recognitionLogs = recognitionLogs;
             this.unitOfWork = unitOfWork;
             this.logger = logger;
@@ -83,7 +87,7 @@
                 {
                     FramesProcessed = frames.Count,
                     TopAnimals = topAnimals.Select(ToAnimalSummary).ToList(),
-                    VideoPath = storedFile.PublicPath
+                    VideoPath = mediaLinks.CreateLink(userId, storedFile.FileName)
                 };
             });
         }
@@ -108,7 +112,7 @@
             var log = new AnimalRecognitionLog
             {
                 UserId = userId,
-                ImagePath = storedFile.PublicPath,
+                FileName = storedFile.FileName,
                 AnimalName = animal,
                 PredictionScore = score,
                 FramesProcessed = framesProcessed,
@@ -160,10 +164,10 @@
             return buffer.ToArray();
         }
 
-        private static ImageUploadResult ToImageUploadResult(AnimalRecognitionLog log) => new()
+        private ImageUploadResult ToImageUploadResult(AnimalRecognitionLog log) => new()
         {
             ImageId = log.Id,
-            ImagePath = log.ImagePath,
+            ImagePath = mediaLinks.CreateLink(log.UserId, log.FileName),
             RecognizedAnimal = log.AnimalName,
             DateRecognized = log.DateRecognized,
             PredictionScore = log.PredictionScore

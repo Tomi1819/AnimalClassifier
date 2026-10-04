@@ -4,8 +4,8 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
     /// <summary>
     /// Every recognition made. One a user clears from their history is kept,
-    /// marked as cleared, so the statistics and search pages, which read every
-    /// recognition, still count it.
+    /// marked as cleared, so the statistics, which read every recognition,
+    /// still count it.
     /// </summary>
     public interface IRecognitionLogRepository
     {
@@ -39,7 +39,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Every recognition, by every user and cleared ones included, of an
+        /// Every recognition by every user, leaving out the cleared ones, of an
         /// animal whose name contains the term. Whether case matters is the
         /// database's collation's to say, and SQL Server's default ignores it.
         /// </summary>

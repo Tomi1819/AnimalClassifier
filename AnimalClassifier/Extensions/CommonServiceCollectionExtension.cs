@@ -51,8 +51,8 @@ namespace AnimalClassifier.Extensions
         {
             // Uploads are configured relative to the content root. An empty
             // path is left for the check to refuse, where resolving it would
-            // turn it into the content root itself, which would then be
-            // served to anyone who asked.
+            // turn it into the content root itself, and mix the uploads in
+            // with the app.
             services.AddSettings<UploadSettings>()
                 .PostConfigure(settings =>
                 {

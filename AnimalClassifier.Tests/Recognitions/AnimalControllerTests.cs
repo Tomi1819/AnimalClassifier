@@ -65,6 +65,20 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
+        // Its owner put it away, so it is not shown to everyone else.
+        [Fact]
+        public async Task Search_LeavesOutClearedRecognitions()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var animalName = $"animal{Guid.NewGuid():N}";
+            await AddRecognitionAsync(account.UserId, animalName, isCleared: true);
+
+            var response = await user.GetAsync($"{SearchPath}?searchTerm={animalName}");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
         [Fact]
         public async Task Search_LeavesOutMatchesRecognisedFarLessOften()
         {

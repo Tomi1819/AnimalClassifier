@@ -236,7 +236,7 @@ so often like any other confirmation of it, and answers `204 No Content`. The ac
 goes at once, with nothing to undo, and every session goes with it.
 
 Its recognitions are removed, cleared ones included, so they leave the
-statistics and search pages too; its uploaded files and passkeys go as well.
+statistics too; its uploaded files and passkeys go as well.
 The admin audit log keeps its entries, showing `Deleted user` where the account
 was named, so the log still covers everything that was done.
 
@@ -310,6 +310,26 @@ glimpse; a video in which none does is recorded as `Unknown`.
 An upload that fails at any step leaves nothing behind: no file, and no
 recognition in the history.
 
+### Loading uploaded images and videos
+
+Nothing serves the upload folder. Every answer that shows an upload, such as
+an upload's own, the history and the search, links to it as
+`/api/media/{token}`, relative to the API, and only that link loads it. A
+browser loads it from an image or a video tag, which sends no token, so the
+link itself is what grants it, without signing in. It is encrypted and
+signed, so neither the user nor the file can be read from it and no other link
+can be made from it. It works for an hour, and stops at once when its file is
+deleted, along with the account. A page is answered with fresh links each time
+it asks, so the hour only has to outlast the page being looked at.
+
+The browser may keep a file for as long as its link works, but nothing between
+the two may, and a video is answered in ranges, so it can be played from any
+point.
+
+Clearing the history keeps the recognitions, which the statistics still count,
+but takes them out of the history and the search, so no new link is made to
+them. Their files stay, private, in the owner's copy of their data.
+
 ### Errors
 
 Every failure is answered with a message for the user, in one shape:
@@ -344,7 +364,9 @@ dotnet ef database update -p AnimalClassifier.Infrastructure -s AnimalClassifier
 
 `RemoveAnimalImages` drops the `AnimalImages` table, which nothing ever wrote
 to, and `IndexRecognitionDates` indexes when each recognition was made, which
-the activity chart reads by.
+the activity chart reads by. `StoreRecognitionFileNames` keeps each
+recognition's file by its name alone, where it kept the path it was served
+under, as nothing serves that path any more.
 
 ### Running the tests
 
@@ -382,6 +404,7 @@ AnimalClassifier.Core/             What the app does
     Passkeys/                      Registering, using and removing passkeys
     Account/                       A signed-in user's own account: profile, name, password, export, deletion
   Recognitions/                    Recognising animals, and reading the recognitions back; MediaFile sits here
+    Media/                         The expiring links an uploaded image or video is loaded by
     Classification/                The model, and reading a video's frames for it
     Uploads/                       Checking and storing an upload, and recording what was recognised in it
     History/                       A user's own recognitions, and clearing them
@@ -441,7 +464,7 @@ held to an order of their own in the same way:
 | Area | Order of its parts |
 | ---- | ------------------ |
 | Identity | SecurityAlerts, EmailConfirmation, Authentication, Passwords, Passkeys, Account |
-| Recognitions | Classification, Uploads, History, Search, Statistics |
+| Recognitions | Media, Classification, Uploads, History, Search, Statistics |
 
 What an area's parts share sits in the area's own folder and uses none of
 them. `CoreLayoutTests`, `IdentityLayoutTests` and `RecognitionsLayoutTests`
