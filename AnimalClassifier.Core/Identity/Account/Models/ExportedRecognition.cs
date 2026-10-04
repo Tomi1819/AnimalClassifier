@@ -26,5 +26,10 @@ namespace AnimalClassifier.Core.Identity.Account.Models
         /// The uploaded image or video, as a path inside the archive.
         /// </summary>
         public string File { get; set; } = string.Empty;
+
+        /// <summary>
+        /// What the owner said of it; null when they said nothing.
+        /// </summary>
+        public ExportedFeedback? Feedback { get; set; }
     }
 }

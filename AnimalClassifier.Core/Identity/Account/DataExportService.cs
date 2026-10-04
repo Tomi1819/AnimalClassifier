@@ -126,7 +126,18 @@ namespace AnimalClassifier.Core.Identity.Account
             FramesProcessed = log.FramesProcessed,
             DateRecognized = log.DateRecognized,
             IsCleared = log.IsDeleted,
-            File = ToArchivePath(log.FileName)
+            File = ToArchivePath(log.FileName),
+            Feedback = log.Feedback is null ? null : ToExportedFeedback(log.Feedback)
+        };
+
+        private static ExportedFeedback ToExportedFeedback(RecognitionFeedback feedback) => new()
+        {
+            Verdict = feedback.Verdict,
+            ActualAnimal = feedback.ActualAnimal,
+            Comment = feedback.Comment,
+            AllowsTraining = feedback.AllowsTraining,
+            ReviewStatus = feedback.ReviewStatus,
+            DateSubmitted = feedback.DateSubmitted
         };
 
         // A recognition names its file, and an upload's physical path ends in

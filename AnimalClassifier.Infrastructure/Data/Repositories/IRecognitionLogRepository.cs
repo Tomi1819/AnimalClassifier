@@ -53,7 +53,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         /// <summary>
         /// Every recognition one user made, cleared ones included, most recent
-        /// first.
+        /// first, each with any feedback they gave on it.
         /// </summary>
         Task<IReadOnlyList<AnimalRecognitionLog>> GetAllForUserAsync(string userId);
 
@@ -71,7 +71,8 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         /// <summary>
         /// Removes every recognition one user made, cleared ones included, so
-        /// that they leave the statistics and search pages as well. Unlike
+        /// that they leave the statistics and search pages as well, and the
+        /// feedback given on them with them. Unlike
         /// clearing, this cannot be undone, and is meant for an account that is
         /// itself going. Takes effect at once, without a save.
         /// </summary>

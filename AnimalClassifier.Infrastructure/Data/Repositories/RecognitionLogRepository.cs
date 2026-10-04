@@ -59,6 +59,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
 
         public async Task<IReadOnlyList<AnimalRecognitionLog>> GetAllForUserAsync(string userId) =>
             await Logs.Where(l => l.UserId == userId)
+                      .Include(l => l.Feedback)
                       .OrderByDescending(l => l.DateRecognized)
                       .ToListAsync();
 
