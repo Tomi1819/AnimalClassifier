@@ -5,8 +5,8 @@
 
     /// <summary>
     /// Finding animals by name among everything recognised in an image, by
-    /// every user. A recognition cleared from its owner's history is still
-    /// found, since the animal was still recognised.
+    /// every user. A recognition cleared from its owner's history is left
+    /// out, since its owner put it away.
     /// </summary>
     public interface IAnimalSearchService
     {

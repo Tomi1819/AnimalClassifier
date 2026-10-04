@@ -4,6 +4,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.History.Models;
+    using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
     using AnimalClassifier.Tests.Support;
@@ -62,7 +63,8 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             var result = (await response.Content.ReadFromJsonAsync<ImageUploadResult>())!;
             Assert.Equal(Factory.Classifier.Animal, result.RecognizedAnimal);
-            Assert.StartsWith($"/uploads/{account.UserId}/", result.ImagePath);
+            Assert.StartsWith($"/{MediaLinkService.Route}/", result.ImagePath);
+            Assert.DoesNotContain(account.UserId, result.ImagePath);
 
             var readBack = await user.GetFromJsonAsync<ImageUploadResult>(response.Headers.Location);
             Assert.Equal(result.ImageId, readBack!.ImageId);

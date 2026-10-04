@@ -48,7 +48,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                       .ToListAsync(cancellationToken);
 
         public async Task<IReadOnlyList<AnimalRecognitionLog>> FindByAnimalNameAsync(string term, CancellationToken cancellationToken) =>
-            await Logs.Where(l => l.AnimalName.Contains(term))
+            await Logs.Where(l => l.AnimalName.Contains(term) && !l.IsDeleted)
                       .ToListAsync(cancellationToken);
 
         public async Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken) =>

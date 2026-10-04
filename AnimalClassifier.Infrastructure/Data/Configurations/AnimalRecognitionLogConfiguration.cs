@@ -9,7 +9,7 @@
         {
             builder.HasKey(e => e.Id);
 
-            builder.Property(a => a.ImagePath)
+            builder.Property(a => a.FileName)
                 .IsRequired()
                 .HasMaxLength(255);
 

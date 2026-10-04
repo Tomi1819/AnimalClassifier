@@ -11,8 +11,8 @@
         public string PhysicalPath { get; set; } = string.Empty;
 
         /// <summary>
-        /// Where the file is served from, for a browser to load.
+        /// The name it was stored under, in its user's folder.
         /// </summary>
-        public string PublicPath { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
     }
 }

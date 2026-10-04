@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Recognitions.History
 {
     using AnimalClassifier.Core.Recognitions.History.Models;
+    using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.Extensions.Logging;
@@ -8,11 +9,15 @@ namespace AnimalClassifier.Core.Recognitions.History
     public class RecognitionHistoryService : IRecognitionHistoryService
     {
         private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IMediaLinkService mediaLinks;
         private readonly ILogger<RecognitionHistoryService> logger;
 
-        public RecognitionHistoryService(IRecognitionLogRepository recognitionLogs, ILogger<RecognitionHistoryService> logger)
+        public RecognitionHistoryService(IRecognitionLogRepository recognitionLogs,
+                                         IMediaLinkService mediaLinks,
+                                         ILogger<RecognitionHistoryService> logger)
         {
             this.recognitionLogs = recognitionLogs;
+            this.mediaLinks = mediaLinks;
             this.logger = logger;
         }
 
@@ -30,15 +35,15 @@ namespace AnimalClassifier.Core.Recognitions.History
             logger.LogInformation("Cleared {Count} recognition(s) from the history of user {UserId}.", cleared, userId);
         }
 
-        private static RecognitionHistoryItem ToHistoryItem(AnimalRecognitionLog log) => new()
+        private RecognitionHistoryItem ToHistoryItem(AnimalRecognitionLog log) => new()
         {
             Id = log.Id,
-            MediaPath = log.ImagePath,
+            MediaPath = mediaLinks.CreateLink(log.UserId, log.FileName),
             RecognizedAnimal = log.AnimalName,
             DateRecognized = log.DateRecognized,
             PredictionScore = log.PredictionScore,
             FramesProcessed = log.FramesProcessed,
-            IsVideo = !MediaFile.IsImage(log.ImagePath)
+            IsVideo = !MediaFile.IsImage(log.FileName)
         };
     }
 }

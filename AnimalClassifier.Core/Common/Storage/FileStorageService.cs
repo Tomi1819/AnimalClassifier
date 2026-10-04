@@ -4,13 +4,13 @@
 
     public class FileStorageService : IFileStorageService
     {
+        private const string InvalidFileName = "The file name has to name a file, and nothing but a file.";
+
         private readonly string uploadRootPath;
-        private readonly string requestPath;
 
         public FileStorageService(IOptions<UploadSettings> options)
         {
             uploadRootPath = options.Value.UploadPath;
-            requestPath = options.Value.RequestPath;
         }
 
         public async Task<StoredFile> SaveAsync(string userId, Stream content, string extension)
@@ -31,8 +31,19 @@
             return new StoredFile
             {
                 PhysicalPath = physicalPath,
-                PublicPath = $"{requestPath}/{userId}/{fileName}"
+                FileName = fileName
             };
+        }
+
+        // A name with a folder in it could reach outside the user's own.
+        public string GetPath(string userId, string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName) || fileName != Path.GetFileName(fileName))
+            {
+                throw new ArgumentException(InvalidFileName, nameof(fileName));
+            }
+
+            return Path.Combine(GetUserDirectory(userId), fileName);
         }
 
         public void Delete(StoredFile file) => File.Delete(file.PhysicalPath);

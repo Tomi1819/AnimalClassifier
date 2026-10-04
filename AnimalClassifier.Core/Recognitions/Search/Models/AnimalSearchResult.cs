@@ -1,5 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Search.Models
 {
+    using AnimalClassifier.Core.Recognitions.Media;
+
     /// <summary>
     /// One animal that matched a search, and the images it was recognised in.
     /// </summary>
@@ -18,6 +20,10 @@
         /// </summary>
         public float Accuracy { get; set; }
 
+        /// <summary>
+        /// A link to each image, which runs out after an hour; see
+        /// <see cref="IMediaLinkService"/>.
+        /// </summary>
         public List<string> ImagePaths { get; set; } = [];
     }
 }

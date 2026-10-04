@@ -4,7 +4,13 @@
     {
         public int Id { get; set; }
         public string AnimalName { get; set; } = string.Empty;
-        public string ImagePath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The name of the image or video it was made from, among the files
+        /// its user uploaded.
+        /// </summary>
+        public string FileName { get; set; } = string.Empty;
+
         public DateTime DateRecognized { get; set; }
         public string UserId { get; set; } = string.Empty;
         public ApplicationUser User { get; set; } = null!;
@@ -22,8 +28,8 @@
 
         /// <summary>
         /// Set when the user clears their history. The recognition still
-        /// happened, so the statistics and search pages keep counting it; only
-        /// the owner's own history hides it.
+        /// happened, so the statistics keep counting it; the owner's history
+        /// and the search leave it out.
         /// </summary>
         public bool IsDeleted { get; set; }
     }

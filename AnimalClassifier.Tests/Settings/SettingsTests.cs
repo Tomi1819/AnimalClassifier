@@ -26,7 +26,7 @@ namespace AnimalClassifier.Tests.Settings
             // Too short to sign with.
             { ApiFactory.Key<JwtSettings>(nameof(JwtSettings.SecretKey)), "too-short" },
 
-            // Resolved, it would be the content root, served to anyone.
+            // Resolved, it would be the content root, where the app itself is.
             { ApiFactory.Key<UploadSettings>(nameof(UploadSettings.UploadPath)), "" },
 
             // The emailed links and the passkeys' domain are made from it.

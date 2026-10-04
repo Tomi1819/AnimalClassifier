@@ -36,8 +36,6 @@ app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 
-app.UseApplicationUploads();
-
 app.UseCors(CorsSettings.PolicyName);
 
 app.UseAuthentication();

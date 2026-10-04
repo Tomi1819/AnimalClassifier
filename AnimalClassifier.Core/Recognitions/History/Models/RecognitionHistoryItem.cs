@@ -1,5 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.History.Models
 {
+    using AnimalClassifier.Core.Recognitions.Media;
+
     /// <summary>
     /// One entry in a user's own recognition history.
     /// </summary>
@@ -8,7 +10,8 @@
         public int Id { get; set; }
 
         /// <summary>
-        /// The public path of the uploaded image or video.
+        /// A link the uploaded image or video is loaded by, which runs out
+        /// after an hour; see <see cref="IMediaLinkService"/>.
         /// </summary>
         public string MediaPath { get; set; } = string.Empty;
 

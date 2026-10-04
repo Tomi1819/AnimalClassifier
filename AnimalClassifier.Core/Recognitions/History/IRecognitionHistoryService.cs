@@ -15,8 +15,8 @@ namespace AnimalClassifier.Core.Recognitions.History
 
         /// <summary>
         /// Clears one user's history. The recognitions are kept, so the
-        /// statistics and search pages still count them; they are only hidden
-        /// from their owner's history.
+        /// statistics still count them, but they leave the history and the
+        /// search, and their files stay in the owner's copy of their data.
         /// </summary>
         Task ClearHistoryAsync(string userId);
     }

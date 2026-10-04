@@ -135,7 +135,7 @@ namespace AnimalClassifier.Tests.Support
             var log = new AnimalRecognitionLog
             {
                 AnimalName = animalName,
-                ImagePath = $"/uploads/{userId}/{fileName ?? $"{Guid.NewGuid():N}.jpg"}",
+                FileName = fileName ?? $"{Guid.NewGuid():N}.jpg",
                 DateRecognized = dateRecognized ?? DateTime.UtcNow,
                 UserId = userId,
                 IsDeleted = isCleared

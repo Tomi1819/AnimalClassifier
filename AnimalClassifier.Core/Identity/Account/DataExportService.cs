@@ -126,11 +126,11 @@ namespace AnimalClassifier.Core.Identity.Account
             FramesProcessed = log.FramesProcessed,
             DateRecognized = log.DateRecognized,
             IsCleared = log.IsDeleted,
-            File = ToArchivePath(log.ImagePath)
+            File = ToArchivePath(log.FileName)
         };
 
-        // Both a recognition's public path and an upload's physical path end
-        // in the stored file's name, so the two meet at the same entry.
+        // A recognition names its file, and an upload's physical path ends in
+        // that name, so the two meet at the same entry.
         private static string ToArchivePath(string path) => UploadsFolder + Path.GetFileName(path);
     }
 }
