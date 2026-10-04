@@ -1,10 +1,12 @@
 namespace AnimalClassifier.Tests.Support
 {
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.EmailConfirmation.Models;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc.Testing;
+    using Microsoft.AspNetCore.WebUtilities;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
     using System.Net.Http.Headers;
@@ -24,6 +26,7 @@ namespace AnimalClassifier.Tests.Support
 
         private const string RegisterPath = "/api/auth/register";
         private const string LoginPath = "/api/auth/login";
+        private const string ConfirmEmailPath = "/api/auth/confirm-email";
         private const string FullName = "Test User";
         private const string BearerScheme = "Bearer";
 
@@ -68,6 +71,31 @@ namespace AnimalClassifier.Tests.Support
 
             return WithToken(app, login.Token);
         }
+
+        /// <summary>
+        /// The token in the last link emailed to the address, as the
+        /// frontend's page would read it.
+        /// </summary>
+        protected string TokenSentTo(string email)
+        {
+            var link = Factory.Emails.LinkSentTo(email);
+            Assert.NotNull(link);
+
+            return QueryHelpers.ParseQuery(new Uri(link).Query)["token"].ToString();
+        }
+
+        protected Task<HttpResponseMessage> ConfirmEmailAsync(string email, string token) =>
+            Factory.CreateClient().PostAsJsonAsync(ConfirmEmailPath, new ConfirmEmailRequest
+            {
+                Email = email,
+                Token = token
+            });
+
+        /// <summary>
+        /// Confirms the email with the link registering mailed to it.
+        /// </summary>
+        protected async Task ConfirmEmailAsync(string email) =>
+            (await ConfirmEmailAsync(email, TokenSentTo(email))).EnsureSuccessStatusCode();
 
         protected HttpClient WithToken(string token) => WithToken(Factory, token);
 

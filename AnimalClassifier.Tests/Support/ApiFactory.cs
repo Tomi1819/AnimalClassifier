@@ -71,6 +71,7 @@
             // share one rate limiting window and the deployed limit would
             // throttle the suite. The tests that cover the limits set their own.
             builder.UseSetting(Key<RateLimitSettings>(nameof(RateLimitSettings.LoginPermitLimit)), "1000");
+            builder.UseSetting(Key<RateLimitSettings>(nameof(RateLimitSettings.RegisterPermitLimit)), "1000");
             builder.UseSetting(Key<RateLimitSettings>(nameof(RateLimitSettings.PasswordResetPermitLimit)), "1000");
 
             // Whatever the app sends is kept here rather than sent, which is

@@ -23,5 +23,12 @@
         /// </summary>
         [Required]
         public string ResetPasswordPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The page that receives an email confirmation token, which has to
+        /// match the frontend.
+        /// </summary>
+        [Required]
+        public string ConfirmEmailPath { get; set; } = string.Empty;
     }
 }

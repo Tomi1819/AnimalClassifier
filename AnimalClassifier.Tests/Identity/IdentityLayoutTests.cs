@@ -12,7 +12,7 @@ namespace AnimalClassifier.Tests.Identity
         private static readonly DependencyOrder Order = new(
             typeof(AccountName).Assembly,
             typeof(AccountName).Namespace!,
-            "SecurityAlerts", "Authentication", "Passwords", "Passkeys", "Account");
+            "SecurityAlerts", "EmailConfirmation", "Authentication", "Passwords", "Passkeys", "Account");
 
         [Fact]
         public void EveryPartOfIdentity_IsInTheDependencyOrder() =>

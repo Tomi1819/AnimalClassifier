@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Identity.Authentication
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using System.Globalization;
@@ -20,14 +21,17 @@ namespace AnimalClassifier.Core.Identity.Authentication
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IAccessTokenIssuer tokenIssuer;
+        private readonly IEmailConfirmationService emailConfirmationService;
 
         public AuthService(UserManager<ApplicationUser> userManager,
                            SignInManager<ApplicationUser> signInManager,
-                           IAccessTokenIssuer tokenIssuer)
+                           IAccessTokenIssuer tokenIssuer,
+                           IEmailConfirmationService emailConfirmationService)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.tokenIssuer = tokenIssuer;
+            this.emailConfirmationService = emailConfirmationService;
         }
 
         public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
@@ -52,6 +56,7 @@ namespace AnimalClassifier.Core.Identity.Authentication
 
             (await userManager.CreateAsync(user, request.Password)).ThrowIfFailed();
             (await userManager.AddToRoleAsync(user, User)).ThrowIfFailed();
+            await emailConfirmationService.SendLinkAsync(user);
 
             return new RegisterResponse
             {

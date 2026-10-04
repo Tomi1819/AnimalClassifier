@@ -9,6 +9,11 @@ namespace AnimalClassifier.Core.Identity.Account.Models
 
         public string Email { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Whether the email has been confirmed by the link mailed to it.
+        /// </summary>
+        public bool EmailConfirmed { get; set; }
+
         public DateTime DateRegistered { get; set; }
     }
 }

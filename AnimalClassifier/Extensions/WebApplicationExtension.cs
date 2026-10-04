@@ -28,9 +28,12 @@
 
         /// <summary>
         /// Creates the roles, and makes the account configured as Admin:Email an
-        /// administrator so that a new installation has someone to manage it. The
-        /// account has to be registered first. Removing the setting later demotes
-        /// no one.
+        /// administrator while there is none, so that a new installation has
+        /// someone to manage it. The account has to be registered and its email
+        /// confirmed first, or whoever registered the address before its owner
+        /// would be given the role. Once there is an administrator the setting
+        /// does nothing, so one whose role was revoked does not get it back on
+        /// the next start; removing it demotes no one.
         /// </summary>
         public static async Task SeedRolesAsync(this WebApplication app)
         {
@@ -48,7 +51,7 @@
             }
 
             var adminEmail = scope.ServiceProvider.GetRequiredService<IOptions<AdminSettings>>().Value.Email;
-            if (string.IsNullOrWhiteSpace(adminEmail))
+            if (string.IsNullOrWhiteSpace(adminEmail) || (await userManager.GetUsersInRoleAsync(Admin)).Count > 0)
             {
                 return;
             }
@@ -60,10 +63,13 @@
                 return;
             }
 
-            if (!await userManager.IsInRoleAsync(admin, Admin))
+            if (!admin.EmailConfirmed)
             {
-                await userManager.AddToRoleAsync(admin, Admin);
+                app.Logger.LogWarning("The administrator email {AdminEmail} has not been confirmed yet.", adminEmail);
+                return;
             }
+
+            await userManager.AddToRoleAsync(admin, Admin);
         }
     }
 }

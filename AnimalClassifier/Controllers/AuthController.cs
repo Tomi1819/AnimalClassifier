@@ -3,6 +3,8 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;
+    using AnimalClassifier.Core.Identity.EmailConfirmation;
+    using AnimalClassifier.Core.Identity.EmailConfirmation.Models;
     using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Core.Identity.Passkeys.Models;
     using AnimalClassifier.Core.Identity.Passwords;
@@ -10,6 +12,7 @@ namespace AnimalClassifier.Controllers
     using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
+    using static AnimalClassifier.Core.Identity.EmailConfirmation.EmailConfirmationMessages;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
 
     [Route("api/[controller]")]
@@ -19,19 +22,35 @@ namespace AnimalClassifier.Controllers
         private readonly IAuthService authService;
         private readonly IPasswordResetService passwordResetService;
         private readonly IPasskeyService passkeyService;
+        private readonly IEmailConfirmationService emailConfirmationService;
 
         public AuthController(IAuthService authService,
                               IPasswordResetService passwordResetService,
-                              IPasskeyService passkeyService)
+                              IPasskeyService passkeyService,
+                              IEmailConfirmationService emailConfirmationService)
         {
             this.authService = authService;
             this.passwordResetService = passwordResetService;
             this.passkeyService = passkeyService;
+            this.emailConfirmationService = emailConfirmationService;
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting(RateLimitPolicies.Register)]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request) =>
             Ok(await authService.RegisterAsync(request));
+
+        /// <summary>
+        /// Anonymous, since the link may be opened on a device the user is
+        /// not signed in on.
+        /// </summary>
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)
+        {
+            await emailConfirmationService.ConfirmAsync(request);
+
+            return Ok(new MessageResponse { Message = EmailConfirmed });
+        }
 
         [HttpPost("login")]
         [EnableRateLimiting(RateLimitPolicies.Login)]
