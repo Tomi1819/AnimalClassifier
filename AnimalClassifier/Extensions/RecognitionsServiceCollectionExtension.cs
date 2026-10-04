@@ -7,13 +7,14 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Search;
     using AnimalClassifier.Core.Recognitions.Statistics;
+    using AnimalClassifier.Core.Recognitions.Training;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using Microsoft.Extensions.ML;
 
     /// <summary>
     /// Recognising animals in what users upload, and everything read back from
     /// those recognitions: a user's history, the feedback they give on it, the
-    /// search and the statistics.
+    /// search and the statistics, and the review of that feedback for training.
     /// </summary>
     public static class RecognitionsServiceCollectionExtension
     {
@@ -25,6 +26,7 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddScoped<IAnimalSearchService, AnimalSearchService>();
+            services.AddScoped<IFeedbackReviewService, FeedbackReviewService>();
 
             // Both are safe to share: the classifier takes an engine from the
             // pool for each image, and the sampler keeps nothing between videos.
