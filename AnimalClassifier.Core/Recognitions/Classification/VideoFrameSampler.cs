@@ -22,6 +22,12 @@ namespace AnimalClassifier.Core.Recognitions.Classification
         /// </summary>
         public const int AssumedFramesPerSecond = 30;
 
+        /// <summary>
+        /// The most pixels a frame can have, which is 4K's. Each frame read is
+        /// decoded whole, and a small file can claim frames of any size.
+        /// </summary>
+        public const long MaxFramePixels = 4096 * 2160;
+
         // The form the frames are handed on in, which is the form of the
         // images the model was trained with.
         private const string FrameFormat = ".jpg";
@@ -33,6 +39,11 @@ namespace AnimalClassifier.Core.Recognitions.Classification
             if (!capture.IsOpened())
             {
                 throw new RequestRefusedException(UnreadableVideo);
+            }
+
+            if ((long)capture.FrameWidth * capture.FrameHeight > MaxFramePixels)
+            {
+                throw new RequestRefusedException(VideoTooLarge);
             }
 
             var step = FramesBetweenSamples(capture.Fps, capture.FrameCount);

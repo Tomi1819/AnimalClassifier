@@ -53,10 +53,15 @@
         {
             UploadValidator.ValidateImage(file);
 
+            var extension = Path.GetExtension(file.FileName);
+            var image = ImageSanitizer.Sanitize(await ReadAllBytesAsync(file), extension);
+
             // Classified before it is stored, so that an image the model fails
             // on leaves nothing to remove.
-            var prediction = classifier.Classify(await ReadAllBytesAsync(file));
-            var storedFile = await StoreAsync(userId, file);
+            var prediction = classifier.Classify(image);
+
+            await using var content = new MemoryStream(image);
+            var storedFile = await fileStorage.SaveAsync(userId, content, extension);
 
             var log = await RemovingOnFailureAsync(storedFile, () =>
                 RecordAsync(userId, storedFile, prediction.Animal, prediction.Score, framesProcessed: null));

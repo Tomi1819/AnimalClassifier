@@ -11,9 +11,13 @@
     /// </summary>
     public interface IUploadService
     {
+        /// <summary>
+        /// Classifies and stores the image as <see cref="ImageSanitizer"/>
+        /// encodes it afresh, without what the camera wrote beside the pixels.
+        /// </summary>
         /// <exception cref="RequestRefusedException">
-        /// When the file is not a JPEG or PNG image, or is too large; see
-        /// <see cref="UploadValidator"/>.
+        /// When the file is not a JPEG or PNG image, is too large, has too many
+        /// pixels, or cannot be read; see <see cref="UploadValidator"/>.
         /// </exception>
         Task<ImageUploadResult> UploadImageAsync(string userId, IFormFile file);
 
@@ -23,8 +27,8 @@
         /// when none was; see <see cref="VideoSummary"/>.
         /// </summary>
         /// <exception cref="RequestRefusedException">
-        /// When the file is not an MP4, MOV or AVI video, is too large, or
-        /// cannot be read.
+        /// When the file is not an MP4, MOV or AVI video, is too large, has
+        /// frames larger than 4K, or cannot be read.
         /// </exception>
         Task<VideoUploadResult> UploadVideoAsync(string userId, IFormFile file);
 

@@ -7,9 +7,11 @@
     /// <summary>
     /// What an uploaded file has to be for a recognition to be made from it.
     ///
-    /// Its name and content type are whatever the caller says they are, so an
-    /// image's first bytes are checked as well. Those are what the model
-    /// reads, and anything that is not really an image would fail inside it.
+    /// Its name and content type are whatever the caller says they are, so its
+    /// first bytes are checked as well. An image's are what the model reads,
+    /// and anything that is not really an image would fail inside it. A
+    /// video's are read by a decoder that knows many more formats than these,
+    /// some of which can point it at other files, so it is given only these.
     /// </summary>
     public static class UploadValidator
     {
@@ -19,6 +21,10 @@
         public const long MaxFileSize = 5 * BytesPerMegabyte;
 
         private const long BytesPerMegabyte = 1024 * 1024;
+
+        private const int MovieTypeBoxOffset = 4;
+        private const int AviTypeOffset = 8;
+        private const int VideoSignatureLength = 12;
 
         private static readonly IReadOnlySet<string> ImageContentTypes =
             new HashSet<string>(["image/jpeg", "image/png"], StringComparer.OrdinalIgnoreCase);
@@ -32,6 +38,12 @@
             [0xFF, 0xD8, 0xFF],
             [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
         ];
+
+        // An MP4 or MOV file starts with the box naming its type, after the
+        // box's length, and an AVI file is a RIFF file whose type is AVI.
+        private static readonly byte[] MovieTypeBox = "ftyp"u8.ToArray();
+        private static readonly byte[] RiffSignature = "RIFF"u8.ToArray();
+        private static readonly byte[] AviType = "AVI "u8.ToArray();
 
         /// <exception cref="RequestRefusedException">
         /// When the file is empty, too large, or not a JPEG or PNG image.
@@ -50,14 +62,15 @@
 
         /// <exception cref="RequestRefusedException">
         /// When the file is empty, too large, or not an MP4, MOV or AVI video.
-        /// Whether it really is one is found out when its frames are read.
+        /// Whether it can be played is found out when its frames are read.
         /// </exception>
         public static void ValidateVideo(IFormFile file)
         {
             ValidateSize(file);
 
             if (!MediaFile.VideoExtensions.Contains(Path.GetExtension(file.FileName))
-                || !VideoContentTypes.Contains(file.ContentType))
+                || !VideoContentTypes.Contains(file.ContentType)
+                || !StartsWithVideoSignature(file))
             {
                 throw new RequestRefusedException(UnsupportedVideo);
             }
@@ -78,13 +91,29 @@
 
         private static bool StartsWithImageSignature(IFormFile file)
         {
-            var start = new byte[ImageSignatures.Max(signature => signature.Length)];
+            var start = ReadStart(file, ImageSignatures.Max(signature => signature.Length));
+
+            return ImageSignatures.Any(signature => start.StartsWith(signature));
+        }
+
+        private static bool StartsWithVideoSignature(IFormFile file)
+        {
+            var start = ReadStart(file, VideoSignatureLength);
+
+            return start.Length == VideoSignatureLength
+                && (start.AsSpan(MovieTypeBoxOffset).StartsWith(MovieTypeBox)
+                    || (start.AsSpan().StartsWith(RiffSignature) && start.AsSpan(AviTypeOffset).StartsWith(AviType)));
+        }
+
+        // As many of the bytes asked for as the file has.
+        private static byte[] ReadStart(IFormFile file, int length)
+        {
+            var start = new byte[length];
 
             using var content = file.OpenReadStream();
-            var read = content.ReadAtLeast(start, start.Length, throwOnEndOfStream: false);
+            var read = content.ReadAtLeast(start, length, throwOnEndOfStream: false);
 
-            return ImageSignatures.Any(signature =>
-                read >= signature.Length && start.AsSpan(0, signature.Length).SequenceEqual(signature));
+            return start[..read];
         }
     }
 }

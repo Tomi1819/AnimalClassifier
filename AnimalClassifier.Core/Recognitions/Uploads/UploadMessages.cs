@@ -14,6 +14,13 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
         public const string FileTooLarge = "The file is too large. It can be at most {0} MB.";
 
         public const string UnsupportedImage = "Only JPEG and PNG images can be uploaded.";
+        public const string UnreadableImage = "The image could not be read. Please try another one.";
+
+        /// <summary>
+        /// Formatted with the most pixels allowed, in millions.
+        /// </summary>
+        public const string ImageTooLarge = "The image is too large. It can be at most {0} megapixels.";
+
         public const string UnsupportedVideo = "Only MP4, MOV and AVI videos can be uploaded.";
         public const string RecognitionNotFound = "The recognition does not exist.";
     }
