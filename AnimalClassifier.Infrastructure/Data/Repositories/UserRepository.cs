@@ -24,8 +24,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
             var totalCount = await users.CountAsync(cancellationToken);
             var pageOfUsers = await users
                 .OrderByDescending(u => u.DateRegistered)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .TakePage(page, pageSize)
                 .ToListAsync(cancellationToken);
 
             return (pageOfUsers, totalCount);

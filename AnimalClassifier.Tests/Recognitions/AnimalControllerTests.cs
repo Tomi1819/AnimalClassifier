@@ -97,5 +97,26 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal($"{term}-often", result.AnimalName);
             Assert.Equal(3, result.ImagePaths.Count);
         }
+
+        // Every image is counted, but only so many are linked to, and a video
+        // is neither.
+        [Fact]
+        public async Task Search_LinksOnlyTheMostRecentImages_ButCountsThemAll()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var animalName = $"animal{Guid.NewGuid():N}";
+            for (var i = 0; i <= AnimalSearchService.MaxImagesPerAnimal; i++)
+            {
+                await AddRecognitionAsync(account.UserId, animalName);
+            }
+            await AddRecognitionAsync(account.UserId, animalName, fileName: "clip.mp4");
+
+            var results = await user.GetFromJsonAsync<List<AnimalSearchResult>>($"{SearchPath}?searchTerm={animalName}");
+
+            var result = Assert.Single(results!);
+            Assert.Equal(AnimalSearchService.MaxImagesPerAnimal + 1, result.Count);
+            Assert.Equal(AnimalSearchService.MaxImagesPerAnimal, result.ImagePaths.Count);
+        }
     }
 }

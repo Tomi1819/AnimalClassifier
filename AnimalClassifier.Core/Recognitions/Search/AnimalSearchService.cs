@@ -15,6 +15,13 @@
         /// </summary>
         public const float MinAccuracy = 0.7f;
 
+        /// <summary>
+        /// How many images are shown of each animal, the most recent ones. An
+        /// animal can be recognised in any number, and each takes a link of its
+        /// own to answer with.
+        /// </summary>
+        public const int MaxImagesPerAnimal = 12;
+
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IMediaLinkService mediaLinks;
 
@@ -31,19 +38,8 @@
                 throw new RequestRefusedException(EnterSearchTerm);
             }
 
-            var logs = await recognitionLogs.FindByAnimalNameAsync(searchTerm.Trim(), cancellationToken);
-
             // Only images can be shown on the page; a video is left out.
-            var matches = logs
-                .Where(log => MediaFile.IsImage(log.FileName))
-                .GroupBy(log => log.AnimalName)
-                .Select(animal => new AnimalSearchResult
-                {
-                    AnimalName = animal.Key,
-                    Count = animal.Count(),
-                    ImagePaths = animal.Select(log => mediaLinks.CreateLink(log.UserId, log.FileName)).ToList()
-                })
-                .ToList();
+            var matches = await recognitionLogs.CountByAnimalNameAsync(searchTerm.Trim(), MediaFile.ImageExtensions, cancellationToken);
 
             if (matches.Count == 0)
             {
@@ -52,15 +48,31 @@
 
             var mostRecognised = matches.Max(match => match.Count);
 
-            foreach (var match in matches)
+            var shown = matches
+                .Select(match => new AnimalSearchResult
+                {
+                    AnimalName = match.AnimalName,
+                    Count = match.Count,
+                    Accuracy = (float)match.Count / mostRecognised
+                })
+                .Where(match => match.Accuracy >= MinAccuracy)
+                .ToList();
+
+            var latest = await recognitionLogs.GetLatestByAnimalsAsync(
+                shown.Select(match => match.AnimalName), MediaFile.ImageExtensions, MaxImagesPerAnimal, cancellationToken);
+
+            // Matched to the animals the way the database grouped them, whose
+            // collation ignores case.
+            var imagesByAnimal = latest.ToLookup(log => log.AnimalName, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var match in shown)
             {
-                match.Accuracy = (float)match.Count / mostRecognised;
+                match.ImagePaths = imagesByAnimal[match.AnimalName]
+                    .Select(log => mediaLinks.CreateLink(log.UserId, log.FileName))
+                    .ToList();
             }
 
-            return matches
-                .Where(match => match.Accuracy >= MinAccuracy)
-                .OrderByDescending(match => match.Accuracy)
-                .ToList();
+            return shown;
         }
     }
 }

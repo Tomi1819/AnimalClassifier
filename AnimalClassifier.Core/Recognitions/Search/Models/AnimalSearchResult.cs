@@ -21,8 +21,9 @@
         public float Accuracy { get; set; }
 
         /// <summary>
-        /// A link to each image, which runs out after an hour; see
-        /// <see cref="IMediaLinkService"/>.
+        /// A link to each of the most recent images, as many as
+        /// <see cref="AnimalSearchService.MaxImagesPerAnimal"/>, most recent
+        /// first. Each runs out after an hour; see <see cref="IMediaLinkService"/>.
         /// </summary>
         public List<string> ImagePaths { get; set; } = [];
     }

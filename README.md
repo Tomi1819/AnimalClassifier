@@ -33,8 +33,16 @@ This application enables users to upload images of animals and receive classific
 
 ### Prerequisites
 
+- Windows, 64-bit
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or another supported database
+
+The backend builds wherever .NET does, but runs on Windows alone. OpenCV,
+which decodes every uploaded image and video, is referenced by its Windows
+runtime only, so anywhere else each upload fails; running elsewhere takes that
+platform's OpenCvSharp4 runtime package in its place. The tests need SQL
+Server LocalDB, which is Windows' alone as well; see
+[Running the tests](#running-the-tests).
 
 ### First administrator
 
@@ -359,6 +367,22 @@ point.
 Clearing the history keeps the recognitions, which the statistics still count,
 but takes them out of the history and the search, so no new link is made to
 them. Their files stay, private, in the owner's copy of their data.
+
+### History and search
+
+`GET /api/upload/history?page=1` answers one page of the signed-in user's
+recognitions, most recent first, 20 to a page, as
+`{ items, page, pageSize, totalCount }`. The page counts from 1, and is the
+first unless given; one past the last has no items. An administrator reads any
+user's the same way, from `GET /api/admin/users/{id}/history?page=1`.
+
+`GET /api/animal/search?searchTerm=cat` finds the animals whose name contains
+the term among every user's images, and answers each with how many images it
+was recognised in and links to the 12 most recent. A term such as `a` matches
+nearly every animal, so one recognised less than 70% as often as the match
+recognised most is left out. Videos are left out, as the page shows images,
+and so are recognitions cleared from their owner's history. When nothing
+matches, the answer is `404 Not Found`.
 
 ### Feedback on a recognition
 
