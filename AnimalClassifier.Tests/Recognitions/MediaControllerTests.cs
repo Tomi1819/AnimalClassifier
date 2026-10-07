@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
@@ -85,7 +86,7 @@ namespace AnimalClassifier.Tests.Recognitions
             await AddRecognitionAsync(account.UserId, fileName: fileName);
 
             var user = await SignInAsync(account.Email);
-            var item = Assert.Single((await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!);
+            var item = Assert.Single((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
             Assert.StartsWith($"/{MediaLinkService.Route}/", item.MediaPath);
 
             return item.MediaPath;

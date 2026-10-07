@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Core.Recognitions.History
 {
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
 
     /// <summary>
@@ -8,10 +9,11 @@ namespace AnimalClassifier.Core.Recognitions.History
     public interface IRecognitionHistoryService
     {
         /// <summary>
-        /// One user's recognitions, most recent first, leaving out any they
-        /// have cleared.
+        /// One page of one user's recognitions, most recent first, leaving out
+        /// any they have cleared.
         /// </summary>
-        Task<IReadOnlyList<RecognitionHistoryItem>> GetHistoryAsync(string userId, CancellationToken cancellationToken);
+        /// <param name="page">Which page, counted from 1.</param>
+        Task<PagedResult<RecognitionHistoryItem>> GetHistoryAsync(string userId, int page, CancellationToken cancellationToken);
 
         /// <summary>
         /// Clears one user's history. The recognitions are kept, so the

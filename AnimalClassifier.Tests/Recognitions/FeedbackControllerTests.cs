@@ -325,7 +325,7 @@ namespace AnimalClassifier.Tests.Recognitions
             var without = await AddRecognitionAsync(account.UserId, dateRecognized: DateTime.UtcNow.AddMinutes(-1));
             (await GiveFeedbackAsync(user, withFeedback, UnlistedAnimal("Capybara"))).EnsureSuccessStatusCode();
 
-            var history = (await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!;
+            var history = (await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items;
 
             Assert.Equal([withFeedback.Id, without.Id], history.Select(item => item.Id));
             Assert.Equal("capybara", history[0].Feedback!.ActualAnimal);

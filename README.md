@@ -360,6 +360,14 @@ Clearing the history keeps the recognitions, which the statistics still count,
 but takes them out of the history and the search, so no new link is made to
 them. Their files stay, private, in the owner's copy of their data.
 
+### History
+
+`GET /api/upload/history?page=1` answers one page of the signed-in user's
+recognitions, most recent first, 20 to a page, as
+`{ items, page, pageSize, totalCount }`. The page counts from 1, and is the
+first unless given; one past the last has no items. An administrator reads any
+user's the same way, from `GET /api/admin/users/{id}/history?page=1`.
+
 ### Feedback on a recognition
 
 A user can say of each image's recognition whether the model named the right

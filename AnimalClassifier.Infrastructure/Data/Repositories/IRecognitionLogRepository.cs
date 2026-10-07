@@ -46,10 +46,12 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         Task<IReadOnlyList<AnimalRecognitionLog>> FindByAnimalNameAsync(string term, CancellationToken cancellationToken);
 
         /// <summary>
-        /// The recognitions belonging to one user that they have not cleared,
-        /// most recent first, each with any feedback they gave on it.
+        /// One page of the recognitions belonging to one user that they have
+        /// not cleared, most recent first, each with any feedback they gave on
+        /// it, and how many there are on every page together.
         /// </summary>
-        Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken);
+        /// <param name="page">Which page, counted from 1.</param>
+        Task<(IReadOnlyList<AnimalRecognitionLog> Logs, int TotalCount)> GetHistoryPageAsync(string userId, int page, int pageSize, CancellationToken cancellationToken);
 
         /// <summary>
         /// Every recognition one user made, cleared ones included, most recent

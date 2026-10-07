@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Core.Recognitions.History
 {
+    using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Core.Recognitions.Media;
@@ -9,6 +10,11 @@ namespace AnimalClassifier.Core.Recognitions.History
 
     public class RecognitionHistoryService : IRecognitionHistoryService
     {
+        /// <summary>
+        /// How many recognitions a page of the history holds.
+        /// </summary>
+        public const int PageSize = 20;
+
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IMediaLinkService mediaLinks;
         private readonly ILogger<RecognitionHistoryService> logger;
@@ -22,11 +28,17 @@ namespace AnimalClassifier.Core.Recognitions.History
             this.logger = logger;
         }
 
-        public async Task<IReadOnlyList<RecognitionHistoryItem>> GetHistoryAsync(string userId, CancellationToken cancellationToken)
+        public async Task<PagedResult<RecognitionHistoryItem>> GetHistoryAsync(string userId, int page, CancellationToken cancellationToken)
         {
-            var logs = await recognitionLogs.GetHistoryAsync(userId, cancellationToken);
+            var (logs, totalCount) = await recognitionLogs.GetHistoryPageAsync(userId, page, PageSize, cancellationToken);
 
-            return logs.Select(ToHistoryItem).ToList();
+            return new PagedResult<RecognitionHistoryItem>
+            {
+                Items = logs.Select(ToHistoryItem).ToList(),
+                Page = page,
+                PageSize = PageSize,
+                TotalCount = totalCount
+            };
         }
 
         public async Task ClearHistoryAsync(string userId)

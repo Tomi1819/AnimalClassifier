@@ -51,11 +51,21 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
             await Logs.Where(l => l.AnimalName.Contains(term) && !l.IsDeleted)
                       .ToListAsync(cancellationToken);
 
-        public async Task<IReadOnlyList<AnimalRecognitionLog>> GetHistoryAsync(string userId, CancellationToken cancellationToken) =>
-            await Logs.Where(l => l.UserId == userId && !l.IsDeleted)
-                      .Include(l => l.Feedback)
-                      .OrderByDescending(l => l.DateRecognized)
-                      .ToListAsync(cancellationToken);
+        public async Task<(IReadOnlyList<AnimalRecognitionLog> Logs, int TotalCount)> GetHistoryPageAsync(string userId, int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var history = Logs.Where(l => l.UserId == userId && !l.IsDeleted);
+
+            var totalCount = await history.CountAsync(cancellationToken);
+            var logs = await history
+                .Include(l => l.Feedback)
+                .OrderByDescending(l => l.DateRecognized)
+                .ThenByDescending(l => l.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (logs, totalCount);
+        }
 
         public async Task<IReadOnlyList<AnimalRecognitionLog>> GetAllForUserAsync(string userId) =>
             await Logs.Where(l => l.UserId == userId)

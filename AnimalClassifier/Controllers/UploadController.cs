@@ -7,6 +7,7 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.RateLimiting;
+    using System.ComponentModel.DataAnnotations;
 
     /// <summary>
     /// A signed-in user's uploads, and the history of what was recognised in
@@ -45,11 +46,14 @@
             Ok(await uploadService.UploadVideoAsync(User.RequiredId(), videoFile, cancellationToken));
 
         /// <summary>
-        /// The signed-in user's own recognitions, most recent first.
+        /// One page of the signed-in user's own recognitions, most recent
+        /// first.
         /// </summary>
         [HttpGet("history")]
-        public async Task<IActionResult> GetHistory(CancellationToken cancellationToken) =>
-            Ok(await historyService.GetHistoryAsync(User.RequiredId(), cancellationToken));
+        public async Task<IActionResult> GetHistory(
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await historyService.GetHistoryAsync(User.RequiredId(), page, cancellationToken));
 
         /// <summary>
         /// Clears the signed-in user's history. The recognitions are kept, so

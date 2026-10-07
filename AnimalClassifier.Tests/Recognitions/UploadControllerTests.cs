@@ -3,6 +3,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Recognitions.Classification;
+    using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads;
@@ -94,7 +95,7 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var result = await ReadAsync<ImageUploadResult>(await user.PostAsync(ImagePath, ImageForm(Jpeg)));
 
-            var item = Assert.Single((await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!);
+            var item = Assert.Single((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
             Assert.Equal(result.ImageId, item.Id);
             Assert.False(item.IsVideo);
         }
@@ -228,7 +229,7 @@ namespace AnimalClassifier.Tests.Recognitions
 
             Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
             Assert.Empty(UploadedFiles(account.UserId));
-            Assert.Empty((await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!);
+            Assert.Empty((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
         }
 
         [Fact]
@@ -244,7 +245,7 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(Factory.Classifier.Animal, animal.Animal);
             Assert.Equal("0.90", animal.AverageScore);
 
-            var item = Assert.Single((await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!);
+            var item = Assert.Single((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
             Assert.True(item.IsVideo);
             Assert.Equal(4, item.FramesProcessed);
         }
@@ -287,7 +288,7 @@ namespace AnimalClassifier.Tests.Recognitions
             var result = await ReadAsync<VideoUploadResult>(await user.PostAsync(VideoPath, VideoForm()));
 
             Assert.Empty(result.TopAnimals);
-            var item = Assert.Single((await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!);
+            var item = Assert.Single((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
             Assert.Equal(UploadService.UnrecognisedAnimal, item.RecognizedAnimal);
         }
 
@@ -314,10 +315,40 @@ namespace AnimalClassifier.Tests.Recognitions
             await AddRecognitionAsync((await RegisterAsync()).UserId);
             var user = await SignInAsync(account.Email);
 
-            var history = (await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!;
+            var history = (await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items;
 
             Assert.Equal([newer.Id, older.Id], history.Select(item => item.Id));
             Assert.True(history[0].IsVideo);
+        }
+
+        [Fact]
+        public async Task GetHistory_IsPaged_MostRecentFirst()
+        {
+            var account = await RegisterAsync();
+            var oldest = await AddRecognitionAsync(account.UserId, dateRecognized: DateTime.UtcNow.AddDays(-1));
+            for (var i = 0; i < RecognitionHistoryService.PageSize; i++)
+            {
+                await AddRecognitionAsync(account.UserId);
+            }
+            var user = await SignInAsync(account.Email);
+
+            var first = (await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!;
+            var second = (await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>($"{HistoryPath}?page=2"))!;
+
+            Assert.Equal(RecognitionHistoryService.PageSize + 1, first.TotalCount);
+            Assert.Equal(RecognitionHistoryService.PageSize, first.Items.Count);
+            Assert.DoesNotContain(first.Items, item => item.Id == oldest.Id);
+            Assert.Equal(oldest.Id, Assert.Single(second.Items).Id);
+        }
+
+        [Fact]
+        public async Task GetHistory_OnAPageBeforeTheFirst_IsABadRequest()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.GetAsync($"{HistoryPath}?page=0");
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [Fact]
@@ -331,7 +362,7 @@ namespace AnimalClassifier.Tests.Recognitions
             var response = await user.DeleteAsync(HistoryPath);
 
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-            Assert.Empty((await user.GetFromJsonAsync<List<RecognitionHistoryItem>>(HistoryPath))!);
+            Assert.Empty((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
         }
 
         private static MultipartFormDataContent ImageForm(byte[] content, string fileName = "cat.jpg", string contentType = JpegContentType) =>

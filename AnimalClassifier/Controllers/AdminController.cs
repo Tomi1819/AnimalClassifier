@@ -30,8 +30,11 @@
             Ok(await adminService.GetUsersAsync(search, page, cancellationToken));
 
         [HttpGet("users/{id}/history")]
-        public async Task<IActionResult> GetUserHistory(string id, CancellationToken cancellationToken) =>
-            Ok(await historyService.GetHistoryAsync(id, cancellationToken));
+        public async Task<IActionResult> GetUserHistory(
+            string id,
+            [FromQuery, Range(1, int.MaxValue)] int page = 1,
+            CancellationToken cancellationToken = default) =>
+            Ok(await historyService.GetHistoryAsync(id, page, cancellationToken));
 
         [HttpPost("users/{id}/lock")]
         public Task<IActionResult> LockUser(string id) =>
