@@ -39,11 +39,21 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Every recognition by every user, leaving out the cleared ones, of an
-        /// animal whose name contains the term. Whether case matters is the
-        /// database's collation's to say, and SQL Server's default ignores it.
+        /// How often each animal whose name contains the term was recognised,
+        /// by every user, in a file with one of the extensions, leaving out the
+        /// cleared recognitions. Most recognised first, and ties alphabetically.
+        /// Whether case matters is the database's collation's to say, and SQL
+        /// Server's default ignores it.
         /// </summary>
-        Task<IReadOnlyList<AnimalRecognitionLog>> FindByAnimalNameAsync(string term, CancellationToken cancellationToken);
+        Task<IReadOnlyList<(string AnimalName, int Count)>> CountByAnimalNameAsync(string term, IEnumerable<string> extensions, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// The most recent recognitions of each of the animals, by every user,
+        /// in a file with one of the extensions, leaving out the cleared ones.
+        /// Each animal's are together, most recent first.
+        /// </summary>
+        /// <param name="countPerAnimal">How many to read of each animal at most.</param>
+        Task<IReadOnlyList<AnimalRecognitionLog>> GetLatestByAnimalsAsync(IEnumerable<string> animalNames, IEnumerable<string> extensions, int countPerAnimal, CancellationToken cancellationToken);
 
         /// <summary>
         /// One page of the recognitions belonging to one user that they have

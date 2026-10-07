@@ -14,7 +14,8 @@
         /// The animals whose name contains the term, whatever its case, that
         /// were recognised nearly as often as the one recognised most; see
         /// <see cref="AnimalSearchService.MinAccuracy"/>. Most recognised
-        /// first.
+        /// first, each with its most recent images; see
+        /// <see cref="AnimalSearchService.MaxImagesPerAnimal"/>.
         /// </summary>
         /// <exception cref="RequestRefusedException">
         /// When the term is blank.

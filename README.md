@@ -360,13 +360,21 @@ Clearing the history keeps the recognitions, which the statistics still count,
 but takes them out of the history and the search, so no new link is made to
 them. Their files stay, private, in the owner's copy of their data.
 
-### History
+### History and search
 
 `GET /api/upload/history?page=1` answers one page of the signed-in user's
 recognitions, most recent first, 20 to a page, as
 `{ items, page, pageSize, totalCount }`. The page counts from 1, and is the
 first unless given; one past the last has no items. An administrator reads any
 user's the same way, from `GET /api/admin/users/{id}/history?page=1`.
+
+`GET /api/animal/search?searchTerm=cat` finds the animals whose name contains
+the term among every user's images, and answers each with how many images it
+was recognised in and links to the 12 most recent. A term such as `a` matches
+nearly every animal, so one recognised less than 70% as often as the match
+recognised most is left out. Videos are left out, as the page shows images,
+and so are recognitions cleared from their owner's history. When nothing
+matches, the answer is `404 Not Found`.
 
 ### Feedback on a recognition
 
