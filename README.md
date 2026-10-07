@@ -33,8 +33,16 @@ This application enables users to upload images of animals and receive classific
 
 ### Prerequisites
 
+- Windows, 64-bit
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or another supported database
+
+The backend builds wherever .NET does, but runs on Windows alone. OpenCV,
+which decodes every uploaded image and video, is referenced by its Windows
+runtime only, so anywhere else each upload fails; running elsewhere takes that
+platform's OpenCvSharp4 runtime package in its place. The tests need SQL
+Server LocalDB, which is Windows' alone as well; see
+[Running the tests](#running-the-tests).
 
 ### First administrator
 
