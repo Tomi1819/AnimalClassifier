@@ -316,6 +316,18 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
+        // So far past the last that the feedback before it numbers more than
+        // an int holds.
+        [Fact]
+        public async Task GetFeedback_OnTheLastPagePossible_IsEmpty()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var result = await user.GetFromJsonAsync<PagedResult<FeedbackItem>>($"{FeedbackPath}?page={int.MaxValue}");
+
+            Assert.Empty(result!.Items);
+        }
+
         [Fact]
         public async Task GiveFeedback_IsShownInTheHistory()
         {

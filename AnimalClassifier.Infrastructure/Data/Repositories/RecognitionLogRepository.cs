@@ -95,8 +95,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 .Include(l => l.Feedback)
                 .OrderByDescending(l => l.DateRecognized)
                 .ThenByDescending(l => l.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .TakePage(page, pageSize)
                 .ToListAsync(cancellationToken);
 
             return (logs, totalCount);

@@ -35,8 +35,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 .Include(f => f.Recognition)
                 .OrderByDescending(f => f.DateSubmitted)
                 .ThenByDescending(f => f.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .TakePage(page, pageSize)
                 .ToListAsync(cancellationToken);
 
             return (feedback, totalCount);
@@ -52,8 +51,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 .Include(f => f.Recognition)
                 .OrderBy(f => f.DateSubmitted)
                 .ThenBy(f => f.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .TakePage(page, pageSize)
                 .ToListAsync(cancellationToken);
 
             return (feedback, totalCount);

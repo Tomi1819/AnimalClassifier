@@ -22,8 +22,7 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 .Include(l => l.Admin)
                 .Include(l => l.User)
                 .OrderByDescending(l => l.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .TakePage(page, pageSize)
                 .ToListAsync(cancellationToken);
 
             return (logs, totalCount);

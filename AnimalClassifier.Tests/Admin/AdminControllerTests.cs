@@ -63,6 +63,22 @@
             Assert.Equal(recognition.Id, Assert.Single(result.Items).Id);
         }
 
+        // So far past the last that the items before it number more than an
+        // int holds.
+        [Theory]
+        [InlineData(UsersPath)]
+        [InlineData(UsersPath + "/{0}/history")]
+        [InlineData("/api/admin/audit")]
+        public async Task List_OnTheLastPagePossible_IsEmpty(string path)
+        {
+            var account = await RegisterAdminAsync();
+            var admin = await SignInAsync(account.Email);
+
+            var result = await admin.GetFromJsonAsync<PagedResult<object>>($"{string.Format(path, account.UserId)}?page={int.MaxValue}");
+
+            Assert.Empty(result!.Items);
+        }
+
         [Fact]
         public async Task LockUser_EndsSessionAndBlocksSignIn()
         {

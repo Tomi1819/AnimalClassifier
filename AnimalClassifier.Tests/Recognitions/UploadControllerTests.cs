@@ -351,6 +351,21 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
+        // So far past the last that the entries before it number more than an
+        // int holds.
+        [Fact]
+        public async Task GetHistory_OnTheLastPagePossible_IsEmpty()
+        {
+            var account = await RegisterAsync();
+            await AddRecognitionAsync(account.UserId);
+            var user = await SignInAsync(account.Email);
+
+            var result = await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>($"{HistoryPath}?page={int.MaxValue}");
+
+            Assert.Empty(result!.Items);
+            Assert.Equal(1, result.TotalCount);
+        }
+
         [Fact]
         public async Task ClearHistory_HidesEveryRecognition()
         {
