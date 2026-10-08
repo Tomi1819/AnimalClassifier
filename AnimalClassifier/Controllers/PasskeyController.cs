@@ -33,11 +33,11 @@ namespace AnimalClassifier.Controllers
         /// </summary>
         [HttpPost("options")]
         public async Task<IActionResult> CreateOptions([FromBody] PasskeyRegistrationOptionsRequest request) =>
-            Ok(await passkeyService.CreateRegistrationOptionsAsync(User.RequiredId(), request, HttpContext));
+            Ok(await passkeyService.CreateRegistrationOptionsAsync(User.RequiredId(), request));
 
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] PasskeyRegistrationRequest request) =>
-            Ok(await passkeyService.RegisterAsync(User.RequiredId(), request, HttpContext));
+            Ok(await passkeyService.RegisterAsync(User.RequiredId(), request));
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Remove(string id)

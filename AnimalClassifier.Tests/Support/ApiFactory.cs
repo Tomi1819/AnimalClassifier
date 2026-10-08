@@ -2,12 +2,13 @@
 {
     using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Common.Settings;
-    using AnimalClassifier.Core.Common.Storage;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Hosting;
     using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Infrastructure.Email;
+    using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Identity;
     using AnimalClassifier.Tests.Recognitions;

@@ -1,6 +1,6 @@
 ﻿namespace AnimalClassifier.Infrastructure.Data.Configurations
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     public class AdminAuditLogConfiguration : IEntityTypeConfiguration<AdminAuditLog>

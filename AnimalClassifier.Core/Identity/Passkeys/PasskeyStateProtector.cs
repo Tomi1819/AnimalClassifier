@@ -2,8 +2,6 @@ namespace AnimalClassifier.Core.Identity.Passkeys
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using Microsoft.AspNetCore.DataProtection;
-    using Microsoft.AspNetCore.Identity;
-    using Microsoft.Extensions.Options;
     using System.Security.Cryptography;
     using static AnimalClassifier.Core.Identity.Passkeys.PasskeyMessages;
 
@@ -22,24 +20,22 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         /// </summary>
         private static readonly TimeSpan StateGrace = TimeSpan.FromMinutes(1);
 
+        // The authenticator is already giving up at this point, so a state
+        // that outlived it by more than the round trips is of no use to the
+        // user it was issued to.
+        private static readonly TimeSpan Lifetime = PasskeySettings.AuthenticatorTimeout + StateGrace;
+
         private readonly ITimeLimitedDataProtector attestationProtector;
         private readonly ITimeLimitedDataProtector assertionProtector;
-        private readonly TimeSpan lifetime;
 
-        public PasskeyStateProtector(IDataProtectionProvider dataProtectionProvider,
-                                     IOptions<IdentityPasskeyOptions> passkeyOptions)
+        public PasskeyStateProtector(IDataProtectionProvider dataProtectionProvider)
         {
             attestationProtector = CreateProtector(dataProtectionProvider, AttestationPurpose);
             assertionProtector = CreateProtector(dataProtectionProvider, AssertionPurpose);
-
-            // The authenticator is already giving up at this point, so a state
-            // that outlived it by more than the round trips is of no use to the
-            // user it was issued to.
-            lifetime = passkeyOptions.Value.AuthenticatorTimeout + StateGrace;
         }
 
         public string Protect(PasskeyCeremony ceremony, string state) =>
-            ProtectorFor(ceremony).Protect(state, lifetime);
+            ProtectorFor(ceremony).Protect(state, Lifetime);
 
         public string Unprotect(PasskeyCeremony ceremony, string state)
         {

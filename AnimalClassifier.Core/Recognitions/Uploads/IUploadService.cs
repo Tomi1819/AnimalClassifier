@@ -3,7 +3,6 @@
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
-    using Microsoft.AspNetCore.Http;
 
     /// <summary>
     /// Recognising the animal in an image or a video a user uploads. Each
@@ -17,7 +16,7 @@
     public interface IUploadService
     {
         /// <summary>
-        /// Classifies and stores the image as <see cref="ImageSanitizer"/>
+        /// Classifies and stores the image as <see cref="IImageSanitizer"/>
         /// encodes it afresh, without what the camera wrote beside the pixels.
         /// </summary>
         /// <exception cref="RequestRefusedException">
@@ -27,7 +26,7 @@
         /// <exception cref="ServiceBusyException">
         /// When too many uploads are waiting for a turn already.
         /// </exception>
-        Task<ImageUploadResult> UploadImageAsync(string userId, IFormFile file, CancellationToken cancellationToken);
+        Task<ImageUploadResult> UploadImageAsync(string userId, UploadedFile file, CancellationToken cancellationToken);
 
         /// <summary>
         /// Classifies the video a frame at a time, and records the animal seen
@@ -41,7 +40,7 @@
         /// <exception cref="ServiceBusyException">
         /// When too many uploads are waiting for a turn already.
         /// </exception>
-        Task<VideoUploadResult> UploadVideoAsync(string userId, IFormFile file, CancellationToken cancellationToken);
+        Task<VideoUploadResult> UploadVideoAsync(string userId, UploadedFile file, CancellationToken cancellationToken);
 
         /// <summary>
         /// A recognition made from an image, as its upload answered it.

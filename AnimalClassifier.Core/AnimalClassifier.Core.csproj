@@ -1,21 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- The few parts of ASP.NET Core that Core uses, rather than the whole
+       framework, so that nothing of HTTP can be reached from it. -->
   <ItemGroup>
-    <ProjectReference Include="..\AnimalClassifier.Infrastructure\AnimalClassifier.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="MailKit" />
-    <PackageReference Include="Microsoft.Extensions.ML" />
-    <PackageReference Include="Microsoft.ML" />
-    <!-- The model is an image classification model, which is loaded by
-         Vision and run by TensorFlow, whose native libraries the redist holds. -->
-    <PackageReference Include="Microsoft.ML.Vision" />
-    <PackageReference Include="SciSharp.TensorFlow.Redist" />
-    <!-- The runtime is Windows' alone; another platform needs its own. -->
-    <PackageReference Include="OpenCvSharp4" />
-    <PackageReference Include="OpenCvSharp4.runtime.win" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="System.Threading.RateLimiting" />
   </ItemGroup>
 
 </Project>

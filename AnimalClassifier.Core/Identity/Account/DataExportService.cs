@@ -1,10 +1,10 @@
 namespace AnimalClassifier.Core.Identity.Account
 {
     using AnimalClassifier.Core.Common.Storage;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Passkeys;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using System.IO.Compression;
     using System.Text.Json;
 

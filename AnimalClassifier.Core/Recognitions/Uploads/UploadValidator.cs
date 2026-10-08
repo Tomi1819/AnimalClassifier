@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Uploads
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using Microsoft.AspNetCore.Http;
+    using AnimalClassifier.Core.Recognitions.Uploads.Models;
     using static AnimalClassifier.Core.Recognitions.Uploads.UploadMessages;
 
     /// <summary>
@@ -55,7 +55,7 @@
         /// <exception cref="RequestRefusedException">
         /// When the file is empty, too large, or not a JPEG or PNG image.
         /// </exception>
-        public static void ValidateImage(IFormFile file)
+        public static void ValidateImage(UploadedFile file)
         {
             ValidateSize(file);
 
@@ -71,7 +71,7 @@
         /// When the file is empty, too large, or not an MP4, MOV or AVI video.
         /// Whether it can be played is found out when its frames are read.
         /// </exception>
-        public static void ValidateVideo(IFormFile file)
+        public static void ValidateVideo(UploadedFile file)
         {
             ValidateSize(file);
 
@@ -83,7 +83,7 @@
             }
         }
 
-        private static void ValidateSize(IFormFile file)
+        private static void ValidateSize(UploadedFile file)
         {
             if (file.Length == 0)
             {
@@ -96,14 +96,14 @@
             }
         }
 
-        private static bool StartsWithImageSignature(IFormFile file)
+        private static bool StartsWithImageSignature(UploadedFile file)
         {
             var start = ReadStart(file, ImageSignatures.Max(signature => signature.Length));
 
             return ImageSignatures.Any(signature => start.StartsWith(signature));
         }
 
-        private static bool StartsWithVideoSignature(IFormFile file)
+        private static bool StartsWithVideoSignature(UploadedFile file)
         {
             var start = ReadStart(file, VideoSignatureLength);
 
@@ -113,7 +113,7 @@
         }
 
         // As many of the bytes asked for as the file has.
-        private static byte[] ReadStart(IFormFile file, int length)
+        private static byte[] ReadStart(UploadedFile file, int length)
         {
             var start = new byte[length];
 

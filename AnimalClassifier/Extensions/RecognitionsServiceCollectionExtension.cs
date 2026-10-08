@@ -1,7 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Recognitions.Classification;
-    using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.Feedback;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.Media;
@@ -9,6 +8,9 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Recognitions.Statistics;
     using AnimalClassifier.Core.Recognitions.Training;
     using AnimalClassifier.Core.Recognitions.Uploads;
+    using AnimalClassifier.Infrastructure.Classification;
+    using AnimalClassifier.Infrastructure.Classification.Models;
+    using AnimalClassifier.Infrastructure.Imaging;
     using Microsoft.Extensions.ML;
 
     /// <summary>
@@ -22,6 +24,7 @@ namespace AnimalClassifier.Extensions
         {
             services.AddScoped<IMediaLinkService, MediaLinkService>();
             services.AddScoped<IUploadService, UploadService>();
+            services.AddScoped<IUploadClassifier, UploadClassifier>();
             services.AddScoped<IRecognitionHistoryService, RecognitionHistoryService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IStatisticsService, StatisticsService>();
@@ -30,9 +33,11 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IFeedbackSummaryService, FeedbackSummaryService>();
             services.AddScoped<ITrainingDataExporter, TrainingDataExporter>();
 
-            // Both are safe to share: the classifier takes an engine from the
-            // pool for each image, and the sampler keeps nothing between videos.
+            // All three are safe to share: the classifier takes an engine from
+            // the pool for each image, and the sanitizer and the sampler keep
+            // nothing between uploads.
             services.AddSingleton<IImageClassifier, MLImageClassifier>();
+            services.AddSingleton<IImageSanitizer, ImageSanitizer>();
             services.AddSingleton<IVideoFrameSampler, VideoFrameSampler>();
 
             // Kept for as long as the app runs, since it is what counts the

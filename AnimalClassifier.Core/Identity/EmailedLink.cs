@@ -1,8 +1,7 @@
 namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Settings;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.WebUtilities;
+    using System.Buffers.Text;
     using System.Text;
 
     /// <summary>
@@ -31,13 +30,12 @@ namespace AnimalClassifier.Core.Identity
         /// <param name="path">The frontend's page that receives the token.</param>
         public static string Build(FrontendSettings frontend, string path, string email, string token)
         {
-            var query = QueryString.Create(new Dictionary<string, string?>
-            {
-                [EmailParameter] = email,
-                [TokenParameter] = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token))
-            });
+            // Base64url is made of characters a query string carries as they
+            // are, where an address can hold ones it cannot, such as a plus.
+            var encodedEmail = Uri.EscapeDataString(email);
+            var encodedToken = Base64Url.EncodeToString(Encoding.UTF8.GetBytes(token));
 
-            return $"{frontend.BaseUrl.TrimEnd('/')}{path}{query}";
+            return $"{frontend.BaseUrl.TrimEnd('/')}{path}?{EmailParameter}={encodedEmail}&{TokenParameter}={encodedToken}";
         }
 
         /// <returns>
@@ -48,7 +46,7 @@ namespace AnimalClassifier.Core.Identity
         {
             try
             {
-                return Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+                return Encoding.UTF8.GetString(Base64Url.DecodeFromChars(token));
             }
             catch (FormatException)
             {

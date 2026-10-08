@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Core.Identity.EmailConfirmation
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.EmailConfirmation.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
 
     /// <summary>
     /// Showing that an account's email belongs to whoever registered it, by a

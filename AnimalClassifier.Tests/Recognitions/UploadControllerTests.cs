@@ -1,13 +1,14 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
+    using AnimalClassifier.Infrastructure.Imaging;
+    using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Http;

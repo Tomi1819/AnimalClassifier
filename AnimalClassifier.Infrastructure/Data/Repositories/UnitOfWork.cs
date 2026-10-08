@@ -1,5 +1,7 @@
 namespace AnimalClassifier.Infrastructure.Data.Repositories
 {
+    using AnimalClassifier.Core.Data.Repositories;
+
     public class UnitOfWork : IUnitOfWork
     {
         private readonly AnimalClassifierDbContext context;

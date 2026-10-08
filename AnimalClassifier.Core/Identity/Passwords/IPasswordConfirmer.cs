@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Identity.Passwords
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     public interface IPasswordConfirmer
     {

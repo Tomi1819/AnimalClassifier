@@ -1,10 +1,10 @@
 namespace AnimalClassifier.Tests.Settings
 {
     using AnimalClassifier.Core.Common.Settings;
-    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Identity.Authentication;
-    using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Hosting;
+    using AnimalClassifier.Infrastructure.Classification;
+    using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.Options;

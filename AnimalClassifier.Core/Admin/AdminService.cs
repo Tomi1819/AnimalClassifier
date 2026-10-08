@@ -3,12 +3,12 @@
     using AnimalClassifier.Core.Admin.Models;
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Identity;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Identity;
-    using static AnimalClassifier.Core.Identity.RoleConstants;
     using static AnimalClassifier.Core.Admin.AdminMessages;
+    using static AnimalClassifier.Core.Identity.RoleConstants;
 
     public class AdminService : IAdminService
     {

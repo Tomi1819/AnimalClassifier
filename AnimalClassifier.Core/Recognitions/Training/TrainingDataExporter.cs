@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Core.Recognitions.Training
 {
     using AnimalClassifier.Core.Common.Storage;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using Microsoft.Extensions.Logging;
     using System.Globalization;
     using System.IO.Compression;
@@ -58,12 +58,13 @@ namespace AnimalClassifier.Core.Recognitions.Training
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var image = fileStorage.GetPath(feedback.Recognition.UserId, feedback.Recognition.FileName);
+                var image = fileStorage.FindPath(feedback.Recognition.UserId, feedback.Recognition.FileName);
 
                 // Such as one removed by hand; the rest are still worth having.
-                if (!File.Exists(image))
+                if (image is null)
                 {
-                    logger.LogWarning("Left feedback {FeedbackId} out of the training data, as its image {Path} is missing.", feedback.Id, image);
+                    logger.LogWarning("Left feedback {FeedbackId} out of the training data, as its image {FileName} is missing.",
+                        feedback.Id, feedback.Recognition.FileName);
                     continue;
                 }
 

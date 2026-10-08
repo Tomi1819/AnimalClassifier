@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Recognitions.Training.Models
 {
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Recognitions.Media;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using System.Text.Json.Serialization;
 
     /// <summary>

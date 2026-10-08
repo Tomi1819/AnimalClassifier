@@ -1,8 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\AnimalClassifier.Core\AnimalClassifier.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.Extensions.ML" />
+    <PackageReference Include="Microsoft.ML" />
+    <!-- The model is an image classification model, which is loaded by
+         Vision and run by TensorFlow, whose native libraries the redist holds. -->
+    <PackageReference Include="Microsoft.ML.Vision" />
+    <PackageReference Include="SciSharp.TensorFlow.Redist" />
+    <!-- The runtime is Windows' alone; another platform needs its own. -->
+    <PackageReference Include="OpenCvSharp4" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" />
   </ItemGroup>
 
 </Project>

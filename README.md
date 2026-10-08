@@ -40,8 +40,9 @@ This application enables users to upload images of animals and receive classific
 The backend builds wherever .NET does, but runs on Windows alone. OpenCV,
 which decodes every uploaded image and video, is referenced by its Windows
 runtime only, so anywhere else each upload fails; running elsewhere takes that
-platform's OpenCvSharp4 runtime package in its place. The tests need SQL
-Server LocalDB, which is Windows' alone as well; see
+platform's OpenCvSharp4 runtime package in its place, in
+`AnimalClassifier.Infrastructure`, the one project that uses OpenCV. The tests
+need SQL Server LocalDB, which is Windows' alone as well; see
 [Running the tests](#running-the-tests).
 
 ### First administrator
@@ -561,13 +562,15 @@ AnimalClassifier/                  The API: controllers, and how the app is put 
   Extensions/                      Service registration, a file per area, such as IdentityServiceCollectionExtension
   Cors/ RateLimiting/              Which origins may call the API, and the limits on its endpoints
   Hosting/                         The keys' folder and the proxies, which running deployed needs
+  Identity/                        What Core asks of Identity's web half: the password check at sign-in, and passkeys' WebAuthn
 AnimalClassifier.Core/             What the app does
   Common/                          What every area uses
-    Email/                         Sending email over SMTP, or into the log in development
+    Email/                         IEmailSender, which every email is sent through
     Exceptions/                    The refusals a service reports to the caller
     Models/                        Responses shared by every area, such as MessageResponse and PagedResult
     Settings/                      ISettings, which every settings class implements, and the frontend's settings
-    Storage/                       Storing uploaded files, a folder per user
+    Storage/                       IFileStorageService, which uploads are kept through, and temporary files
+  Data/                            The entities, and the repository per table they are read and written through
   Identity/                        Accounts and signing in; AccountName and the roles sit here
     SecurityAlerts/                The emails sent when how an account signs in changes
     EmailConfirmation/             Confirming an account's email with a link mailed to it
@@ -577,7 +580,7 @@ AnimalClassifier.Core/             What the app does
     Account/                       A signed-in user's own account: profile, name, password, export, deletion
   Recognitions/                    Recognising animals, and reading the recognitions back; MediaFile sits here
     Media/                         The expiring links an uploaded image or video is loaded by
-    Classification/                The model, and reading a video's frames for it
+    Classification/                What the model and the video reader are asked for, and the turns uploads wait for
     Uploads/                       Checking and storing an upload, and recording what was recognised in it
     Feedback/                      What users say of their recognitions, and checking it against the animals the model knows
     History/                       A user's own recognitions, and clearing them
@@ -585,7 +588,13 @@ AnimalClassifier.Core/             What the app does
     Statistics/                    The totals, the animals recognised most, and the daily activity
     Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
-AnimalClassifier.Infrastructure/   The database: entities, migrations, and a repository per table
+AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside the app are implemented with
+  Data/                            The database's context and configurations, and each repository's implementation
+  Migrations/                      Every change to the schema
+  Email/                           Sending email over SMTP, or into the log in development
+  Storage/                         Keeping uploaded files on disk, a folder per user
+  Classification/                  Running the trained model with ML.NET
+  Imaging/                         Encoding an uploaded image afresh, and reading a video's frames, with OpenCV
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/
@@ -593,6 +602,15 @@ AnimalClassifier.Tests/            Tests; each class that calls the API has an a
   Hosting/                         The headers every answer carries, and the caller's address behind a proxy
   Support/                         The test app, ApiTest that most test classes start from, and DependencyOrder
 ```
+
+The projects depend on each other in one direction. Core is what the app does,
+and uses neither of the others. It reaches the database, the disk, mail, the
+model and OpenCV through interfaces of its own, such as `IFileStorageService`
+and `IImageClassifier`, which Infrastructure implements, and the parts of
+Identity that need the HTTP request through `IPasswordSignInChecker` and
+`IWebAuthnHandler`, which the API implements. The API puts them together and
+serves them. `ProjectLayoutTests` fails when Core comes to use either project,
+or a library other than the few it is built on.
 
 Core is split by area rather than by kind of file, and each area into parts.
 Everything a part needs sits in its folder, and the namespaces follow the
@@ -607,34 +625,38 @@ folders:
   `AccountName.MaxLength`, `PasswordPolicy.MinLength` and
   `UploadValidator.MaxFileSize`.
 
-The entities stay in Infrastructure, since the migrations name each by its
-full type name and moving one would read as a change to the schema. Each table
-has a repository of its own, and `IUnitOfWork` saves what they were given and
-runs several changes in one transaction. A read that serves a request can take
-the request's cancellation token, since abandoning one loses nothing; a write
-never does, so that a caller who goes away cannot leave a change half made.
+The entities and the repositories' interfaces are Core's, in `Data/`, and
+Infrastructure implements the repositories with Entity Framework Core, so Core
+never depends on Infrastructure. Each table has a repository of its own, and
+`IUnitOfWork` saves what they were given and runs several changes in one
+transaction. A read that serves a request can take the request's cancellation
+token, since abandoning one loses nothing; a write never does, so that a caller
+who goes away cannot leave a change half made.
 
 ### Adding a feature
 
 1. Give it a folder of its own: `Core/<Area>/<Part>/` for a part of an area,
    such as `Core/Recognitions/Uploads/`, or a new area beside the others.
-2. Have its services throw `RequestRefusedException`, `NotFoundException` or
+2. Reach anything outside the app, such as a new library or service, through
+   an interface in that folder, and implement it in
+   `AnimalClassifier.Infrastructure`, in a folder named for what it does.
+3. Have its services throw `RequestRefusedException`, `NotFoundException` or
    `AuthenticationFailedException` for anything the user should be told.
    `DomainExceptionFilter` answers them with 400, 404 and 401 and the message,
    so a controller has nothing to catch. Any other exception is logged and
    answered as a server error, and its message never reaches the caller.
-3. Give its settings a class implementing `ISettings`, and add them with
+4. Give its settings a class implementing `ISettings`, and add them with
    `services.AddSettings<TSettings>()`, which checks them as the app starts.
-4. Register its services in its area's file in `AnimalClassifier/Extensions`,
+5. Register its services in its area's file in `AnimalClassifier/Extensions`,
    such as `AddApplicationRecognitions`, and call any new file's from
    `Program.cs`.
-5. Test it from `AnimalClassifier.Tests/<Area>/`, with a class deriving from
+6. Test it from `AnimalClassifier.Tests/<Area>/`, with a class deriving from
    `ApiTest` to call it as a signed-in user would.
 
 Core's areas depend on each other in one direction, in this order: Common,
-Identity, Recognitions, Admin. Each may use those before it and none after, so
-Common uses no other area, and nothing uses Admin. The parts within an area are
-held to an order of their own in the same way:
+Data, Identity, Recognitions, Admin. Each may use those before it and none
+after, so Common uses no other area, and nothing uses Admin. The parts within
+an area are held to an order of their own in the same way:
 
 | Area | Order of its parts |
 | ---- | ------------------ |

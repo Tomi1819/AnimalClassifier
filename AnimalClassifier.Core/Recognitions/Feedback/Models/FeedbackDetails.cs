@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Recognitions.Feedback.Models
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using System.Text.Json.Serialization;
 
     /// <summary>

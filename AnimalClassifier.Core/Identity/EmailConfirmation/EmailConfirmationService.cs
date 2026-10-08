@@ -3,8 +3,8 @@ namespace AnimalClassifier.Core.Identity.EmailConfirmation
     using AnimalClassifier.Core.Common.Email;
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Settings;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.EmailConfirmation.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;

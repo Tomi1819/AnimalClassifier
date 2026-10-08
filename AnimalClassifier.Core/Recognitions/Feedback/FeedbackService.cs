@@ -2,11 +2,11 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.Media;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using static AnimalClassifier.Core.Recognitions.Feedback.FeedbackMessages;
 
     public class FeedbackService : IFeedbackService

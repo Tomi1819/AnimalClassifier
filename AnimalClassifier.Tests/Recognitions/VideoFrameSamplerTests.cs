@@ -2,6 +2,7 @@ namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Recognitions.Classification;
+    using AnimalClassifier.Infrastructure.Imaging;
     using OpenCvSharp;
 
     public class VideoFrameSamplerTests : IDisposable

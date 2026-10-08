@@ -33,7 +33,7 @@
         [EnableRateLimiting(RateLimitPolicies.Upload)]
         public async Task<IActionResult> UploadImage([FromForm] IFormFile formFile, CancellationToken cancellationToken)
         {
-            var result = await uploadService.UploadImageAsync(User.RequiredId(), formFile, cancellationToken);
+            var result = await uploadService.UploadImageAsync(User.RequiredId(), formFile.ToUploadedFile(), cancellationToken);
 
             return CreatedAtAction(nameof(GetImageUpload), new { id = result.ImageId }, result);
         }
@@ -43,7 +43,7 @@
         [RequestSizeLimit(UploadValidator.MaxRequestSize)]
         [EnableRateLimiting(RateLimitPolicies.Upload)]
         public async Task<IActionResult> UploadVideo([FromForm] IFormFile videoFile, CancellationToken cancellationToken) =>
-            Ok(await uploadService.UploadVideoAsync(User.RequiredId(), videoFile, cancellationToken));
+            Ok(await uploadService.UploadVideoAsync(User.RequiredId(), videoFile.ToUploadedFile(), cancellationToken));
 
         /// <summary>
         /// One page of the signed-in user's own recognitions, most recent

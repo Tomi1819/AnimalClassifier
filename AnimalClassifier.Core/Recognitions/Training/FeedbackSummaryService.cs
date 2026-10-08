@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Core.Recognitions.Training
 {
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Recognitions.Training.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
 
     public class FeedbackSummaryService : IFeedbackSummaryService
     {

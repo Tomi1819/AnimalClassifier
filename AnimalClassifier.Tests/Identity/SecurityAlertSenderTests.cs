@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Core.Common.Email;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.Logging.Abstractions;
 

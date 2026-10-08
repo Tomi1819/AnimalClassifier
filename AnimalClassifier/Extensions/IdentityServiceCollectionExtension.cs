@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Settings;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Authentication;
@@ -8,8 +9,8 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
+    using AnimalClassifier.Identity;
     using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;
@@ -132,6 +133,10 @@ namespace AnimalClassifier.Extensions
                     // choosing.
                     options.ServerDomain = passkeyOptions.Value.ResolveServerDomain(frontendOptions.Value);
 
+                    // Core's, since the state a ceremony is carried in expires
+                    // just after the authenticator gives up.
+                    options.AuthenticatorTimeout = PasskeySettings.AuthenticatorTimeout;
+
                     // Signing in without first naming an account needs the
                     // credential to be discoverable, which is what the browser
                     // offers an account picker from.
@@ -149,6 +154,7 @@ namespace AnimalClassifier.Extensions
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
+            services.AddScoped<IPasswordSignInChecker, SignInManagerPasswordChecker>();
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IDataExportService, DataExportService>();
@@ -164,6 +170,11 @@ namespace AnimalClassifier.Extensions
 
             services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddSingleton<IPasskeyStateProtector, PasskeyStateProtector>();
+
+            // Identity reads the origin of the request a ceremony arrives on,
+            // which the handler reaches through the accessor.
+            services.AddHttpContextAccessor();
+            services.AddScoped<IWebAuthnHandler, IdentityWebAuthnHandler>();
 
             services.AddScoped<ISecurityAlertSender, SecurityAlertSender>();
 

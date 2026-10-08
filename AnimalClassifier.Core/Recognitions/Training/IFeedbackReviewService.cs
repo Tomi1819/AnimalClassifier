@@ -2,8 +2,8 @@ namespace AnimalClassifier.Core.Recognitions.Training
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Recognitions.Training.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
 
     /// <summary>
     /// An administrator's check of the feedback users offer for training,

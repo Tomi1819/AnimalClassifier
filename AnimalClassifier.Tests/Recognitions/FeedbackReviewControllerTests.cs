@@ -1,11 +1,11 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Common.Storage;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.Training.Models;
     using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.Tests.Support;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;

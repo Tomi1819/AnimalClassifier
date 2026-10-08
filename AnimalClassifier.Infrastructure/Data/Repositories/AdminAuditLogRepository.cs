@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Infrastructure.Data.Repositories
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using Microsoft.EntityFrameworkCore;
 
     public class AdminAuditLogRepository : IAdminAuditLogRepository

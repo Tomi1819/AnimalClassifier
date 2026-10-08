@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Identity.Authentication
 {
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Authentication.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
 
     public interface IAccessTokenIssuer
     {

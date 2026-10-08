@@ -1,10 +1,10 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Core.Recognitions.Media;
+    using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;

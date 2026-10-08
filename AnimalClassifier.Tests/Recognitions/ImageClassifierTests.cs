@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
-    using AnimalClassifier.Core.Recognitions.Classification;
-    using AnimalClassifier.Core.Recognitions.Classification.Models;
+    using AnimalClassifier.Infrastructure.Classification;
+    using AnimalClassifier.Infrastructure.Classification.Models;
     using AnimalClassifier.Tests.Support;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.ML;

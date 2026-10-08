@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Controllers
 {
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Recognitions.Training;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.RateLimiting;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;

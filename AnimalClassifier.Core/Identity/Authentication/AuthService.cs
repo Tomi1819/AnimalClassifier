@@ -1,9 +1,9 @@
 namespace AnimalClassifier.Core.Identity.Authentication
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.EmailConfirmation;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using System.Globalization;
     using System.Security.Claims;
@@ -19,17 +19,17 @@ namespace AnimalClassifier.Core.Identity.Authentication
         public const int MaxEmailLength = 256;
 
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly IPasswordSignInChecker passwordSignInChecker;
         private readonly IAccessTokenIssuer tokenIssuer;
         private readonly IEmailConfirmationService emailConfirmationService;
 
         public AuthService(UserManager<ApplicationUser> userManager,
-                           SignInManager<ApplicationUser> signInManager,
+                           IPasswordSignInChecker passwordSignInChecker,
                            IAccessTokenIssuer tokenIssuer,
                            IEmailConfirmationService emailConfirmationService)
         {
             this.userManager = userManager;
-            this.signInManager = signInManager;
+            this.passwordSignInChecker = passwordSignInChecker;
             this.tokenIssuer = tokenIssuer;
             this.emailConfirmationService = emailConfirmationService;
         }
@@ -76,14 +76,14 @@ namespace AnimalClassifier.Core.Identity.Authentication
 
             // Unlike checking the password alone, this refuses a locked-out account
             // and counts a wrong password towards locking it.
-            var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+            var result = await passwordSignInChecker.CheckAsync(user, request.Password);
 
-            if (result.IsLockedOut)
+            if (result == PasswordSignInResult.LockedOut)
             {
                 throw new AuthenticationFailedException(LockedOutAccount);
             }
 
-            if (!result.Succeeded)
+            if (result != PasswordSignInResult.Succeeded)
             {
                 throw new AuthenticationFailedException(InvalidCredentials);
             }

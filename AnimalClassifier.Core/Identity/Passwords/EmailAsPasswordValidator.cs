@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Identity.Passwords
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using Microsoft.AspNetCore.Identity;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
 

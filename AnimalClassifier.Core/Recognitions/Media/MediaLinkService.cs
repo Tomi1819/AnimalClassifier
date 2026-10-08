@@ -52,9 +52,9 @@ namespace AnimalClassifier.Core.Recognitions.Media
             }
 
             var separator = userAndFile.IndexOf(Separator);
-            var path = fileStorage.GetPath(userAndFile[..separator], userAndFile[(separator + 1)..]);
 
-            return File.Exists(path) ? path : throw new NotFoundException(MediaNotFound);
+            return fileStorage.FindPath(userAndFile[..separator], userAndFile[(separator + 1)..])
+                ?? throw new NotFoundException(MediaNotFound);
         }
     }
 }
