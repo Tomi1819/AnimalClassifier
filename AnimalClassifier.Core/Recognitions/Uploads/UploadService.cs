@@ -7,7 +7,6 @@
     using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using System.Globalization;
     using static AnimalClassifier.Core.Recognitions.Uploads.UploadMessages;
@@ -45,7 +44,7 @@
             this.logger = logger;
         }
 
-        public async Task<ImageUploadResult> UploadImageAsync(string userId, IFormFile file, CancellationToken cancellationToken)
+        public async Task<ImageUploadResult> UploadImageAsync(string userId, UploadedFile file, CancellationToken cancellationToken)
         {
             UploadValidator.ValidateImage(file);
 
@@ -64,7 +63,7 @@
             return ToImageUploadResult(log);
         }
 
-        public async Task<VideoUploadResult> UploadVideoAsync(string userId, IFormFile file, CancellationToken cancellationToken)
+        public async Task<VideoUploadResult> UploadVideoAsync(string userId, UploadedFile file, CancellationToken cancellationToken)
         {
             UploadValidator.ValidateVideo(file);
 
@@ -98,7 +97,7 @@
             return ToImageUploadResult(log);
         }
 
-        private async Task<StoredFile> StoreAsync(string userId, IFormFile file)
+        private async Task<StoredFile> StoreAsync(string userId, UploadedFile file)
         {
             await using var content = file.OpenReadStream();
 
@@ -152,7 +151,7 @@
             }
         }
 
-        private static async Task<byte[]> ReadAllBytesAsync(IFormFile file)
+        private static async Task<byte[]> ReadAllBytesAsync(UploadedFile file)
         {
             await using var content = file.OpenReadStream();
             using var buffer = new MemoryStream();
