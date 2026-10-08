@@ -15,10 +15,10 @@
         Task<StoredFile> SaveAsync(string userId, Stream content, string extension);
 
         /// <summary>
-        /// Where one of a user's files is on disk, whether or not it is still
-        /// there.
+        /// Where one of a user's files is on disk, or null when it is not
+        /// there, such as one removed by hand.
         /// </summary>
-        string GetPath(string userId, string fileName);
+        string? FindPath(string userId, string fileName);
 
         /// <summary>
         /// Removes one stored file, such as one whose upload failed after it

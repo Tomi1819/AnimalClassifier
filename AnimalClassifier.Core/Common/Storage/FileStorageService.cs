@@ -36,14 +36,16 @@
         }
 
         // A name with a folder in it could reach outside the user's own.
-        public string GetPath(string userId, string fileName)
+        public string? FindPath(string userId, string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName) || fileName != Path.GetFileName(fileName))
             {
                 throw new ArgumentException(InvalidFileName, nameof(fileName));
             }
 
-            return Path.Combine(GetUserDirectory(userId), fileName);
+            var path = Path.Combine(GetUserDirectory(userId), fileName);
+
+            return File.Exists(path) ? path : null;
         }
 
         public void Delete(StoredFile file) => File.Delete(file.PhysicalPath);
