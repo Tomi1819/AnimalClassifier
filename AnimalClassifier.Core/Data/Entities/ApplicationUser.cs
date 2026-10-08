@@ -1,6 +1,7 @@
-﻿namespace AnimalClassifier.Infrastructure.Data.Models
+﻿namespace AnimalClassifier.Core.Data.Entities
 {
     using Microsoft.AspNetCore.Identity;
+
     public class ApplicationUser : IdentityUser
     {
         public string FullName { get; set; } = string.Empty;

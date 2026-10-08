@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Tests.Admin
 {
     using AnimalClassifier.Core.Admin;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Authentication.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.DependencyInjection;

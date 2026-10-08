@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Recognitions.Training
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     /// <summary>
     /// The animal an image is trained as, by what its user said of it.

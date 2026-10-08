@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Infrastructure.Data.Models
+namespace AnimalClassifier.Core.Data.Entities
 {
     /// <summary>
     /// What a user said of the animal the model named in their image.

@@ -2,9 +2,9 @@
 {
     using AnimalClassifier.Core.Admin.Models;
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using AnimalClassifier.Tests.Support;
     using System.Net;
     using System.Net.Http.Json;

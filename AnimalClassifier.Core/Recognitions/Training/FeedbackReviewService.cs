@@ -2,10 +2,10 @@ namespace AnimalClassifier.Core.Recognitions.Training
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Training.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using static AnimalClassifier.Core.Recognitions.Training.TrainingMessages;
 
     public class FeedbackReviewService : IFeedbackReviewService

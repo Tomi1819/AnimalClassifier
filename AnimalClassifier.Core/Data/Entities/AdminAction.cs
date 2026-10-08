@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Infrastructure.Data.Models
+﻿namespace AnimalClassifier.Core.Data.Entities
 {
     public enum AdminAction
     {

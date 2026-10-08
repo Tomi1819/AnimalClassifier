@@ -1,6 +1,6 @@
-namespace AnimalClassifier.Infrastructure.Data.Repositories
+namespace AnimalClassifier.Core.Data.Repositories
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     /// <summary>
     /// Reads users in the ways Identity's user manager does not offer. Every

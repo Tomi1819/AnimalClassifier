@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Infrastructure.Data.Models
+namespace AnimalClassifier.Core.Data.Entities
 {
     /// <summary>
     /// Where an administrator's review of a feedback stands. Only feedback

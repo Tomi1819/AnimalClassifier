@@ -2,12 +2,12 @@
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Storage;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using System.Globalization;

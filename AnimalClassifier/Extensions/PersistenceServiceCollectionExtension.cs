@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Infrastructure.Data;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.EntityFrameworkCore;

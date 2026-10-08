@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Identity.SecurityAlerts
 {
     using AnimalClassifier.Core.Common.Email;
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using Microsoft.Extensions.Logging;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 

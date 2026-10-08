@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Infrastructure.Data
 {
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Infrastructure.Data.Converters;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
 

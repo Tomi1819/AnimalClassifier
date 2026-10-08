@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Core.Identity.SecurityAlerts
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     /// <summary>
     /// Emails a user when how their account is signed in to changes, so that

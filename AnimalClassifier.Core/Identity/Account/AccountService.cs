@@ -1,12 +1,12 @@
 namespace AnimalClassifier.Core.Identity.Account
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
 

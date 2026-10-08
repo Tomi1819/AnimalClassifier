@@ -1,8 +1,8 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Statistics
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Recognitions.Statistics.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using static AnimalClassifier.Core.Recognitions.Statistics.StatisticsMessages;
 
     // Everything is counted by the database, so that the work and what is

@@ -1,6 +1,6 @@
-namespace AnimalClassifier.Infrastructure.Data.Repositories
+namespace AnimalClassifier.Core.Data.Repositories
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     /// <summary>
     /// The feedback users give on their recognitions, at most one each. It is

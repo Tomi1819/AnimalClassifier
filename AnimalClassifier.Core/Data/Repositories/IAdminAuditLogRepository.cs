@@ -1,6 +1,6 @@
-namespace AnimalClassifier.Infrastructure.Data.Repositories
+namespace AnimalClassifier.Core.Data.Repositories
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     /// <summary>
     /// What administrators have done to users. An entry outlives the accounts

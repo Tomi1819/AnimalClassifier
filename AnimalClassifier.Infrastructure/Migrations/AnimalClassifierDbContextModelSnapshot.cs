@@ -22,7 +22,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AdminAuditLog", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.AdminAuditLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -53,7 +53,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.ToTable("AdminAuditLogs", (string)null);
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalRecognitionLog", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.AnimalRecognitionLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -97,7 +97,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.ToTable("AnimalRecognitionLogs", (string)null);
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -170,7 +170,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.RecognitionFeedback", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.RecognitionFeedback", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -372,14 +372,14 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AdminAuditLog", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.AdminAuditLog", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "Admin")
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", "Admin")
                         .WithMany()
                         .HasForeignKey("AdminId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "User")
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -389,9 +389,9 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalRecognitionLog", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.AnimalRecognitionLog", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", "User")
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
@@ -400,11 +400,11 @@ namespace AnimalClassifier.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.RecognitionFeedback", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.RecognitionFeedback", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.AnimalRecognitionLog", "Recognition")
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.AnimalRecognitionLog", "Recognition")
                         .WithOne("Feedback")
-                        .HasForeignKey("AnimalClassifier.Infrastructure.Data.Models.RecognitionFeedback", "RecognitionId")
+                        .HasForeignKey("AnimalClassifier.Core.Data.Entities.RecognitionFeedback", "RecognitionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -422,7 +422,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", null)
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -431,7 +431,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", null)
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -440,7 +440,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<string>", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", null)
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -497,7 +497,7 @@ namespace AnimalClassifier.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", null)
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -506,14 +506,14 @@ namespace AnimalClassifier.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("AnimalClassifier.Infrastructure.Data.Models.ApplicationUser", null)
+                    b.HasOne("AnimalClassifier.Core.Data.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AnimalClassifier.Infrastructure.Data.Models.AnimalRecognitionLog", b =>
+            modelBuilder.Entity("AnimalClassifier.Core.Data.Entities.AnimalRecognitionLog", b =>
                 {
                     b.Navigation("Feedback");
                 });

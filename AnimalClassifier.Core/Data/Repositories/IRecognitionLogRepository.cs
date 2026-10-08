@@ -1,6 +1,6 @@
-namespace AnimalClassifier.Infrastructure.Data.Repositories
+namespace AnimalClassifier.Core.Data.Repositories
 {
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
 
     /// <summary>
     /// Every recognition made. One a user clears from their history is kept,

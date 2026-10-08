@@ -1,9 +1,9 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Search
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Search.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using static AnimalClassifier.Core.Recognitions.Search.SearchMessages;
 
     public class AnimalSearchService : IAnimalSearchService

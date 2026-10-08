@@ -1,9 +1,9 @@
 namespace AnimalClassifier.Core.Identity.Authentication
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.EmailConfirmation;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Identity;
     using System.Globalization;
     using System.Security.Claims;

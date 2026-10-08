@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Infrastructure.Data.Models
+namespace AnimalClassifier.Core.Data.Entities
 {
     /// <summary>
     /// What a user said of one of their recognitions: whether the model named

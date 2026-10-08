@@ -568,6 +568,7 @@ AnimalClassifier.Core/             What the app does
     Models/                        Responses shared by every area, such as MessageResponse and PagedResult
     Settings/                      ISettings, which every settings class implements, and the frontend's settings
     Storage/                       Storing uploaded files, a folder per user
+  Data/                            The entities, and the repository per table they are read and written through
   Identity/                        Accounts and signing in; AccountName and the roles sit here
     SecurityAlerts/                The emails sent when how an account signs in changes
     EmailConfirmation/             Confirming an account's email with a link mailed to it
@@ -585,7 +586,7 @@ AnimalClassifier.Core/             What the app does
     Statistics/                    The totals, the animals recognised most, and the daily activity
     Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
-AnimalClassifier.Infrastructure/   The database: entities, migrations, and a repository per table
+AnimalClassifier.Infrastructure/   The database: its context, the migrations, and each repository's implementation
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/
@@ -607,12 +608,13 @@ folders:
   `AccountName.MaxLength`, `PasswordPolicy.MinLength` and
   `UploadValidator.MaxFileSize`.
 
-The entities stay in Infrastructure, since the migrations name each by its
-full type name and moving one would read as a change to the schema. Each table
-has a repository of its own, and `IUnitOfWork` saves what they were given and
-runs several changes in one transaction. A read that serves a request can take
-the request's cancellation token, since abandoning one loses nothing; a write
-never does, so that a caller who goes away cannot leave a change half made.
+The entities and the repositories' interfaces are Core's, in `Data/`, and
+Infrastructure implements the repositories with Entity Framework Core, so Core
+never depends on Infrastructure. Each table has a repository of its own, and
+`IUnitOfWork` saves what they were given and runs several changes in one
+transaction. A read that serves a request can take the request's cancellation
+token, since abandoning one loses nothing; a write never does, so that a caller
+who goes away cannot leave a change half made.
 
 ### Adding a feature
 
@@ -632,8 +634,8 @@ never does, so that a caller who goes away cannot leave a change half made.
    `ApiTest` to call it as a signed-in user would.
 
 Core's areas depend on each other in one direction, in this order: Common,
-Identity, Recognitions, Admin. Each may use those before it and none after, so
-Common uses no other area, and nothing uses Admin. The parts within an area are
+Data, Identity, Recognitions, Admin. Each may use those before it and none
+after, so Common uses no other area, and nothing uses Admin. The parts within an area are
 held to an order of their own in the same way:
 
 | Area | Order of its parts |

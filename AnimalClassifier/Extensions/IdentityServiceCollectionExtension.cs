@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Common.Settings;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account;
     using AnimalClassifier.Core.Identity.Authentication;
@@ -9,7 +10,6 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
     using AnimalClassifier.Infrastructure.Data;
-    using AnimalClassifier.Infrastructure.Data.Models;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Options;

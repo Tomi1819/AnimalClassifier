@@ -1,4 +1,4 @@
-namespace AnimalClassifier.Infrastructure.Data.Repositories
+namespace AnimalClassifier.Core.Data.Repositories
 {
     /// <summary>
     /// Saves what the repositories were given, and makes several changes stand

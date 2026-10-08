@@ -2,10 +2,10 @@ namespace AnimalClassifier.Core.Identity.Account
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Storage;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Core.Identity.Account.Models;
     using AnimalClassifier.Core.Identity.Passwords;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.Extensions.Logging;
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;

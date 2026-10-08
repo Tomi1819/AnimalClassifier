@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Recognitions.Feedback
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Infrastructure.Data.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using System.Text.RegularExpressions;
     using static AnimalClassifier.Core.Recognitions.Feedback.FeedbackMessages;
 

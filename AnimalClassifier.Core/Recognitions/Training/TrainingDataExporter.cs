@@ -1,8 +1,8 @@
 namespace AnimalClassifier.Core.Recognitions.Training
 {
     using AnimalClassifier.Core.Common.Storage;
-    using AnimalClassifier.Infrastructure.Data.Models;
-    using AnimalClassifier.Infrastructure.Data.Repositories;
+    using AnimalClassifier.Core.Data.Entities;
+    using AnimalClassifier.Core.Data.Repositories;
     using Microsoft.Extensions.Logging;
     using System.Globalization;
     using System.IO.Compression;
