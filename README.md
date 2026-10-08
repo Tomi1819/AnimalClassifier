@@ -602,6 +602,15 @@ AnimalClassifier.Tests/            Tests; each class that calls the API has an a
   Support/                         The test app, ApiTest that most test classes start from, and DependencyOrder
 ```
 
+The projects depend on each other in one direction. Core is what the app does,
+and uses neither of the others. It reaches the database, the disk, mail, the
+model and OpenCV through interfaces of its own, such as `IFileStorageService`
+and `IImageClassifier`, which Infrastructure implements, and the parts of
+Identity that need the HTTP request through `IPasswordSignInChecker` and
+`IWebAuthnHandler`, which the API implements. The API puts them together and
+serves them. `ProjectLayoutTests` fails when Core comes to use either project,
+or a library other than the few it is built on.
+
 Core is split by area rather than by kind of file, and each area into parts.
 Everything a part needs sits in its folder, and the namespaces follow the
 folders:
@@ -627,23 +636,26 @@ who goes away cannot leave a change half made.
 
 1. Give it a folder of its own: `Core/<Area>/<Part>/` for a part of an area,
    such as `Core/Recognitions/Uploads/`, or a new area beside the others.
-2. Have its services throw `RequestRefusedException`, `NotFoundException` or
+2. Reach anything outside the app, such as a new library or service, through
+   an interface in that folder, and implement it in
+   `AnimalClassifier.Infrastructure`, in a folder named for what it does.
+3. Have its services throw `RequestRefusedException`, `NotFoundException` or
    `AuthenticationFailedException` for anything the user should be told.
    `DomainExceptionFilter` answers them with 400, 404 and 401 and the message,
    so a controller has nothing to catch. Any other exception is logged and
    answered as a server error, and its message never reaches the caller.
-3. Give its settings a class implementing `ISettings`, and add them with
+4. Give its settings a class implementing `ISettings`, and add them with
    `services.AddSettings<TSettings>()`, which checks them as the app starts.
-4. Register its services in its area's file in `AnimalClassifier/Extensions`,
+5. Register its services in its area's file in `AnimalClassifier/Extensions`,
    such as `AddApplicationRecognitions`, and call any new file's from
    `Program.cs`.
-5. Test it from `AnimalClassifier.Tests/<Area>/`, with a class deriving from
+6. Test it from `AnimalClassifier.Tests/<Area>/`, with a class deriving from
    `ApiTest` to call it as a signed-in user would.
 
 Core's areas depend on each other in one direction, in this order: Common,
 Data, Identity, Recognitions, Admin. Each may use those before it and none
-after, so Common uses no other area, and nothing uses Admin. The parts within an area are
-held to an order of their own in the same way:
+after, so Common uses no other area, and nothing uses Admin. The parts within
+an area are held to an order of their own in the same way:
 
 | Area | Order of its parts |
 | ---- | ------------------ |
