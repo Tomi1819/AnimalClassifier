@@ -1,6 +1,8 @@
-namespace AnimalClassifier.Core.Recognitions.Classification
+namespace AnimalClassifier.Infrastructure.Classification
 {
+    using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
+    using AnimalClassifier.Infrastructure.Classification.Models;
     using Microsoft.Extensions.ML;
     using Microsoft.ML.Data;
 

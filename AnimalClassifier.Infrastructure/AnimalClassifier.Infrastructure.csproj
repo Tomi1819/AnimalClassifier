@@ -8,6 +8,12 @@
     <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.Extensions.ML" />
+    <PackageReference Include="Microsoft.ML" />
+    <!-- The model is an image classification model, which is loaded by
+         Vision and run by TensorFlow, whose native libraries the redist holds. -->
+    <PackageReference Include="Microsoft.ML.Vision" />
+    <PackageReference Include="SciSharp.TensorFlow.Redist" />
   </ItemGroup>
 
 </Project>

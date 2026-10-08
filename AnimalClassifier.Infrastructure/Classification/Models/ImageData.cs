@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Recognitions.Classification.Models
+﻿namespace AnimalClassifier.Infrastructure.Classification.Models
 {
     using Microsoft.ML.Data;
 

@@ -578,7 +578,7 @@ AnimalClassifier.Core/             What the app does
     Account/                       A signed-in user's own account: profile, name, password, export, deletion
   Recognitions/                    Recognising animals, and reading the recognitions back; MediaFile sits here
     Media/                         The expiring links an uploaded image or video is loaded by
-    Classification/                The model, and reading a video's frames for it
+    Classification/                What the model is asked, reading a video's frames for it, and the turns uploads wait for
     Uploads/                       Checking and storing an upload, and recording what was recognised in it
     Feedback/                      What users say of their recognitions, and checking it against the animals the model knows
     History/                       A user's own recognitions, and clearing them
@@ -591,6 +591,7 @@ AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside t
   Migrations/                      Every change to the schema
   Email/                           Sending email over SMTP, or into the log in development
   Storage/                         Keeping uploaded files on disk, a folder per user
+  Classification/                  Running the trained model with ML.NET
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/

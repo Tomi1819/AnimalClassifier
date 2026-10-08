@@ -1,7 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
     using AnimalClassifier.Core.Recognitions.Classification;
-    using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.Feedback;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.Media;
@@ -9,6 +8,8 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Recognitions.Statistics;
     using AnimalClassifier.Core.Recognitions.Training;
     using AnimalClassifier.Core.Recognitions.Uploads;
+    using AnimalClassifier.Infrastructure.Classification;
+    using AnimalClassifier.Infrastructure.Classification.Models;
     using Microsoft.Extensions.ML;
 
     /// <summary>

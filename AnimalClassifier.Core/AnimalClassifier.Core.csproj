@@ -2,12 +2,6 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.Extensions.ML" />
-    <PackageReference Include="Microsoft.ML" />
-    <!-- The model is an image classification model, which is loaded by
-         Vision and run by TensorFlow, whose native libraries the redist holds. -->
-    <PackageReference Include="Microsoft.ML.Vision" />
-    <PackageReference Include="SciSharp.TensorFlow.Redist" />
     <!-- The runtime is Windows' alone; another platform needs its own. -->
     <PackageReference Include="OpenCvSharp4" />
     <PackageReference Include="OpenCvSharp4.runtime.win" />
