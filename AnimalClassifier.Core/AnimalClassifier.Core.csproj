@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.Extensions.ML" />
     <PackageReference Include="Microsoft.ML" />
     <!-- The model is an image classification model, which is loaded by

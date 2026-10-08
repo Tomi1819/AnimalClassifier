@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Common.Email
+﻿namespace AnimalClassifier.Infrastructure.Email
 {
     using AnimalClassifier.Core.Common.Settings;
 

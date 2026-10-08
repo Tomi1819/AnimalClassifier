@@ -1,5 +1,6 @@
-﻿namespace AnimalClassifier.Core.Common.Email
+﻿namespace AnimalClassifier.Infrastructure.Email
 {
+    using AnimalClassifier.Core.Common.Email;
     using MailKit.Net.Smtp;
     using MailKit.Security;
     using Microsoft.Extensions.Options;

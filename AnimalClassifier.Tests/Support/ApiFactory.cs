@@ -8,6 +8,7 @@
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Hosting;
     using AnimalClassifier.Infrastructure.Data;
+    using AnimalClassifier.Infrastructure.Email;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Identity;
     using AnimalClassifier.Tests.Recognitions;

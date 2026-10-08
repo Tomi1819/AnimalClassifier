@@ -563,7 +563,7 @@ AnimalClassifier/                  The API: controllers, and how the app is put 
   Hosting/                         The keys' folder and the proxies, which running deployed needs
 AnimalClassifier.Core/             What the app does
   Common/                          What every area uses
-    Email/                         Sending email over SMTP, or into the log in development
+    Email/                         IEmailSender, which every email is sent through
     Exceptions/                    The refusals a service reports to the caller
     Models/                        Responses shared by every area, such as MessageResponse and PagedResult
     Settings/                      ISettings, which every settings class implements, and the frontend's settings
@@ -586,7 +586,10 @@ AnimalClassifier.Core/             What the app does
     Statistics/                    The totals, the animals recognised most, and the daily activity
     Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
-AnimalClassifier.Infrastructure/   The database: its context, the migrations, and each repository's implementation
+AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside the app are implemented with
+  Data/                            The database's context and configurations, and each repository's implementation
+  Migrations/                      Every change to the schema
+  Email/                           Sending email over SMTP, or into the log in development
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/

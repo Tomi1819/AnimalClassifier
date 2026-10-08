@@ -1,6 +1,6 @@
 namespace AnimalClassifier.Tests.Common
 {
-    using AnimalClassifier.Core.Common.Email;
+    using AnimalClassifier.Infrastructure.Email;
     using MailKit.Security;
 
     public class SmtpEmailSenderTests
