@@ -1,6 +1,7 @@
-namespace AnimalClassifier.Core.Recognitions.Classification
+namespace AnimalClassifier.Infrastructure.Imaging
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Recognitions.Classification;
     using OpenCvSharp;
     using static AnimalClassifier.Core.Recognitions.Classification.ClassificationMessages;
 

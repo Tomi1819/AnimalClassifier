@@ -14,6 +14,9 @@
          Vision and run by TensorFlow, whose native libraries the redist holds. -->
     <PackageReference Include="Microsoft.ML.Vision" />
     <PackageReference Include="SciSharp.TensorFlow.Redist" />
+    <!-- The runtime is Windows' alone; another platform needs its own. -->
+    <PackageReference Include="OpenCvSharp4" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" />
   </ItemGroup>
 
 </Project>

@@ -10,6 +10,7 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Recognitions.Uploads;
     using AnimalClassifier.Infrastructure.Classification;
     using AnimalClassifier.Infrastructure.Classification.Models;
+    using AnimalClassifier.Infrastructure.Imaging;
     using Microsoft.Extensions.ML;
 
     /// <summary>
