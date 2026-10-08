@@ -133,6 +133,10 @@ namespace AnimalClassifier.Extensions
                     // choosing.
                     options.ServerDomain = passkeyOptions.Value.ResolveServerDomain(frontendOptions.Value);
 
+                    // Core's, since the state a ceremony is carried in expires
+                    // just after the authenticator gives up.
+                    options.AuthenticatorTimeout = PasskeySettings.AuthenticatorTimeout;
+
                     // Signing in without first naming an account needs the
                     // credential to be discoverable, which is what the browser
                     // offers an account picker from.

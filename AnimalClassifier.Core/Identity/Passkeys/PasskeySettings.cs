@@ -4,6 +4,14 @@ namespace AnimalClassifier.Core.Identity.Passkeys
 
     public class PasskeySettings : ISettings
     {
+        /// <summary>
+        /// How long the browser gives the user to finish a ceremony with their
+        /// authenticator, which Identity is told to ask for. Fixed here rather
+        /// than left to Identity, since a ceremony's state lasts only a little
+        /// longer; see <see cref="PasskeyStateProtector"/>.
+        /// </summary>
+        public static readonly TimeSpan AuthenticatorTimeout = TimeSpan.FromMinutes(5);
+
         public static string SectionName => "Passkey";
 
         /// <summary>
