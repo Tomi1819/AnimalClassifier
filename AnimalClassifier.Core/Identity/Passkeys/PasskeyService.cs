@@ -7,7 +7,6 @@ namespace AnimalClassifier.Core.Identity.Passkeys
     using AnimalClassifier.Core.Identity.Passkeys.Models;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.WebUtilities;
     using System.Text.Json.Nodes;
@@ -19,66 +18,53 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         private const string UnnamedPasskey = "Passkey";
 
         private readonly UserManager<ApplicationUser> userManager;
-        private readonly IPasskeyHandler<ApplicationUser> passkeyHandler;
+        private readonly IWebAuthnHandler webAuthn;
         private readonly IPasskeyStateProtector stateProtector;
         private readonly IPasswordConfirmer passwordConfirmer;
         private readonly IAccessTokenIssuer tokenIssuer;
         private readonly ISecurityAlertSender securityAlertSender;
 
         public PasskeyService(UserManager<ApplicationUser> userManager,
-                              IPasskeyHandler<ApplicationUser> passkeyHandler,
+                              IWebAuthnHandler webAuthn,
                               IPasskeyStateProtector stateProtector,
                               IPasswordConfirmer passwordConfirmer,
                               IAccessTokenIssuer tokenIssuer,
                               ISecurityAlertSender securityAlertSender)
         {
             this.userManager = userManager;
-            this.passkeyHandler = passkeyHandler;
+            this.webAuthn = webAuthn;
             this.stateProtector = stateProtector;
             this.passwordConfirmer = passwordConfirmer;
             this.tokenIssuer = tokenIssuer;
             this.securityAlertSender = securityAlertSender;
         }
 
-        public async Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request, HttpContext httpContext)
+        public async Task<PasskeyOptionsResponse> CreateRegistrationOptionsAsync(string userId, PasskeyRegistrationOptionsRequest request)
         {
             var user = await userManager.GetByIdAsync(userId);
 
             await passwordConfirmer.ConfirmAsync(user, request.Password);
 
-            var options = await passkeyHandler.MakeCreationOptionsAsync(new PasskeyUserEntity
-            {
-                Id = user.Id,
-                Name = user.UserName ?? string.Empty,
-
-                // What the authenticator shows the user when it offers them a
-                // choice of accounts, so it is the name rather than the login.
-                DisplayName = user.FullName
-            }, httpContext);
-
-            return Respond(options.CreationOptionsJson, PasskeyCeremony.Attestation, options.AttestationState);
+            return Respond(await webAuthn.CreateRegistrationOptionsAsync(user), PasskeyCeremony.Attestation);
         }
 
-        public async Task<PasskeySummary> RegisterAsync(string userId, PasskeyRegistrationRequest request, HttpContext httpContext)
+        public async Task<PasskeySummary> RegisterAsync(string userId, PasskeyRegistrationRequest request)
         {
             var user = await userManager.GetByIdAsync(userId);
 
-            var result = await passkeyHandler.PerformAttestationAsync(new PasskeyAttestationContext
-            {
-                HttpContext = httpContext,
-                CredentialJson = ReadCredential(request),
-                AttestationState = stateProtector.Unprotect(PasskeyCeremony.Attestation, request.State)
-            });
+            var attestation = await webAuthn.VerifyAttestationAsync(
+                ReadCredential(request),
+                stateProtector.Unprotect(PasskeyCeremony.Attestation, request.State));
 
             // An attestation says nothing about who it belongs to; the state it
             // answers is the only record of that. Identity cannot check the two
             // agree, having nothing to compare against, so it is checked here.
-            if (!result.Succeeded || result.UserEntity.Id != user.Id)
+            if (attestation is null || attestation.UserId != user.Id)
             {
                 throw new RequestRefusedException(RejectedPasskey);
             }
 
-            var passkey = result.Passkey;
+            var passkey = attestation.Passkey;
             var name = string.IsNullOrWhiteSpace(request.Name) ? UnnamedPasskey : request.Name.Trim();
             passkey.Name = name;
 
@@ -88,31 +74,20 @@ namespace AnimalClassifier.Core.Identity.Passkeys
             return ToSummary(passkey);
         }
 
-        public async Task<PasskeyOptionsResponse> CreateLoginOptionsAsync(HttpContext httpContext)
+        // Naming no user leaves the browser to offer whatever it holds for
+        // this site. Naming one would mean taking an address from whoever
+        // asked and answering whether it has any passkeys.
+        public async Task<PasskeyOptionsResponse> CreateLoginOptionsAsync() =>
+            Respond(await webAuthn.CreateLoginOptionsAsync(), PasskeyCeremony.Assertion);
+
+        public async Task<LoginResponse> LoginAsync(PasskeyCredentialRequest request)
         {
-            // Naming no user leaves the browser to offer whatever it holds for
-            // this site. Naming one would mean taking an address from whoever
-            // asked and answering whether it has any passkeys.
-            var options = await passkeyHandler.MakeRequestOptionsAsync(user: null, httpContext);
+            var assertion = await webAuthn.VerifyAssertionAsync(
+                ReadCredential(request),
+                stateProtector.Unprotect(PasskeyCeremony.Assertion, request.State))
+                ?? throw new AuthenticationFailedException(InvalidPasskey);
 
-            return Respond(options.RequestOptionsJson, PasskeyCeremony.Assertion, options.AssertionState);
-        }
-
-        public async Task<LoginResponse> LoginAsync(PasskeyCredentialRequest request, HttpContext httpContext)
-        {
-            var result = await passkeyHandler.PerformAssertionAsync(new PasskeyAssertionContext
-            {
-                HttpContext = httpContext,
-                CredentialJson = ReadCredential(request),
-                AssertionState = stateProtector.Unprotect(PasskeyCeremony.Assertion, request.State)
-            });
-
-            if (!result.Succeeded)
-            {
-                throw new AuthenticationFailedException(InvalidPasskey);
-            }
-
-            var user = result.User;
+            var user = assertion.User;
 
             // Identity checks the signature, not the account. Without this an
             // administrator could lock a user who still held a passkey and
@@ -124,7 +99,7 @@ namespace AnimalClassifier.Core.Identity.Passkeys
 
             // The counter moves on with every use, and storing it is what lets
             // a replayed assertion be told from a fresh one.
-            (await userManager.AddOrUpdatePasskeyAsync(user, result.Passkey)).ThrowIfFailed();
+            (await userManager.AddOrUpdatePasskeyAsync(user, assertion.Passkey)).ThrowIfFailed();
 
             return await tokenIssuer.IssueAsync(user);
         }
@@ -157,11 +132,11 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         // which these two are not. Carrying an empty state rather than
         // refusing here lets the ceremony fail where it is checked, with the
         // answer every other unusable state gets.
-        private PasskeyOptionsResponse Respond(string optionsJson, PasskeyCeremony ceremony, string? state) =>
+        private PasskeyOptionsResponse Respond(PasskeyChallenge challenge, PasskeyCeremony ceremony) =>
             new()
             {
-                Options = JsonNode.Parse(optionsJson),
-                State = stateProtector.Protect(ceremony, state ?? string.Empty)
+                Options = JsonNode.Parse(challenge.OptionsJson),
+                State = stateProtector.Protect(ceremony, challenge.State ?? string.Empty)
             };
 
         private static PasskeySummary ToSummary(UserPasskeyInfo passkey) =>

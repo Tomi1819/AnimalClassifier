@@ -561,7 +561,7 @@ AnimalClassifier/                  The API: controllers, and how the app is put 
   Extensions/                      Service registration, a file per area, such as IdentityServiceCollectionExtension
   Cors/ RateLimiting/              Which origins may call the API, and the limits on its endpoints
   Hosting/                         The keys' folder and the proxies, which running deployed needs
-  Identity/                        What Core asks of Identity's web half: checking a password at sign-in
+  Identity/                        What Core asks of Identity's web half: the password check at sign-in, and passkeys' WebAuthn
 AnimalClassifier.Core/             What the app does
   Common/                          What every area uses
     Email/                         IEmailSender, which every email is sent through

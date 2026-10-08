@@ -167,6 +167,11 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddSingleton<IPasskeyStateProtector, PasskeyStateProtector>();
 
+            // Identity reads the origin of the request a ceremony arrives on,
+            // which the handler reaches through the accessor.
+            services.AddHttpContextAccessor();
+            services.AddScoped<IWebAuthnHandler, IdentityWebAuthnHandler>();
+
             services.AddScoped<ISecurityAlertSender, SecurityAlertSender>();
 
             return services;

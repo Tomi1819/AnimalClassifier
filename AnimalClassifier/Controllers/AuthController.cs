@@ -64,11 +64,11 @@ namespace AnimalClassifier.Controllers
         /// </summary>
         [HttpPost("passkey/options")]
         public async Task<IActionResult> PasskeyOptions() =>
-            Ok(await passkeyService.CreateLoginOptionsAsync(HttpContext));
+            Ok(await passkeyService.CreateLoginOptionsAsync());
 
         [HttpPost("passkey/login")]
         public async Task<IActionResult> PasskeyLogin([FromBody] PasskeyCredentialRequest request) =>
-            Ok(await passkeyService.LoginAsync(request, HttpContext));
+            Ok(await passkeyService.LoginAsync(request));
 
         [HttpPost("forgot-password")]
         [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
