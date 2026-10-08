@@ -567,7 +567,7 @@ AnimalClassifier.Core/             What the app does
     Exceptions/                    The refusals a service reports to the caller
     Models/                        Responses shared by every area, such as MessageResponse and PagedResult
     Settings/                      ISettings, which every settings class implements, and the frontend's settings
-    Storage/                       Storing uploaded files, a folder per user
+    Storage/                       IFileStorageService, which uploads are kept through, and temporary files
   Data/                            The entities, and the repository per table they are read and written through
   Identity/                        Accounts and signing in; AccountName and the roles sit here
     SecurityAlerts/                The emails sent when how an account signs in changes
@@ -590,6 +590,7 @@ AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside t
   Data/                            The database's context and configurations, and each repository's implementation
   Migrations/                      Every change to the schema
   Email/                           Sending email over SMTP, or into the log in development
+  Storage/                         Keeping uploaded files on disk, a folder per user
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/

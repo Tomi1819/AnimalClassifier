@@ -1,5 +1,6 @@
-﻿namespace AnimalClassifier.Core.Common.Storage
+﻿namespace AnimalClassifier.Infrastructure.Storage
 {
+    using AnimalClassifier.Core.Common.Storage;
     using Microsoft.Extensions.Options;
 
     public class FileStorageService : IFileStorageService

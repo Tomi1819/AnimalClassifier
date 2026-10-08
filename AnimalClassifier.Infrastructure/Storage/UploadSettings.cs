@@ -1,4 +1,4 @@
-﻿namespace AnimalClassifier.Core.Common.Storage
+﻿namespace AnimalClassifier.Infrastructure.Storage
 {
     using AnimalClassifier.Core.Common.Settings;
     using System.ComponentModel.DataAnnotations;

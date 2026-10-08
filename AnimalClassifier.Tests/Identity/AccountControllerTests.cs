@@ -2,7 +2,6 @@ namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Core.Admin.Models;
     using AnimalClassifier.Core.Common.Models;
-    using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Identity;
     using AnimalClassifier.Core.Identity.Account.Models;
@@ -11,6 +10,7 @@ namespace AnimalClassifier.Tests.Identity
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Infrastructure.Data;
+    using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.Mvc.Testing;
