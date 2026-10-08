@@ -9,6 +9,7 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Identity.Passkeys;
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
+    using AnimalClassifier.Identity;
     using AnimalClassifier.Infrastructure.Data;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Identity;
@@ -149,6 +150,7 @@ namespace AnimalClassifier.Extensions
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAccessTokenIssuer, AccessTokenIssuer>();
+            services.AddScoped<IPasswordSignInChecker, SignInManagerPasswordChecker>();
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IDataExportService, DataExportService>();
