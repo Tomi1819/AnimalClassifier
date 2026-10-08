@@ -13,8 +13,8 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
     public interface IUploadClassifier
     {
         /// <summary>
-        /// Encodes the image afresh, as <see cref="ImageSanitizer"/> does, and
-        /// classifies what it encoded.
+        /// Encodes the image afresh, as <see cref="IImageSanitizer"/> does,
+        /// and classifies what it encoded.
         /// </summary>
         /// <param name="extension">The format to encode it in, such as <c>.jpg</c>.</param>
         /// <returns>The image as encoded afresh, which is what is stored, and the animal in it.</returns>

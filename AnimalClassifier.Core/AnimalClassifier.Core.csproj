@@ -2,9 +2,6 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <!-- The runtime is Windows' alone; another platform needs its own. -->
-    <PackageReference Include="OpenCvSharp4" />
-    <PackageReference Include="OpenCvSharp4.runtime.win" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
 

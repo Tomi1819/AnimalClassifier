@@ -7,6 +7,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
+    using AnimalClassifier.Infrastructure.Imaging;
     using AnimalClassifier.Infrastructure.Storage;
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;

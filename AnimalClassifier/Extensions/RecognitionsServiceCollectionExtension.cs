@@ -33,9 +33,11 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IFeedbackSummaryService, FeedbackSummaryService>();
             services.AddScoped<ITrainingDataExporter, TrainingDataExporter>();
 
-            // Both are safe to share: the classifier takes an engine from the
-            // pool for each image, and the sampler keeps nothing between videos.
+            // All three are safe to share: the classifier takes an engine from
+            // the pool for each image, and the sanitizer and the sampler keep
+            // nothing between uploads.
             services.AddSingleton<IImageClassifier, MLImageClassifier>();
+            services.AddSingleton<IImageSanitizer, ImageSanitizer>();
             services.AddSingleton<IVideoFrameSampler, VideoFrameSampler>();
 
             // Kept for as long as the app runs, since it is what counts the

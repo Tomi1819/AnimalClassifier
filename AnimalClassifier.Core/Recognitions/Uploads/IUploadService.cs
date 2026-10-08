@@ -17,7 +17,7 @@
     public interface IUploadService
     {
         /// <summary>
-        /// Classifies and stores the image as <see cref="ImageSanitizer"/>
+        /// Classifies and stores the image as <see cref="IImageSanitizer"/>
         /// encodes it afresh, without what the camera wrote beside the pixels.
         /// </summary>
         /// <exception cref="RequestRefusedException">

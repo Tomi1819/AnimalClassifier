@@ -592,7 +592,7 @@ AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside t
   Email/                           Sending email over SMTP, or into the log in development
   Storage/                         Keeping uploaded files on disk, a folder per user
   Classification/                  Running the trained model with ML.NET
-  Imaging/                         Reading a video's frames with OpenCV
+  Imaging/                         Encoding an uploaded image afresh, and reading a video's frames, with OpenCV
 AnimalClassifier.Tests/            Tests; each class that calls the API has an app and a database of its own
   Common/ Identity/ Recognitions/  The tests of each area, and the stand-ins they use
   Admin/

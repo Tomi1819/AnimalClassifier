@@ -6,14 +6,17 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
     public class UploadClassifier : IUploadClassifier
     {
         private readonly IImageClassifier classifier;
+        private readonly IImageSanitizer imageSanitizer;
         private readonly IVideoFrameSampler frameSampler;
         private readonly IClassificationLimiter classificationLimiter;
 
         public UploadClassifier(IImageClassifier classifier,
+                                IImageSanitizer imageSanitizer,
                                 IVideoFrameSampler frameSampler,
                                 IClassificationLimiter classificationLimiter)
         {
             this.classifier = classifier;
+            this.imageSanitizer = imageSanitizer;
             this.frameSampler = frameSampler;
             this.classificationLimiter = classificationLimiter;
         }
@@ -22,7 +25,7 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
         {
             using var turn = await classificationLimiter.WaitTurnAsync(cancellationToken);
 
-            var image = ImageSanitizer.Sanitize(upload, extension);
+            var image = imageSanitizer.Sanitize(upload, extension);
 
             return (image, classifier.Classify(image));
         }

@@ -1,22 +1,18 @@
-namespace AnimalClassifier.Core.Recognitions.Uploads
+namespace AnimalClassifier.Infrastructure.Imaging
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Recognitions.Uploads;
     using OpenCvSharp;
     using System.Buffers.Binary;
     using System.Globalization;
     using static AnimalClassifier.Core.Recognitions.Uploads.UploadMessages;
 
     /// <summary>
-    /// Decodes an uploaded image and encodes it afresh, which is then what is
-    /// classified, stored and shown. Only the pixels make it across. What a
-    /// camera writes beside them, such as where the photo was taken, is left
-    /// behind, and the rotation it records is applied to the pixels instead.
-    ///
-    /// The size is read from the header first, since decoding allocates the
-    /// whole image at once, and a file of a few megabytes can claim billions
-    /// of pixels.
+    /// Decodes and encodes with OpenCV. The size is read from the header
+    /// first, since decoding allocates the whole image at once, and a file of
+    /// a few megabytes can claim billions of pixels.
     /// </summary>
-    public static class ImageSanitizer
+    public class ImageSanitizer : IImageSanitizer
     {
         /// <summary>
         /// The most pixels an image can have, in millions. More than any phone
@@ -43,12 +39,7 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
 
         private static readonly byte[] PngHeaderChunkType = "IHDR"u8.ToArray();
 
-        /// <param name="image">A JPEG or PNG file's bytes.</param>
-        /// <param name="extension">The format to encode it in, such as <c>.jpg</c>.</param>
-        /// <exception cref="RequestRefusedException">
-        /// When the image has too many pixels, or cannot be decoded.
-        /// </exception>
-        public static byte[] Sanitize(byte[] image, string extension)
+        public byte[] Sanitize(byte[] image, string extension)
         {
             if (!TryReadPngSize(image, out var width, out var height) && !TryReadJpegSize(image, out width, out height))
             {
