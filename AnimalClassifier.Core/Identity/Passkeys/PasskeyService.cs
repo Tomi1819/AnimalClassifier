@@ -8,7 +8,7 @@ namespace AnimalClassifier.Core.Identity.Passkeys
     using AnimalClassifier.Core.Identity.Passwords;
     using AnimalClassifier.Core.Identity.SecurityAlerts;
     using Microsoft.AspNetCore.Identity;
-    using Microsoft.AspNetCore.WebUtilities;
+    using System.Buffers.Text;
     using System.Text.Json.Nodes;
     using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
     using static AnimalClassifier.Core.Identity.Passkeys.PasskeyMessages;
@@ -142,7 +142,7 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         private static PasskeySummary ToSummary(UserPasskeyInfo passkey) =>
             new()
             {
-                Id = WebEncoders.Base64UrlEncode(passkey.CredentialId),
+                Id = Base64Url.EncodeToString(passkey.CredentialId),
                 Name = passkey.Name ?? UnnamedPasskey,
                 DateAdded = passkey.CreatedAt.UtcDateTime
             };
@@ -154,7 +154,7 @@ namespace AnimalClassifier.Core.Identity.Passkeys
         {
             try
             {
-                return WebEncoders.Base64UrlDecode(passkeyId);
+                return Base64Url.DecodeFromChars(passkeyId);
             }
             catch (FormatException)
             {
