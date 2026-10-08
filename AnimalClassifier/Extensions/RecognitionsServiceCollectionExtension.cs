@@ -23,6 +23,7 @@ namespace AnimalClassifier.Extensions
         {
             services.AddScoped<IMediaLinkService, MediaLinkService>();
             services.AddScoped<IUploadService, UploadService>();
+            services.AddScoped<IUploadClassifier, UploadClassifier>();
             services.AddScoped<IRecognitionHistoryService, RecognitionHistoryService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IStatisticsService, StatisticsService>();

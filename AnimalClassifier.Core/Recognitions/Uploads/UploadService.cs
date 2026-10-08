@@ -4,7 +4,6 @@
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Data.Repositories;
-    using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Classification.Models;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
@@ -24,27 +23,21 @@
         // The form the frontend reads a video's scores in.
         private const string ScoreFormat = "0.00";
 
-        private readonly IImageClassifier classifier;
-        private readonly IVideoFrameSampler frameSampler;
-        private readonly IClassificationLimiter classificationLimiter;
+        private readonly IUploadClassifier uploadClassifier;
         private readonly IFileStorageService fileStorage;
         private readonly IMediaLinkService mediaLinks;
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IUnitOfWork unitOfWork;
         private readonly ILogger<UploadService> logger;
 
-        public UploadService(IImageClassifier classifier,
-                             IVideoFrameSampler frameSampler,
-                             IClassificationLimiter classificationLimiter,
+        public UploadService(IUploadClassifier uploadClassifier,
                              IFileStorageService fileStorage,
                              IMediaLinkService mediaLinks,
                              IRecognitionLogRepository recognitionLogs,
                              IUnitOfWork unitOfWork,
                              ILogger<UploadService> logger)
         {
-            this.classifier = classifier;
-            this.frameSampler = frameSampler;
-            this.classificationLimiter = classificationLimiter;
+            this.uploadClassifier = uploadClassifier;
             this.fileStorage = fileStorage;
             this.mediaLinks = mediaLinks;
             this.recognitionLogs = recognitionLogs;
@@ -60,7 +53,7 @@
 
             // Classified before it is stored, so that an image the model fails
             // on leaves nothing to remove.
-            var (image, prediction) = await SanitizeAndClassifyAsync(await ReadAllBytesAsync(file), extension, cancellationToken);
+            var (image, prediction) = await uploadClassifier.ClassifyImageAsync(await ReadAllBytesAsync(file), extension, cancellationToken);
 
             await using var content = new MemoryStream(image);
             var storedFile = await fileStorage.SaveAsync(userId, content, extension);
@@ -81,7 +74,7 @@
             {
                 // Read back from where it was stored, since a video's frames
                 // are read from a file.
-                var frames = await ClassifyFramesAsync(storedFile.PhysicalPath, cancellationToken);
+                var frames = await uploadClassifier.ClassifyVideoAsync(storedFile.PhysicalPath, cancellationToken);
 
                 var topAnimals = VideoSummary.TopAnimals(frames);
                 var strongest = topAnimals.FirstOrDefault();
@@ -103,34 +96,6 @@
                 ?? throw new NotFoundException(RecognitionNotFound);
 
             return ToImageUploadResult(log);
-        }
-
-        // Decoding an image takes as much as classifying it, so it waits for
-        // the same turn.
-        private async Task<(byte[] Image, Prediction Prediction)> SanitizeAndClassifyAsync(byte[] upload, string extension, CancellationToken cancellationToken)
-        {
-            using var turn = await classificationLimiter.WaitTurnAsync(cancellationToken);
-
-            var image = ImageSanitizer.Sanitize(upload, extension);
-
-            return (image, classifier.Classify(image));
-        }
-
-        // A caller who goes away stops it between frames, as nothing has been
-        // recorded yet.
-        private async Task<List<Prediction>> ClassifyFramesAsync(string videoPath, CancellationToken cancellationToken)
-        {
-            using var turn = await classificationLimiter.WaitTurnAsync(cancellationToken);
-
-            var frames = new List<Prediction>();
-
-            foreach (var frame in frameSampler.SampleFrames(videoPath))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                frames.Add(classifier.Classify(frame));
-            }
-
-            return frames;
         }
 
         private async Task<StoredFile> StoreAsync(string userId, IFormFile file)
