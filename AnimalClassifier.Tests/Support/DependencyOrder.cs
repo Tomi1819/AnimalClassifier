@@ -76,7 +76,7 @@ namespace AnimalClassifier.Tests.Support
             assembly.GetTypes().Where(type => IsInRoot(type.Namespace));
 
         private bool IsInRoot(string? @namespace) =>
-            @namespace == rootNamespace || @namespace?.StartsWith(rootNamespace + ".") == true;
+            @namespace == rootNamespace || @namespace?.StartsWith(rootNamespace + ".", StringComparison.Ordinal) == true;
 
         /// <returns>
         /// The part a type belongs to, such as "Passkeys" for its models too,

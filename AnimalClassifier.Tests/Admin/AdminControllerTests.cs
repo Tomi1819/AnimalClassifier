@@ -6,6 +6,7 @@
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Tests.Support;
+    using System.Globalization;
     using System.Net;
     using System.Net.Http.Json;
 
@@ -74,7 +75,7 @@
             var account = await RegisterAdminAsync();
             var admin = await SignInAsync(account.Email);
 
-            var result = await admin.GetFromJsonAsync<PagedResult<object>>($"{string.Format(path, account.UserId)}?page={int.MaxValue}");
+            var result = await admin.GetFromJsonAsync<PagedResult<object>>($"{string.Format(CultureInfo.InvariantCulture, path, account.UserId)}?page={int.MaxValue}");
 
             Assert.Empty(result!.Items);
         }

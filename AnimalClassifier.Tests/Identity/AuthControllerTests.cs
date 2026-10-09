@@ -10,6 +10,7 @@
     using AnimalClassifier.RateLimiting;
     using AnimalClassifier.Tests.Support;
     using Microsoft.AspNetCore.WebUtilities;
+    using System.Globalization;
     using System.Net;
     using System.Net.Http.Json;
     using static AnimalClassifier.Core.Identity.Authentication.AuthenticationMessages;
@@ -62,7 +63,7 @@
             var response = await RegisterWithNameAsync(new string('a', AccountName.MaxLength + 1));
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(string.Format(FullNameTooLong, AccountName.MaxLength), await response.Content.ReadAsStringAsync());
+            Assert.Contains(string.Format(CultureInfo.InvariantCulture, FullNameTooLong, AccountName.MaxLength), await response.Content.ReadAsStringAsync());
         }
 
         [Theory]
@@ -84,7 +85,7 @@
             var response = await RegisterAsync(email, Password);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            Assert.Contains(string.Format(EmailTooLong, AuthService.MaxEmailLength), await response.Content.ReadAsStringAsync());
+            Assert.Contains(string.Format(CultureInfo.InvariantCulture, EmailTooLong, AuthService.MaxEmailLength), await response.Content.ReadAsStringAsync());
         }
 
         [Fact]

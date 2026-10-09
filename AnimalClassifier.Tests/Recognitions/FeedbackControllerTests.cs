@@ -8,6 +8,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Tests.Support;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
+    using System.Globalization;
     using System.Net;
     using System.Net.Http.Json;
     using System.Text;
@@ -84,7 +85,7 @@ namespace AnimalClassifier.Tests.Recognitions
         {
             var (user, recognition) = await SignInWithRecognitionAsync();
 
-            var response = await GiveFeedbackAsync(user, recognition, WrongAnimal(recognition.AnimalName.ToLower()));
+            var response = await GiveFeedbackAsync(user, recognition, WrongAnimal(recognition.AnimalName.ToLowerInvariant()));
 
             await AssertRefusedAsync(response, SameAnimal);
         }
@@ -146,7 +147,7 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var response = await GiveFeedbackAsync(user, recognition, UnlistedAnimal(name));
 
-            await AssertRefusedAsync(response, string.Format(InvalidAnimalName, RecognitionFeedback.MaxActualAnimalLength));
+            await AssertRefusedAsync(response, string.Format(CultureInfo.InvariantCulture, InvalidAnimalName, RecognitionFeedback.MaxActualAnimalLength));
         }
 
         [Fact]
@@ -156,7 +157,7 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var response = await GiveFeedbackAsync(user, recognition, UnlistedAnimal(new string('a', RecognitionFeedback.MaxActualAnimalLength + 1)));
 
-            await AssertRefusedAsync(response, string.Format(InvalidAnimalName, RecognitionFeedback.MaxActualAnimalLength));
+            await AssertRefusedAsync(response, string.Format(CultureInfo.InvariantCulture, InvalidAnimalName, RecognitionFeedback.MaxActualAnimalLength));
         }
 
         [Fact]
@@ -180,7 +181,7 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var response = await GiveFeedbackAsync(user, recognition, request);
 
-            await AssertRefusedAsync(response, string.Format(CommentTooLong, RecognitionFeedback.MaxCommentLength));
+            await AssertRefusedAsync(response, string.Format(CultureInfo.InvariantCulture, CommentTooLong, RecognitionFeedback.MaxCommentLength));
         }
 
         [Theory]

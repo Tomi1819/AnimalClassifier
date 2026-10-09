@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Core.Identity
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using System.Globalization;
     using static AnimalClassifier.Core.Identity.IdentityMessages;
 
     /// <summary>
@@ -40,7 +41,7 @@ namespace AnimalClassifier.Core.Identity
 
             if (tidied.Length > MaxLength)
             {
-                throw new RequestRefusedException(string.Format(FullNameTooLong, MaxLength));
+                throw new RequestRefusedException(string.Format(CultureInfo.InvariantCulture, FullNameTooLong, MaxLength));
             }
 
             return tidied;
@@ -53,7 +54,7 @@ namespace AnimalClassifier.Core.Identity
         public static string Capitalise(string name)
         {
             var words = name.Split(Space, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(word => char.ToUpper(word[0]) + word[1..].ToLower());
+                            .Select(word => char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant());
 
             return string.Join(Space, words);
         }

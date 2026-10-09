@@ -17,6 +17,7 @@ namespace AnimalClassifier.Tests.Identity
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
+    using System.Globalization;
     using System.IO.Compression;
     using System.Net;
     using System.Net.Http.Json;
@@ -602,7 +603,7 @@ namespace AnimalClassifier.Tests.Identity
             using var archive = await ExportDataAsync(client);
 
             Assert.Empty(await ReadJsonEntryAsync<List<ExportedRecognition>>(archive, RecognitionsEntry));
-            Assert.DoesNotContain(archive.Entries, e => e.FullName.StartsWith(UploadsFolder));
+            Assert.DoesNotContain(archive.Entries, e => e.FullName.StartsWith(UploadsFolder, StringComparison.Ordinal));
         }
 
         [Fact]
@@ -863,7 +864,7 @@ namespace AnimalClassifier.Tests.Identity
         // several.
         private WebApplicationFactory<Program> WithDataExportLimit(int permitLimit) =>
             Factory.WithWebHostBuilder(builder =>
-                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.DataExportPermitLimit)), permitLimit.ToString()));
+                builder.UseSetting(ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.DataExportPermitLimit)), permitLimit.ToString(CultureInfo.InvariantCulture)));
 
         /// <returns>The directory the user's uploads are kept in.</returns>
         private async Task<string> AddUploadAsync(string userId)
