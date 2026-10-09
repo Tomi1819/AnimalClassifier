@@ -547,6 +547,9 @@ The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-u
 dotnet test
 ```
 
+They run on xUnit.net v3 and Microsoft.Testing.Platform, which `global.json`
+opts `dotnet test` into, as the .NET 10 SDK asks.
+
 Uploads are recognised by stand-ins for the model and for reading videos,
 which a test tells what to see, and the stand-in for the model knows a handful
 of animals of its own. `ImageClassifierTests` alone loads the trained

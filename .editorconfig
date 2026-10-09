@@ -39,6 +39,10 @@ dotnet_diagnostic.CA1863.severity = none
 [AnimalClassifier.Tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
 
+# The tests pass their calls no cancellation token. A run stopped part way
+# loses nothing, and the token on every call would hide what each test does.
+dotnet_diagnostic.xUnit1051.severity = none
+
 # EF Core writes the migrations, so they are left as it wrote them rather than
 # held to the conventions above.
 [**/Migrations/*.cs]
