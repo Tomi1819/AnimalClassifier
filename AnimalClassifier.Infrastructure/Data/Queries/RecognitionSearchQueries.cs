@@ -18,13 +18,11 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
         private IQueryable<AnimalRecognitionLog> Logs => context.AnimalRecognitionLogs.AsNoTracking();
 
         // What a search finds: every user's recognitions but the cleared ones,
-        // of a file whose name ends with one of the extensions. EF Core turns
-        // EndsWith into SQL, where the column's collation compares, and cannot
-        // translate the overload that names a comparison.
-#pragma warning disable CA1310
+        // of a file whose name ends with one of the extensions. The match is
+        // SQL's LIKE, so the column's collation compares; the extensions are
+        // MediaFile's, none of which holds a character LIKE treats as a wildcard.
         private IQueryable<AnimalRecognitionLog> Searchable(IEnumerable<string> extensions) =>
-            Logs.Where(l => !l.IsDeleted && extensions.Any(extension => l.FileName.EndsWith(extension)));
-#pragma warning restore CA1310
+            Logs.Where(l => !l.IsDeleted && extensions.Any(extension => EF.Functions.Like(l.FileName, "%" + extension)));
 
         public async Task<IReadOnlyList<(string AnimalName, int Count)>> CountByAnimalNameAsync(string term, IEnumerable<string> extensions, CancellationToken cancellationToken)
         {
