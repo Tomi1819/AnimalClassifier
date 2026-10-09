@@ -1,0 +1,7 @@
+// What the app's code may not call, each with what to use instead. A test may,
+// and Directory.Build.props leaves the tests out.
+P:System.DateTime.Now;Read the time from the injected TimeProvider, so that a test can set it.
+P:System.DateTime.UtcNow;Read the time from the injected TimeProvider, so that a test can set it.
+P:System.DateTime.Today;Read the time from the injected TimeProvider, so that a test can set it.
+P:System.DateTimeOffset.Now;Read the time from the injected TimeProvider, so that a test can set it.
+P:System.DateTimeOffset.UtcNow;Read the time from the injected TimeProvider, so that a test can set it.
