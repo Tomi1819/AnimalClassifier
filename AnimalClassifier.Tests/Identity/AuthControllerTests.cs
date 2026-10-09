@@ -1,8 +1,8 @@
 ﻿namespace AnimalClassifier.Tests.Identity
 {
     using AnimalClassifier.Core.Identity;
-    using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Account.Models;
+    using AnimalClassifier.Core.Identity.Authentication;
     using AnimalClassifier.Core.Identity.Authentication.Models;
     using AnimalClassifier.Core.Identity.EmailConfirmation;
     using AnimalClassifier.Core.Identity.Passwords;

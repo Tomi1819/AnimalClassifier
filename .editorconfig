@@ -20,3 +20,8 @@ csharp_using_directive_placement = inside_namespace:suggestion
 dotnet_sort_system_directives_first = false
 
 dotnet_diagnostic.IDE0005.severity = suggestion
+
+# EF Core writes the migrations, so they are left as it wrote them rather than
+# held to the conventions above.
+[**/Migrations/*.cs]
+generated_code = true
