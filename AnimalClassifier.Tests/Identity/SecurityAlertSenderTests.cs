@@ -40,7 +40,7 @@ namespace AnimalClassifier.Tests.Identity
             Assert.Contains("&lt;b&gt;Laptop&lt;/b&gt;", body);
         }
 
-        private class FailingEmailSender : IEmailSender
+        private sealed class FailingEmailSender : IEmailSender
         {
             public Task SendAsync(string recipient, string subject, string htmlBody) =>
                 throw new InvalidOperationException("The mail server is down.");

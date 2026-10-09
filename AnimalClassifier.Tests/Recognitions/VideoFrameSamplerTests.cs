@@ -5,7 +5,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using AnimalClassifier.Infrastructure.Imaging;
     using OpenCvSharp;
 
-    public class VideoFrameSamplerTests : IDisposable
+    public sealed class VideoFrameSamplerTests : IDisposable
     {
         private readonly string directory = Directory.CreateTempSubdirectory("AnimalClassifierTests_").FullName;
 

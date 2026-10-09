@@ -94,7 +94,7 @@ namespace AnimalClassifier.Tests.Hosting
 
         // The test server's requests come from no address at all, so this
         // gives them the one a connection would have.
-        private class CallerAddress : IStartupFilter
+        private sealed class CallerAddress : IStartupFilter
         {
             private readonly IPAddress address;
 

@@ -49,7 +49,7 @@ namespace AnimalClassifier.Tests.ErrorHandling
             Assert.Equal(ErrorMessages.RequestTooLarge, Assert.IsType<MessageResponse>(result.Value).Message);
         }
 
-        private class RequestBodyLimit : IHttpMaxRequestBodySizeFeature
+        private sealed class RequestBodyLimit : IHttpMaxRequestBodySizeFeature
         {
             public bool IsReadOnly => false;
 
