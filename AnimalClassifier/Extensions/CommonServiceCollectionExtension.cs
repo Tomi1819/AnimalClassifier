@@ -5,10 +5,11 @@ namespace AnimalClassifier.Extensions
     using AnimalClassifier.Core.Common.Storage;
     using AnimalClassifier.Infrastructure.Email;
     using AnimalClassifier.Infrastructure.Storage;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
 
     /// <summary>
-    /// What more than one area uses: sending email, storing uploaded files, and
-    /// where the frontend is served from.
+    /// What more than one area uses: the clock, sending email, storing
+    /// uploaded files, and where the frontend is served from.
     /// </summary>
     public static class CommonServiceCollectionExtension
     {
@@ -17,6 +18,18 @@ namespace AnimalClassifier.Extensions
 
         private const string UploadsInsideTheApp =
             "FileUploadSettings:UploadPath has to be a folder outside the app's own outside development.";
+
+        /// <summary>
+        /// The clock everything reads the time from, rather than the system's
+        /// own, so that a test can set it. Added only where nothing has added
+        /// one yet, as ASP.NET Core's authentication may have.
+        /// </summary>
+        public static IServiceCollection AddApplicationClock(this IServiceCollection services)
+        {
+            services.TryAddSingleton(TimeProvider.System);
+
+            return services;
+        }
 
         /// <summary>
         /// Registers the SMTP sender wherever a server is configured for it,

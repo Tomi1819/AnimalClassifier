@@ -17,10 +17,12 @@
         public const int MostCommonAnimalCount = 3;
 
         private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly TimeProvider timeProvider;
 
-        public StatisticsService(IRecognitionLogRepository recognitionLogs)
+        public StatisticsService(IRecognitionLogRepository recognitionLogs, TimeProvider timeProvider)
         {
             this.recognitionLogs = recognitionLogs;
+            this.timeProvider = timeProvider;
         }
 
         public Task<int> GetTotalRecognitionsAsync(CancellationToken cancellationToken) =>
@@ -42,12 +44,15 @@
         {
             var timeZone = FindTimeZone(timeZoneId);
 
-            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
+            // Read once, so that today and the days read are the same
+            // whenever the request runs across midnight.
+            var now = timeProvider.GetUtcNow().UtcDateTime;
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, timeZone));
             var firstDay = today.AddDays(1 - days);
 
             // A day more than asked for, which covers the first day wherever
             // it starts in relation to UTC.
-            var dates = await recognitionLogs.GetDatesSinceAsync(DateTime.UtcNow.AddDays(-(days + 1)), cancellationToken);
+            var dates = await recognitionLogs.GetDatesSinceAsync(now.AddDays(-(days + 1)), cancellationToken);
 
             var counts = dates
                 .GroupBy(date => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(date, timeZone)))

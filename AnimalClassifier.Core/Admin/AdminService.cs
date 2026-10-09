@@ -19,18 +19,21 @@
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IAdminAuditLogRepository auditLogs;
         private readonly IUnitOfWork unitOfWork;
+        private readonly TimeProvider timeProvider;
 
         public AdminService(UserManager<ApplicationUser> userManager,
                             IUserRepository users,
                             IRecognitionLogRepository recognitionLogs,
                             IAdminAuditLogRepository auditLogs,
-                            IUnitOfWork unitOfWork)
+                            IUnitOfWork unitOfWork,
+                            TimeProvider timeProvider)
         {
             this.userManager = userManager;
             this.users = users;
             this.recognitionLogs = recognitionLogs;
             this.auditLogs = auditLogs;
             this.unitOfWork = unitOfWork;
+            this.timeProvider = timeProvider;
         }
 
         public async Task<PagedResult<AdminUserItem>> GetUsersAsync(string? search, int page, CancellationToken cancellationToken)
@@ -48,7 +51,7 @@
                     Email = user.Email ?? string.Empty,
                     DateRegistered = user.DateRegistered,
                     IsAdmin = adminIds.Contains(user.Id),
-                    IsLocked = user.LockoutEnd > DateTimeOffset.UtcNow,
+                    IsLocked = user.LockoutEnd > timeProvider.GetUtcNow(),
                     RecognitionCount = recognitionCounts.GetValueOrDefault(user.Id)
                 }).ToList(),
                 Page = page,
@@ -65,7 +68,7 @@
 
         public Task UnlockUserAsync(string adminId, string userId) =>
             ChangeUserAsync(adminId, userId, AdminAction.Unlock,
-                user => user.LockoutEnd > DateTimeOffset.UtcNow
+                user => user.LockoutEnd > timeProvider.GetUtcNow()
                     ? userManager.SetLockoutEndDateAsync(user, null)
                     : throw new RequestRefusedException(UserNotLocked));
 
@@ -116,7 +119,7 @@
                 auditLogs.Add(new AdminAuditLog
                 {
                     Action = action,
-                    DatePerformed = DateTime.UtcNow,
+                    DatePerformed = timeProvider.GetUtcNow().UtcDateTime,
                     AdminId = adminId,
                     UserId = userId
                 });

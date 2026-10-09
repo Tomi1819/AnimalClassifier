@@ -22,16 +22,19 @@ namespace AnimalClassifier.Core.Identity.Authentication
         private readonly IPasswordSignInChecker passwordSignInChecker;
         private readonly IAccessTokenIssuer tokenIssuer;
         private readonly IEmailConfirmationService emailConfirmationService;
+        private readonly TimeProvider timeProvider;
 
         public AuthService(UserManager<ApplicationUser> userManager,
                            IPasswordSignInChecker passwordSignInChecker,
                            IAccessTokenIssuer tokenIssuer,
-                           IEmailConfirmationService emailConfirmationService)
+                           IEmailConfirmationService emailConfirmationService,
+                           TimeProvider timeProvider)
         {
             this.userManager = userManager;
             this.passwordSignInChecker = passwordSignInChecker;
             this.tokenIssuer = tokenIssuer;
             this.emailConfirmationService = emailConfirmationService;
+            this.timeProvider = timeProvider;
         }
 
         public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
@@ -51,7 +54,7 @@ namespace AnimalClassifier.Core.Identity.Authentication
                 FullName = NameAtRegistration(request.FullName),
                 UserName = request.Email,
                 Email = request.Email,
-                DateRegistered = DateTime.UtcNow
+                DateRegistered = timeProvider.GetUtcNow().UtcDateTime
             };
 
             (await userManager.CreateAsync(user, request.Password)).ThrowIfFailed();

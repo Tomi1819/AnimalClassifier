@@ -27,6 +27,7 @@
         private readonly IMediaLinkService mediaLinks;
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IUnitOfWork unitOfWork;
+        private readonly TimeProvider timeProvider;
         private readonly ILogger<UploadService> logger;
 
         public UploadService(IUploadClassifier uploadClassifier,
@@ -34,6 +35,7 @@
                              IMediaLinkService mediaLinks,
                              IRecognitionLogRepository recognitionLogs,
                              IUnitOfWork unitOfWork,
+                             TimeProvider timeProvider,
                              ILogger<UploadService> logger)
         {
             this.uploadClassifier = uploadClassifier;
@@ -41,6 +43,7 @@
             this.mediaLinks = mediaLinks;
             this.recognitionLogs = recognitionLogs;
             this.unitOfWork = unitOfWork;
+            this.timeProvider = timeProvider;
             this.logger = logger;
         }
 
@@ -113,7 +116,7 @@
                 AnimalName = animal,
                 PredictionScore = score,
                 FramesProcessed = framesProcessed,
-                DateRecognized = DateTime.UtcNow
+                DateRecognized = timeProvider.GetUtcNow().UtcDateTime
             };
 
             recognitionLogs.Add(log);

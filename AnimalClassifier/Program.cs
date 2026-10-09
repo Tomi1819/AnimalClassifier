@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplicationHosting(builder.Environment);
 
+builder.Services.AddApplicationClock();
+
 builder.Services.AddApplicationPersistence(builder.Configuration);
 
 builder.Services.AddApplicationEmail(builder.Configuration, builder.Environment);
