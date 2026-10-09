@@ -18,18 +18,21 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
         private readonly IRecognitionFeedbackRepository feedbackRepository;
         private readonly IMediaLinkService mediaLinks;
         private readonly IUnitOfWork unitOfWork;
+        private readonly TimeProvider timeProvider;
 
         public FeedbackService(IImageClassifier classifier,
                                IRecognitionLogRepository recognitionLogs,
                                IRecognitionFeedbackRepository feedbackRepository,
                                IMediaLinkService mediaLinks,
-                               IUnitOfWork unitOfWork)
+                               IUnitOfWork unitOfWork,
+                               TimeProvider timeProvider)
         {
             this.classifier = classifier;
             this.recognitionLogs = recognitionLogs;
             this.feedbackRepository = feedbackRepository;
             this.mediaLinks = mediaLinks;
             this.unitOfWork = unitOfWork;
+            this.timeProvider = timeProvider;
         }
 
         public IReadOnlyList<string> GetKnownAnimals() => classifier.KnownAnimals;
@@ -76,7 +79,7 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
             feedback.ActualAnimal = actualAnimal;
             feedback.Comment = comment;
             feedback.AllowsTraining = request.AllowsTraining;
-            feedback.DateSubmitted = DateTime.UtcNow;
+            feedback.DateSubmitted = timeProvider.GetUtcNow().UtcDateTime;
 
             // A review was of what the feedback said then, so a changed one
             // waits for another.

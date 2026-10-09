@@ -11,7 +11,7 @@ namespace AnimalClassifier.Core.Identity.Account
     using static AnimalClassifier.Core.Identity.Account.AccountMessages;
     using static AnimalClassifier.Core.Identity.RoleConstants;
 
-    public class AccountDeletionService : IAccountDeletionService
+    public partial class AccountDeletionService : IAccountDeletionService
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IPasswordConfirmer passwordConfirmer;
@@ -74,8 +74,11 @@ namespace AnimalClassifier.Core.Identity.Account
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                logger.LogError(exception, "Could not delete the uploaded files of deleted user {UserId}.", userId);
+                LogFilesNotDeleted(exception, userId);
             }
         }
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Could not delete the uploaded files of deleted user {UserId}.")]
+        private partial void LogFilesNotDeleted(Exception exception, string userId);
     }
 }

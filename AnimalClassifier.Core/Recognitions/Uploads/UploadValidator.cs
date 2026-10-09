@@ -2,6 +2,7 @@
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Recognitions.Uploads.Models;
+    using System.Globalization;
     using static AnimalClassifier.Core.Recognitions.Uploads.UploadMessages;
 
     /// <summary>
@@ -92,7 +93,7 @@
 
             if (file.Length > MaxFileSize)
             {
-                throw new RequestRefusedException(string.Format(FileTooLarge, MaxFileSize / BytesPerMegabyte));
+                throw new RequestRefusedException(string.Format(CultureInfo.InvariantCulture, FileTooLarge, MaxFileSize / BytesPerMegabyte));
             }
         }
 

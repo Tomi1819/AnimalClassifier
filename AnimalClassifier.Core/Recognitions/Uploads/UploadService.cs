@@ -11,7 +11,7 @@
     using System.Globalization;
     using static AnimalClassifier.Core.Recognitions.Uploads.UploadMessages;
 
-    public class UploadService : IUploadService
+    public partial class UploadService : IUploadService
     {
         /// <summary>
         /// What a video is recorded as when no animal shows clearly enough in
@@ -27,6 +27,7 @@
         private readonly IMediaLinkService mediaLinks;
         private readonly IRecognitionLogRepository recognitionLogs;
         private readonly IUnitOfWork unitOfWork;
+        private readonly TimeProvider timeProvider;
         private readonly ILogger<UploadService> logger;
 
         public UploadService(IUploadClassifier uploadClassifier,
@@ -34,6 +35,7 @@
                              IMediaLinkService mediaLinks,
                              IRecognitionLogRepository recognitionLogs,
                              IUnitOfWork unitOfWork,
+                             TimeProvider timeProvider,
                              ILogger<UploadService> logger)
         {
             this.uploadClassifier = uploadClassifier;
@@ -41,6 +43,7 @@
             this.mediaLinks = mediaLinks;
             this.recognitionLogs = recognitionLogs;
             this.unitOfWork = unitOfWork;
+            this.timeProvider = timeProvider;
             this.logger = logger;
         }
 
@@ -113,7 +116,7 @@
                 AnimalName = animal,
                 PredictionScore = score,
                 FramesProcessed = framesProcessed,
-                DateRecognized = DateTime.UtcNow
+                DateRecognized = timeProvider.GetUtcNow().UtcDateTime
             };
 
             recognitionLogs.Add(log);
@@ -147,7 +150,7 @@
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                logger.LogError(exception, "Could not remove {Path}, stored for an upload that failed.", storedFile.PhysicalPath);
+                LogFileNotRemoved(exception, storedFile.PhysicalPath);
             }
         }
 
@@ -175,5 +178,8 @@
             Animal = animal.Animal,
             AverageScore = animal.Score.ToString(ScoreFormat, CultureInfo.InvariantCulture)
         };
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Could not remove {Path}, stored for an upload that failed.")]
+        private partial void LogFileNotRemoved(Exception exception, string path);
     }
 }

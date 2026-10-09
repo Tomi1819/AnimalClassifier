@@ -8,7 +8,7 @@ namespace AnimalClassifier.Core.Recognitions.Training
     using System.IO.Compression;
     using System.Text;
 
-    public class TrainingDataExporter : ITrainingDataExporter
+    public partial class TrainingDataExporter : ITrainingDataExporter
     {
         // Model Builder trains an image classifier from a folder holding a
         // folder of images per animal, named after it, so this one merges
@@ -63,8 +63,7 @@ namespace AnimalClassifier.Core.Recognitions.Training
                 // Such as one removed by hand; the rest are still worth having.
                 if (image is null)
                 {
-                    logger.LogWarning("Left feedback {FeedbackId} out of the training data, as its image {FileName} is missing.",
-                        feedback.Id, feedback.Recognition.FileName);
+                    LogImageMissing(feedback.Id, feedback.Recognition.FileName);
                     continue;
                 }
 
@@ -100,5 +99,8 @@ namespace AnimalClassifier.Core.Recognitions.Training
                 feedback.Recognition.AnimalName,
                 feedback.Recognition.PredictionScore.ToString(CultureInfo.InvariantCulture),
                 feedback.Verdict);
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "Left feedback {FeedbackId} out of the training data, as its image {FileName} is missing.")]
+        private partial void LogImageMissing(int feedbackId, string fileName);
     }
 }

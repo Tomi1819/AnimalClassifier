@@ -17,6 +17,7 @@ namespace AnimalClassifier.Tests.Recognitions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
     using OpenCvSharp;
+    using System.Globalization;
     using System.Net;
     using System.Net.Http.Headers;
     using System.Net.Http.Json;
@@ -75,7 +76,7 @@ namespace AnimalClassifier.Tests.Recognitions
         {
             var account = await RegisterAsync();
             var user = await SignInAsync(account.Email);
-            var content = fileName.EndsWith(".png") ? Png : Jpeg;
+            var content = fileName.EndsWith(".png", StringComparison.Ordinal) ? Png : Jpeg;
 
             var response = await user.PostAsync(ImagePath, ImageForm(content, fileName, contentType));
 
@@ -141,13 +142,13 @@ namespace AnimalClassifier.Tests.Recognitions
         public async Task UploadImage_WithTooManyPixels_IsRefused(string fileName)
         {
             var user = await SignInAsync((await RegisterAsync()).Email);
-            byte[] header = fileName.EndsWith(".png")
+            byte[] header = fileName.EndsWith(".png", StringComparison.Ordinal)
                 ? [.. Png[..16], 0x00, 0x00, 0x27, 0x10, 0x00, 0x00, 0x27, 0x10, .. Png[24..]]
                 : [0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x27, 0x10, 0x27, 0x10, 0x03];
 
             var response = await user.PostAsync(ImagePath, ImageForm(header, fileName));
 
-            await AssertRefusedAsync(response, string.Format(UploadMessages.ImageTooLarge, ImageSanitizer.MaxMegapixels));
+            await AssertRefusedAsync(response, string.Format(CultureInfo.InvariantCulture, UploadMessages.ImageTooLarge, ImageSanitizer.MaxMegapixels));
         }
 
         [Fact]

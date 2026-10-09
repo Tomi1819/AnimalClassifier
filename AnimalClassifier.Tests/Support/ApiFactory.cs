@@ -26,7 +26,7 @@
     /// Runs the API against its own LocalDB database, created from the
     /// migrations and dropped once the tests finish.
     /// </summary>
-    public class ApiFactory : WebApplicationFactory<Program>
+    public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         /// <summary>
         /// The domain passkeys are expected to bind to, which is the

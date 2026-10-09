@@ -6,4 +6,22 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <!-- Microsoft's recommended code analysis, with any warning failing the
+       build, so that the code stays as clean as it is now. .editorconfig names
+       the few rules set aside. A package found vulnerable stays a warning, as
+       an advisory published overnight should not stop the app building. -->
+  <PropertyGroup>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!-- The app's code calls none of what BannedSymbols.txt lists, such as the
+       system clock, which it reads through an injected TimeProvider instead.
+       The tests may, as they set the scene a request runs in. -->
+  <ItemGroup Condition="'$(IsTestProject)' != 'true'">
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
+  </ItemGroup>
 </Project>

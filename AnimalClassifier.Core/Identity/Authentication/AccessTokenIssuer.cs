@@ -12,15 +12,19 @@ namespace AnimalClassifier.Core.Identity.Authentication
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly JwtSettings jwtSettings;
+        private readonly TimeProvider timeProvider;
 
-        public AccessTokenIssuer(UserManager<ApplicationUser> userManager, IOptions<JwtSettings> jwtOptions)
+        public AccessTokenIssuer(UserManager<ApplicationUser> userManager,
+                                 IOptions<JwtSettings> jwtOptions,
+                                 TimeProvider timeProvider)
         {
             this.userManager = userManager;
             this.jwtSettings = jwtOptions.Value;
+            this.timeProvider = timeProvider;
         }
 
         public Task<LoginResponse> IssueAsync(ApplicationUser user) =>
-            CreateAsync(user, DateTime.UtcNow.AddHours(jwtSettings.ExpirationHours));
+            CreateAsync(user, timeProvider.GetUtcNow().UtcDateTime.AddHours(jwtSettings.ExpirationHours));
 
         public Task<LoginResponse> ReissueAsync(ApplicationUser user, DateTime expiration) =>
             CreateAsync(user, expiration);

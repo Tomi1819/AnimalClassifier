@@ -1,7 +1,7 @@
 namespace AnimalClassifier.Core.Recognitions.Training
 {
     using AnimalClassifier.Core.Data.Entities;
-    using AnimalClassifier.Core.Data.Repositories;
+    using AnimalClassifier.Core.Data.Queries;
     using AnimalClassifier.Core.Recognitions.Training.Models;
 
     public class FeedbackSummaryService : IFeedbackSummaryService
@@ -12,19 +12,19 @@ namespace AnimalClassifier.Core.Recognitions.Training
         /// </summary>
         public const int ListedCount = 10;
 
-        private readonly IRecognitionFeedbackRepository feedbackRepository;
+        private readonly IFeedbackSummaryQueries feedbackSummary;
 
-        public FeedbackSummaryService(IRecognitionFeedbackRepository feedbackRepository)
+        public FeedbackSummaryService(IFeedbackSummaryQueries feedbackSummary)
         {
-            this.feedbackRepository = feedbackRepository;
+            this.feedbackSummary = feedbackSummary;
         }
 
         public async Task<FeedbackSummary> GetSummaryAsync(CancellationToken cancellationToken)
         {
-            var verdicts = await feedbackRepository.CountByVerdictAsync(cancellationToken);
-            var reviews = await feedbackRepository.CountForReviewByStatusAsync(cancellationToken);
-            var mistakes = await feedbackRepository.GetMostCommonMistakesAsync(ListedCount, cancellationToken);
-            var requested = await feedbackRepository.GetMostNamedUnlistedAnimalsAsync(ListedCount, cancellationToken);
+            var verdicts = await feedbackSummary.CountByVerdictAsync(cancellationToken);
+            var reviews = await feedbackSummary.CountForReviewByStatusAsync(cancellationToken);
+            var mistakes = await feedbackSummary.GetMostCommonMistakesAsync(ListedCount, cancellationToken);
+            var requested = await feedbackSummary.GetMostNamedUnlistedAnimalsAsync(ListedCount, cancellationToken);
 
             return new FeedbackSummary
             {

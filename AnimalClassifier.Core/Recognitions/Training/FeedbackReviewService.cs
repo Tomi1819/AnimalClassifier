@@ -15,14 +15,17 @@ namespace AnimalClassifier.Core.Recognitions.Training
         private readonly IRecognitionFeedbackRepository feedbackRepository;
         private readonly IMediaLinkService mediaLinks;
         private readonly IUnitOfWork unitOfWork;
+        private readonly TimeProvider timeProvider;
 
         public FeedbackReviewService(IRecognitionFeedbackRepository feedbackRepository,
                                      IMediaLinkService mediaLinks,
-                                     IUnitOfWork unitOfWork)
+                                     IUnitOfWork unitOfWork,
+                                     TimeProvider timeProvider)
         {
             this.feedbackRepository = feedbackRepository;
             this.mediaLinks = mediaLinks;
             this.unitOfWork = unitOfWork;
+            this.timeProvider = timeProvider;
         }
 
         public async Task<PagedResult<FeedbackReviewItem>> GetFeedbackAsync(FeedbackReviewStatus status, int page, CancellationToken cancellationToken)
@@ -55,7 +58,7 @@ namespace AnimalClassifier.Core.Recognitions.Training
             }
 
             feedback.ReviewStatus = status;
-            feedback.DateReviewed = DateTime.UtcNow;
+            feedback.DateReviewed = timeProvider.GetUtcNow().UtcDateTime;
 
             await unitOfWork.SaveChangesAsync();
         }

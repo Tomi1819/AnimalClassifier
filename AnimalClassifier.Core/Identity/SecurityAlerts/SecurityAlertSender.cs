@@ -5,7 +5,7 @@ namespace AnimalClassifier.Core.Identity.SecurityAlerts
     using Microsoft.Extensions.Logging;
     using static AnimalClassifier.Core.Identity.SecurityAlerts.SecurityAlertEmail;
 
-    public class SecurityAlertSender : ISecurityAlertSender
+    public partial class SecurityAlertSender : ISecurityAlertSender
     {
         private readonly IEmailSender emailSender;
         private readonly ILogger<SecurityAlertSender> logger;
@@ -41,9 +41,11 @@ namespace AnimalClassifier.Core.Identity.SecurityAlerts
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Could not send the security alert \"{Subject}\" to user {UserId}.",
-                    subject, user.Id);
+                LogAlertNotSent(exception, subject, user.Id);
             }
         }
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Could not send the security alert \"{Subject}\" to user {UserId}.")]
+        private partial void LogAlertNotSent(Exception exception, string subject, string userId);
     }
 }

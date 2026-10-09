@@ -1,13 +1,15 @@
 namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Data.Queries;
     using AnimalClassifier.Core.Data.Repositories;
     using AnimalClassifier.Infrastructure.Data;
+    using AnimalClassifier.Infrastructure.Data.Queries;
     using AnimalClassifier.Infrastructure.Data.Repositories;
     using Microsoft.EntityFrameworkCore;
 
     /// <summary>
-    /// The database, and the repositories every area reads and writes it
-    /// through.
+    /// The database, the repositories every area reads and writes it
+    /// through, and the queries that count and search across it.
     /// </summary>
     public static class PersistenceServiceCollectionExtension
     {
@@ -27,6 +29,10 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IAdminAuditLogRepository, AdminAuditLogRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            services.AddScoped<IRecognitionStatisticsQueries, RecognitionStatisticsQueries>();
+            services.AddScoped<IRecognitionSearchQueries, RecognitionSearchQueries>();
+            services.AddScoped<IFeedbackSummaryQueries, FeedbackSummaryQueries>();
 
             return services;
         }

@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Statistics
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Data.Repositories;
+    using AnimalClassifier.Core.Data.Queries;
     using AnimalClassifier.Core.Recognitions.Statistics.Models;
     using static AnimalClassifier.Core.Recognitions.Statistics.StatisticsMessages;
 
@@ -16,22 +16,24 @@
         /// </summary>
         public const int MostCommonAnimalCount = 3;
 
-        private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IRecognitionStatisticsQueries recognitionStatistics;
+        private readonly TimeProvider timeProvider;
 
-        public StatisticsService(IRecognitionLogRepository recognitionLogs)
+        public StatisticsService(IRecognitionStatisticsQueries recognitionStatistics, TimeProvider timeProvider)
         {
-            this.recognitionLogs = recognitionLogs;
+            this.recognitionStatistics = recognitionStatistics;
+            this.timeProvider = timeProvider;
         }
 
         public Task<int> GetTotalRecognitionsAsync(CancellationToken cancellationToken) =>
-            recognitionLogs.CountAsync(cancellationToken);
+            recognitionStatistics.CountAsync(cancellationToken);
 
         public Task<int> GetUserCountAsync(CancellationToken cancellationToken) =>
-            recognitionLogs.CountUsersAsync(cancellationToken);
+            recognitionStatistics.CountUsersAsync(cancellationToken);
 
         public async Task<IReadOnlyList<MostCommonAnimal>> GetMostCommonAnimalsAsync(CancellationToken cancellationToken)
         {
-            var animals = await recognitionLogs.GetMostRecognisedAnimalsAsync(MostCommonAnimalCount, cancellationToken);
+            var animals = await recognitionStatistics.GetMostRecognisedAnimalsAsync(MostCommonAnimalCount, cancellationToken);
 
             return animals
                 .Select(animal => new MostCommonAnimal { AnimalName = animal.AnimalName, Count = animal.Count })
@@ -42,12 +44,15 @@
         {
             var timeZone = FindTimeZone(timeZoneId);
 
-            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone));
+            // Read once, so that today and the days read are the same
+            // whenever the request runs across midnight.
+            var now = timeProvider.GetUtcNow().UtcDateTime;
+            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, timeZone));
             var firstDay = today.AddDays(1 - days);
 
             // A day more than asked for, which covers the first day wherever
             // it starts in relation to UTC.
-            var dates = await recognitionLogs.GetDatesSinceAsync(DateTime.UtcNow.AddDays(-(days + 1)), cancellationToken);
+            var dates = await recognitionStatistics.GetDatesSinceAsync(now.AddDays(-(days + 1)), cancellationToken);
 
             var counts = dates
                 .GroupBy(date => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(date, timeZone)))

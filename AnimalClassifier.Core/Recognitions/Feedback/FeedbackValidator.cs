@@ -2,6 +2,7 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
 {
     using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Data.Entities;
+    using System.Globalization;
     using System.Text.RegularExpressions;
     using static AnimalClassifier.Core.Recognitions.Feedback.FeedbackMessages;
 
@@ -49,7 +50,7 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
 
             if (tidied?.Length > RecognitionFeedback.MaxCommentLength)
             {
-                throw new RequestRefusedException(string.Format(CommentTooLong, RecognitionFeedback.MaxCommentLength));
+                throw new RequestRefusedException(string.Format(CultureInfo.InvariantCulture, CommentTooLong, RecognitionFeedback.MaxCommentLength));
             }
 
             return string.IsNullOrEmpty(tidied) ? null : tidied;
@@ -67,7 +68,7 @@ namespace AnimalClassifier.Core.Recognitions.Feedback
         {
             if (named.Length > RecognitionFeedback.MaxActualAnimalLength || !AnimalName().IsMatch(named))
             {
-                throw new RequestRefusedException(string.Format(InvalidAnimalName, RecognitionFeedback.MaxActualAnimalLength));
+                throw new RequestRefusedException(string.Format(CultureInfo.InvariantCulture, InvalidAnimalName, RecognitionFeedback.MaxActualAnimalLength));
             }
 
             if (knownAnimals.Any(animal => Same(animal, named)))

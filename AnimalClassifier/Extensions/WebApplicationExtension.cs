@@ -7,7 +7,7 @@
     using Microsoft.Extensions.Options;
     using static AnimalClassifier.Core.Identity.RoleConstants;
 
-    public static class WebApplicationExtension
+    public static partial class WebApplicationExtension
     {
         // The API answers with JSON, images and videos, never a page, so
         // nothing it sends may run a script, be read as another type, or be
@@ -70,17 +70,23 @@
             var admin = await userManager.FindByEmailAsync(adminEmail);
             if (admin is null)
             {
-                app.Logger.LogWarning("No account is registered with the administrator email {AdminEmail}.", adminEmail);
+                LogAdminNotRegistered(app.Logger, adminEmail);
                 return;
             }
 
             if (!admin.EmailConfirmed)
             {
-                app.Logger.LogWarning("The administrator email {AdminEmail} has not been confirmed yet.", adminEmail);
+                LogAdminNotConfirmed(app.Logger, adminEmail);
                 return;
             }
 
             await userManager.AddToRoleAsync(admin, Admin);
         }
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "No account is registered with the administrator email {AdminEmail}.")]
+        private static partial void LogAdminNotRegistered(ILogger logger, string adminEmail);
+
+        [LoggerMessage(Level = LogLevel.Warning, Message = "The administrator email {AdminEmail} has not been confirmed yet.")]
+        private static partial void LogAdminNotConfirmed(ILogger logger, string adminEmail);
     }
 }

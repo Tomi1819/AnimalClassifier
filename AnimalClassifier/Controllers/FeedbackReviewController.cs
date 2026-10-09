@@ -22,14 +22,17 @@ namespace AnimalClassifier.Controllers
         private readonly IFeedbackReviewService reviewService;
         private readonly IFeedbackSummaryService summaryService;
         private readonly ITrainingDataExporter trainingDataExporter;
+        private readonly TimeProvider timeProvider;
 
         public FeedbackReviewController(IFeedbackReviewService reviewService,
                                         IFeedbackSummaryService summaryService,
-                                        ITrainingDataExporter trainingDataExporter)
+                                        ITrainingDataExporter trainingDataExporter,
+                                        TimeProvider timeProvider)
         {
             this.reviewService = reviewService;
             this.summaryService = summaryService;
             this.trainingDataExporter = trainingDataExporter;
+            this.timeProvider = timeProvider;
         }
 
         /// <summary>
@@ -80,6 +83,6 @@ namespace AnimalClassifier.Controllers
         }
 
         // Dated, so that exports made on different days sit side by side.
-        private static string ExportFileName() => $"animal-classifier-training-{DateTime.UtcNow:yyyy-MM-dd}.zip";
+        private string ExportFileName() => $"animal-classifier-training-{timeProvider.GetUtcNow():yyyy-MM-dd}.zip";
     }
 }

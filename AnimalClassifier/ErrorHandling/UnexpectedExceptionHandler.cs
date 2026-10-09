@@ -11,7 +11,7 @@ namespace AnimalClassifier.ErrorHandling
     /// The exception's own message describes the inside of the app, so it is
     /// logged and never sent.
     /// </summary>
-    public class UnexpectedExceptionHandler : IExceptionHandler
+    public partial class UnexpectedExceptionHandler : IExceptionHandler
     {
         private readonly ILogger<UnexpectedExceptionHandler> logger;
 
@@ -37,16 +37,22 @@ namespace AnimalClassifier.ErrorHandling
         {
             if (exception is BadHttpRequestException badRequest)
             {
-                logger.LogInformation(exception, "Refused a request that could not be read.");
+                LogUnreadableRequest(exception);
 
                 return (badRequest.StatusCode, badRequest.StatusCode == StatusCodes.Status413PayloadTooLarge
                     ? ErrorMessages.RequestTooLarge
                     : ErrorMessages.InvalidRequest);
             }
 
-            logger.LogError(exception, "A request failed with an unexpected exception.");
+            LogUnexpectedException(exception);
 
             return (StatusCodes.Status500InternalServerError, ErrorMessages.UnexpectedError);
         }
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Refused a request that could not be read.")]
+        private partial void LogUnreadableRequest(Exception exception);
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "A request failed with an unexpected exception.")]
+        private partial void LogUnexpectedException(Exception exception);
     }
 }

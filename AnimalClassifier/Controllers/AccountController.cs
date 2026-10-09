@@ -26,16 +26,19 @@ namespace AnimalClassifier.Controllers
         private readonly IDataExportService dataExportService;
         private readonly IAccountDeletionService accountDeletionService;
         private readonly IEmailConfirmationService emailConfirmationService;
+        private readonly TimeProvider timeProvider;
 
         public AccountController(IAccountService accountService,
                                  IDataExportService dataExportService,
                                  IAccountDeletionService accountDeletionService,
-                                 IEmailConfirmationService emailConfirmationService)
+                                 IEmailConfirmationService emailConfirmationService,
+                                 TimeProvider timeProvider)
         {
             this.accountService = accountService;
             this.dataExportService = dataExportService;
             this.accountDeletionService = accountDeletionService;
             this.emailConfirmationService = emailConfirmationService;
+            this.timeProvider = timeProvider;
         }
 
         [HttpGet]
@@ -93,6 +96,6 @@ namespace AnimalClassifier.Controllers
         }
 
         // Dated, so that copies downloaded on different days sit side by side.
-        private static string ExportFileName() => $"animal-classifier-data-{DateTime.UtcNow:yyyy-MM-dd}.zip";
+        private string ExportFileName() => $"animal-classifier-data-{timeProvider.GetUtcNow():yyyy-MM-dd}.zip";
     }
 }
