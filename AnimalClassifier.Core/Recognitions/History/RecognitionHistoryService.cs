@@ -8,7 +8,7 @@ namespace AnimalClassifier.Core.Recognitions.History
     using AnimalClassifier.Core.Recognitions.Media;
     using Microsoft.Extensions.Logging;
 
-    public class RecognitionHistoryService : IRecognitionHistoryService
+    public partial class RecognitionHistoryService : IRecognitionHistoryService
     {
         /// <summary>
         /// How many recognitions a page of the history holds.
@@ -45,7 +45,7 @@ namespace AnimalClassifier.Core.Recognitions.History
         {
             var cleared = await recognitionLogs.ClearHistoryAsync(userId);
 
-            logger.LogInformation("Cleared {Count} recognition(s) from the history of user {UserId}.", cleared, userId);
+            LogHistoryCleared(cleared, userId);
         }
 
         private RecognitionHistoryItem ToHistoryItem(AnimalRecognitionLog log) => new()
@@ -59,5 +59,8 @@ namespace AnimalClassifier.Core.Recognitions.History
             IsVideo = !MediaFile.IsImage(log.FileName),
             Feedback = log.Feedback is null ? null : FeedbackDetails.From(log.Feedback)
         };
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Cleared {Count} recognition(s) from the history of user {UserId}.")]
+        private partial void LogHistoryCleared(int count, string userId);
     }
 }

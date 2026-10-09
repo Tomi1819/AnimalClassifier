@@ -11,7 +11,7 @@
     using Microsoft.Extensions.Options;
     using static AnimalClassifier.Core.Identity.Passwords.PasswordMessages;
 
-    public class PasswordResetService : IPasswordResetService
+    public partial class PasswordResetService : IPasswordResetService
     {
         private static readonly string InvalidTokenCode = new IdentityErrorDescriber().InvalidToken().Code;
 
@@ -58,7 +58,7 @@
                 // The caller hears nothing about this. An error here, where an
                 // unregistered address gets a cheerful 200, would answer the
                 // question the endpoint refuses to answer.
-                logger.LogError(exception, "Could not send a password reset email to user {UserId}.", user.Id);
+                LogResetEmailNotSent(exception, user.Id);
             }
         }
 
@@ -88,5 +88,8 @@
 
             await securityAlertSender.PasswordChangedAsync(user);
         }
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Could not send a password reset email to user {UserId}.")]
+        private partial void LogResetEmailNotSent(Exception exception, string userId);
     }
 }

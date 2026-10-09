@@ -9,7 +9,7 @@
     /// readable by anyone who can read the log, which is why nothing registers
     /// this outside development.
     /// </summary>
-    public class LoggingEmailSender : IEmailSender
+    public partial class LoggingEmailSender : IEmailSender
     {
         private readonly ILogger<LoggingEmailSender> logger;
 
@@ -20,10 +20,12 @@
 
         public Task SendAsync(string recipient, string subject, string htmlBody)
         {
-            logger.LogInformation("Email to {Recipient}, \"{Subject}\":\n{Body}",
-                recipient, subject, htmlBody);
+            LogEmail(recipient, subject, htmlBody);
 
             return Task.CompletedTask;
         }
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "Email to {Recipient}, \"{Subject}\":\n{Body}")]
+        private partial void LogEmail(string recipient, string subject, string body);
     }
 }

@@ -10,7 +10,7 @@ namespace AnimalClassifier.Core.Identity.EmailConfirmation
     using Microsoft.Extensions.Options;
     using static AnimalClassifier.Core.Identity.EmailConfirmation.EmailConfirmationMessages;
 
-    public class EmailConfirmationService : IEmailConfirmationService
+    public partial class EmailConfirmationService : IEmailConfirmationService
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IEmailSender emailSender;
@@ -36,7 +36,7 @@ namespace AnimalClassifier.Core.Identity.EmailConfirmation
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Could not send an email confirmation link to user {UserId}.", user.Id);
+                LogLinkNotSent(exception, user.Id);
             }
         }
 
@@ -79,5 +79,8 @@ namespace AnimalClassifier.Core.Identity.EmailConfirmation
 
             await emailSender.SendAsync(user.Email, EmailConfirmationEmail.Subject, EmailConfirmationEmail.BuildBody(user.FullName, link));
         }
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Could not send an email confirmation link to user {UserId}.")]
+        private partial void LogLinkNotSent(Exception exception, string userId);
     }
 }

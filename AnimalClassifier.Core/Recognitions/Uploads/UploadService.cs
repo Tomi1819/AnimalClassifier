@@ -11,7 +11,7 @@
     using System.Globalization;
     using static AnimalClassifier.Core.Recognitions.Uploads.UploadMessages;
 
-    public class UploadService : IUploadService
+    public partial class UploadService : IUploadService
     {
         /// <summary>
         /// What a video is recorded as when no animal shows clearly enough in
@@ -147,7 +147,7 @@
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                logger.LogError(exception, "Could not remove {Path}, stored for an upload that failed.", storedFile.PhysicalPath);
+                LogFileNotRemoved(exception, storedFile.PhysicalPath);
             }
         }
 
@@ -175,5 +175,8 @@
             Animal = animal.Animal,
             AverageScore = animal.Score.ToString(ScoreFormat, CultureInfo.InvariantCulture)
         };
+
+        [LoggerMessage(Level = LogLevel.Error, Message = "Could not remove {Path}, stored for an upload that failed.")]
+        private partial void LogFileNotRemoved(Exception exception, string path);
     }
 }
