@@ -21,6 +21,24 @@ dotnet_sort_system_directives_first = false
 
 dotnet_diagnostic.IDE0005.severity = suggestion
 
+# The rules of the recommended analysis that the code sets aside, each for its
+# reason. Any other warning fails the build; see Directory.Build.props.
+
+# LINQ's First and FirstOrDefault already index a list rather than enumerate it.
+dotnet_diagnostic.CA1826.severity = none
+
+# A private member is typed by what it promises, as a public one is. A concrete
+# type would save a virtual call, which nothing here needs.
+dotnet_diagnostic.CA1859.severity = none
+
+# A message is formatted once, for a refused request, so caching its parsed
+# form would save nothing worth the field it takes.
+dotnet_diagnostic.CA1863.severity = none
+
+# Test names read as sentences, with underscores between their parts.
+[AnimalClassifier.Tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
+
 # EF Core writes the migrations, so they are left as it wrote them rather than
 # held to the conventions above.
 [**/Migrations/*.cs]
