@@ -570,7 +570,7 @@ AnimalClassifier.Core/             What the app does
     Models/                        Responses shared by every area, such as MessageResponse and PagedResult
     Settings/                      ISettings, which every settings class implements, and the frontend's settings
     Storage/                       IFileStorageService, which uploads are kept through, and temporary files
-  Data/                            The entities, and the repository per table they are read and written through
+  Data/                            The entities, the repository per table they are read and written through, and the reports' queries
   Identity/                        Accounts and signing in; AccountName and the roles sit here
     SecurityAlerts/                The emails sent when how an account signs in changes
     EmailConfirmation/             Confirming an account's email with a link mailed to it
@@ -589,7 +589,7 @@ AnimalClassifier.Core/             What the app does
     Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
 AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside the app are implemented with
-  Data/                            The database's context and configurations, and each repository's implementation
+  Data/                            The database's context and configurations, and each repository's and query's implementation
   Migrations/                      Every change to the schema
   Email/                           Sending email over SMTP, or into the log in development
   Storage/                         Keeping uploaded files on disk, a folder per user
@@ -629,9 +629,13 @@ The entities and the repositories' interfaces are Core's, in `Data/`, and
 Infrastructure implements the repositories with Entity Framework Core, so Core
 never depends on Infrastructure. Each table has a repository of its own, and
 `IUnitOfWork` saves what they were given and runs several changes in one
-transaction. A read that serves a request can take the request's cancellation
-token, since abandoning one loses nothing; a write never does, so that a caller
-who goes away cannot leave a change half made.
+transaction. What a report counts or searches across every user's rows, such
+as the statistics, is a query of its own in `Data/Queries/` instead, so that a
+repository keeps to storing and finding its table's rows, and a report's
+service depends on nothing but what it reads. A read that serves a request can
+take the request's cancellation token, since abandoning one loses nothing; a
+write never does, so that a caller who goes away cannot leave a change half
+made.
 
 ### Adding a feature
 

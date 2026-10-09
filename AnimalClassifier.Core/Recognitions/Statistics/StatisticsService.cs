@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Statistics
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Data.Repositories;
+    using AnimalClassifier.Core.Data.Queries;
     using AnimalClassifier.Core.Recognitions.Statistics.Models;
     using static AnimalClassifier.Core.Recognitions.Statistics.StatisticsMessages;
 
@@ -16,24 +16,24 @@
         /// </summary>
         public const int MostCommonAnimalCount = 3;
 
-        private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IRecognitionStatisticsQueries recognitionStatistics;
         private readonly TimeProvider timeProvider;
 
-        public StatisticsService(IRecognitionLogRepository recognitionLogs, TimeProvider timeProvider)
+        public StatisticsService(IRecognitionStatisticsQueries recognitionStatistics, TimeProvider timeProvider)
         {
-            this.recognitionLogs = recognitionLogs;
+            this.recognitionStatistics = recognitionStatistics;
             this.timeProvider = timeProvider;
         }
 
         public Task<int> GetTotalRecognitionsAsync(CancellationToken cancellationToken) =>
-            recognitionLogs.CountAsync(cancellationToken);
+            recognitionStatistics.CountAsync(cancellationToken);
 
         public Task<int> GetUserCountAsync(CancellationToken cancellationToken) =>
-            recognitionLogs.CountUsersAsync(cancellationToken);
+            recognitionStatistics.CountUsersAsync(cancellationToken);
 
         public async Task<IReadOnlyList<MostCommonAnimal>> GetMostCommonAnimalsAsync(CancellationToken cancellationToken)
         {
-            var animals = await recognitionLogs.GetMostRecognisedAnimalsAsync(MostCommonAnimalCount, cancellationToken);
+            var animals = await recognitionStatistics.GetMostRecognisedAnimalsAsync(MostCommonAnimalCount, cancellationToken);
 
             return animals
                 .Select(animal => new MostCommonAnimal { AnimalName = animal.AnimalName, Count = animal.Count })
@@ -52,7 +52,7 @@
 
             // A day more than asked for, which covers the first day wherever
             // it starts in relation to UTC.
-            var dates = await recognitionLogs.GetDatesSinceAsync(now.AddDays(-(days + 1)), cancellationToken);
+            var dates = await recognitionStatistics.GetDatesSinceAsync(now.AddDays(-(days + 1)), cancellationToken);
 
             var counts = dates
                 .GroupBy(date => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(date, timeZone)))

@@ -1,7 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Search
 {
     using AnimalClassifier.Core.Common.Exceptions;
-    using AnimalClassifier.Core.Data.Repositories;
+    using AnimalClassifier.Core.Data.Queries;
     using AnimalClassifier.Core.Recognitions.Media;
     using AnimalClassifier.Core.Recognitions.Search.Models;
     using static AnimalClassifier.Core.Recognitions.Search.SearchMessages;
@@ -22,12 +22,12 @@
         /// </summary>
         public const int MaxImagesPerAnimal = 12;
 
-        private readonly IRecognitionLogRepository recognitionLogs;
+        private readonly IRecognitionSearchQueries recognitionSearch;
         private readonly IMediaLinkService mediaLinks;
 
-        public AnimalSearchService(IRecognitionLogRepository recognitionLogs, IMediaLinkService mediaLinks)
+        public AnimalSearchService(IRecognitionSearchQueries recognitionSearch, IMediaLinkService mediaLinks)
         {
-            this.recognitionLogs = recognitionLogs;
+            this.recognitionSearch = recognitionSearch;
             this.mediaLinks = mediaLinks;
         }
 
@@ -39,7 +39,7 @@
             }
 
             // Only images can be shown on the page; a video is left out.
-            var matches = await recognitionLogs.CountByAnimalNameAsync(searchTerm.Trim(), MediaFile.ImageExtensions, cancellationToken);
+            var matches = await recognitionSearch.CountByAnimalNameAsync(searchTerm.Trim(), MediaFile.ImageExtensions, cancellationToken);
 
             if (matches.Count == 0)
             {
@@ -58,7 +58,7 @@
                 .Where(match => match.Accuracy >= MinAccuracy)
                 .ToList();
 
-            var latest = await recognitionLogs.GetLatestByAnimalsAsync(
+            var latest = await recognitionSearch.GetLatestByAnimalsAsync(
                 shown.Select(match => match.AnimalName), MediaFile.ImageExtensions, MaxImagesPerAnimal, cancellationToken);
 
             // Matched to the animals the way the database grouped them, whose

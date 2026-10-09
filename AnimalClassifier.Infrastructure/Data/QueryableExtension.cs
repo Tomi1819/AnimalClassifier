@@ -1,5 +1,7 @@
-namespace AnimalClassifier.Infrastructure.Data.Repositories
+namespace AnimalClassifier.Infrastructure.Data
 {
+    using AnimalClassifier.Core.Data.Entities;
+
     public static class QueryableExtension
     {
         /// <summary>
@@ -11,5 +13,12 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
         public static IQueryable<T> TakePage<T>(this IQueryable<T> query, int page, int pageSize) =>
             query.Skip((int)Math.Min((page - 1L) * pageSize, int.MaxValue))
                  .Take(pageSize);
+
+        /// <summary>
+        /// The feedback an administrator reviews. Feedback whose user did not
+        /// allow training is never reviewed, so the review never sees it.
+        /// </summary>
+        public static IQueryable<RecognitionFeedback> ForReview(this IQueryable<RecognitionFeedback> feedback) =>
+            feedback.Where(f => f.AllowsTraining);
     }
 }
