@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Email">
-    <PackageVersion Include="MailKit" Version="4.18.0" />
+    <PackageVersion Include="MailKit" Version="4.18.1" />
   </ItemGroup>
 
   <ItemGroup Label="Code analysis">
