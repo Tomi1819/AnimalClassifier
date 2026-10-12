@@ -20,9 +20,6 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
         public Task<int> CountAsync(CancellationToken cancellationToken) =>
             Logs.CountAsync(cancellationToken);
 
-        public Task<int> CountUsersAsync(CancellationToken cancellationToken) =>
-            Logs.Select(l => l.UserId).Distinct().CountAsync(cancellationToken);
-
         public async Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(int count, CancellationToken cancellationToken)
         {
             // Ties are put in alphabetical order, so that the same counts

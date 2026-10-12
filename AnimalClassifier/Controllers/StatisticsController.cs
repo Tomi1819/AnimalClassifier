@@ -24,10 +24,6 @@
         public async Task<IActionResult> GetTotal(CancellationToken cancellationToken) =>
             Ok(await statisticsService.GetTotalRecognitionsAsync(cancellationToken));
 
-        [HttpGet("users")]
-        public async Task<IActionResult> GetUniqueUsers(CancellationToken cancellationToken) =>
-            Ok(await statisticsService.GetUserCountAsync(cancellationToken));
-
         [HttpGet("top-animal")]
         public async Task<IActionResult> GetTopAnimals(CancellationToken cancellationToken) =>
             Ok(await statisticsService.GetMostCommonAnimalsAsync(cancellationToken));

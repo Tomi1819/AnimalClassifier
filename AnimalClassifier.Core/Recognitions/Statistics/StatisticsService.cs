@@ -28,9 +28,6 @@
         public Task<int> GetTotalRecognitionsAsync(CancellationToken cancellationToken) =>
             recognitionStatistics.CountAsync(cancellationToken);
 
-        public Task<int> GetUserCountAsync(CancellationToken cancellationToken) =>
-            recognitionStatistics.CountUsersAsync(cancellationToken);
-
         public async Task<IReadOnlyList<MostCommonAnimal>> GetMostCommonAnimalsAsync(CancellationToken cancellationToken)
         {
             var animals = await recognitionStatistics.GetMostRecognisedAnimalsAsync(MostCommonAnimalCount, cancellationToken);

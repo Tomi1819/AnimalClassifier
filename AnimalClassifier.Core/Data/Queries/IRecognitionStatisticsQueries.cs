@@ -12,11 +12,6 @@ namespace AnimalClassifier.Core.Data.Queries
         Task<int> CountAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// How many users have made a recognition, cleared ones included.
-        /// </summary>
-        Task<int> CountUsersAsync(CancellationToken cancellationToken);
-
-        /// <summary>
         /// The animals recognised most, with how often each was, most first.
         /// </summary>
         /// <param name="count">How many animals to read.</param>

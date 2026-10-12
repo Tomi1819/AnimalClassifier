@@ -61,9 +61,6 @@ namespace AnimalClassifier.Tests.Recognitions
             public Task<int> CountAsync(CancellationToken cancellationToken) =>
                 throw new NotSupportedException();
 
-            public Task<int> CountUsersAsync(CancellationToken cancellationToken) =>
-                throw new NotSupportedException();
-
             public Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(int count, CancellationToken cancellationToken) =>
                 throw new NotSupportedException();
         }

@@ -35,19 +35,6 @@
         }
 
         [Fact]
-        public async Task GetUniqueUsers_CountsEachUserOnce()
-        {
-            var account = await RegisterAsync();
-            var user = await SignInAsync(account.Email);
-            var before = await user.GetFromJsonAsync<int>("/api/statistics/users");
-
-            await AddRecognitionAsync(account.UserId);
-            await AddRecognitionAsync(account.UserId);
-
-            Assert.Equal(before + 1, await user.GetFromJsonAsync<int>("/api/statistics/users"));
-        }
-
-        [Fact]
         public async Task GetTopAnimals_ListsTheAnimalRecognisedMostFirst()
         {
             var account = await RegisterAsync();

@@ -13,11 +13,6 @@
         Task<int> GetTotalRecognitionsAsync(CancellationToken cancellationToken);
 
         /// <summary>
-        /// How many users have made a recognition.
-        /// </summary>
-        Task<int> GetUserCountAsync(CancellationToken cancellationToken);
-
-        /// <summary>
         /// The <see cref="StatisticsService.MostCommonAnimalCount"/> animals
         /// recognised most, most first.
         /// </summary>
