@@ -378,11 +378,12 @@ first unless given; one past the last has no items. An administrator reads any
 user's the same way, from `GET /api/admin/users/{id}/history?page=1`.
 
 `GET /api/animal/search?searchTerm=cat` finds the animals whose name contains
-the term among every user's images, and answers each with how many images it
-was recognised in and links to the 12 most recent. A term such as `a` matches
-nearly every animal, so one recognised less than 70% as often as the match
-recognised most is left out. Videos are left out, as the page shows images,
-and so are recognitions cleared from their owner's history. When nothing
+the term among the signed-in user's own images, and answers each with how many
+of them it was recognised in and links to the 12 most recent. No other user's
+images are ever found. A term such as `a` matches nearly every animal, so one
+recognised less than 70% as often as the match recognised most is left out.
+Videos are left out, as the page shows images, and so are recognitions cleared
+from the history. When nothing
 matches, the answer is `404 Not Found`.
 
 ### Feedback on a recognition

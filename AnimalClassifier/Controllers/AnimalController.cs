@@ -1,9 +1,13 @@
 ﻿namespace AnimalClassifier.Controllers
 {
     using AnimalClassifier.Core.Recognitions.Search;
+    using AnimalClassifier.Extensions;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
+    /// <summary>
+    /// Finding animals among the signed-in user's own images.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -22,6 +26,6 @@
         /// </summary>
         [HttpGet("search")]
         public async Task<IActionResult> SearchAnimals([FromQuery] string? searchTerm, CancellationToken cancellationToken) =>
-            Ok(await searchService.SearchAsync(searchTerm, cancellationToken));
+            Ok(await searchService.SearchAsync(User.RequiredId(), searchTerm, cancellationToken));
     }
 }

@@ -31,7 +31,7 @@
             this.mediaLinks = mediaLinks;
         }
 
-        public async Task<IReadOnlyList<AnimalSearchResult>> SearchAsync(string? searchTerm, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<AnimalSearchResult>> SearchAsync(string userId, string? searchTerm, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -39,7 +39,7 @@
             }
 
             // Only images can be shown on the page; a video is left out.
-            var matches = await recognitionSearch.CountByAnimalNameAsync(searchTerm.Trim(), MediaFile.ImageExtensions, cancellationToken);
+            var matches = await recognitionSearch.CountByAnimalNameAsync(userId, searchTerm.Trim(), MediaFile.ImageExtensions, cancellationToken);
 
             if (matches.Count == 0)
             {
@@ -59,7 +59,7 @@
                 .ToList();
 
             var latest = await recognitionSearch.GetLatestByAnimalsAsync(
-                shown.Select(match => match.AnimalName), MediaFile.ImageExtensions, MaxImagesPerAnimal, cancellationToken);
+                userId, shown.Select(match => match.AnimalName), MediaFile.ImageExtensions, MaxImagesPerAnimal, cancellationToken);
 
             // Matched to the animals the way the database grouped them, whose
             // collation ignores case.
