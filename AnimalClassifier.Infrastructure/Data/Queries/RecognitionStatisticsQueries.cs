@@ -15,16 +15,17 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
             this.context = context;
         }
 
-        private IQueryable<AnimalRecognitionLog> Logs => context.AnimalRecognitionLogs.AsNoTracking();
+        private IQueryable<AnimalRecognitionLog> LogsOf(string userId) =>
+            context.AnimalRecognitionLogs.AsNoTracking().Where(l => l.UserId == userId);
 
-        public Task<int> CountAsync(CancellationToken cancellationToken) =>
-            Logs.CountAsync(cancellationToken);
+        public Task<int> CountAsync(string userId, CancellationToken cancellationToken) =>
+            LogsOf(userId).CountAsync(cancellationToken);
 
-        public async Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(int count, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(string userId, int count, CancellationToken cancellationToken)
         {
             // Ties are put in alphabetical order, so that the same counts
             // always list the same animals.
-            var animals = await Logs
+            var animals = await LogsOf(userId)
                 .GroupBy(l => l.AnimalName)
                 .Select(g => new { AnimalName = g.Key, Count = g.Count() })
                 .OrderByDescending(a => a.Count)
@@ -35,9 +36,10 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
             return animals.Select(a => (a.AnimalName, a.Count)).ToList();
         }
 
-        public async Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since, CancellationToken cancellationToken) =>
-            await Logs.Where(l => l.DateRecognized >= since)
-                      .Select(l => l.DateRecognized)
-                      .ToListAsync(cancellationToken);
+        public async Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(string userId, DateTime since, CancellationToken cancellationToken) =>
+            await LogsOf(userId)
+                .Where(l => l.DateRecognized >= since)
+                .Select(l => l.DateRecognized)
+                .ToListAsync(cancellationToken);
     }
 }
