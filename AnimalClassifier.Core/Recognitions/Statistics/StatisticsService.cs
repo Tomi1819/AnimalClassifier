@@ -6,9 +6,9 @@
     using static AnimalClassifier.Core.Recognitions.Statistics.StatisticsMessages;
 
     // Everything is counted by the database, so that the work and what is
-    // read do not grow with every recognition ever made. Only the dates of
-    // the days asked for are read, to be put into their days in the caller's
-    // time zone, which the database does not know.
+    // read do not grow with every recognition the user made. Only the dates
+    // of the days asked for are read, to be put into their days in the
+    // caller's time zone, which the database does not know.
     public class StatisticsService : IStatisticsService
     {
         /// <summary>
@@ -25,22 +25,19 @@
             this.timeProvider = timeProvider;
         }
 
-        public Task<int> GetTotalRecognitionsAsync(CancellationToken cancellationToken) =>
-            recognitionStatistics.CountAsync(cancellationToken);
+        public Task<int> GetTotalRecognitionsAsync(string userId, CancellationToken cancellationToken) =>
+            recognitionStatistics.CountAsync(userId, cancellationToken);
 
-        public Task<int> GetUserCountAsync(CancellationToken cancellationToken) =>
-            recognitionStatistics.CountUsersAsync(cancellationToken);
-
-        public async Task<IReadOnlyList<MostCommonAnimal>> GetMostCommonAnimalsAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<MostCommonAnimal>> GetMostCommonAnimalsAsync(string userId, CancellationToken cancellationToken)
         {
-            var animals = await recognitionStatistics.GetMostRecognisedAnimalsAsync(MostCommonAnimalCount, cancellationToken);
+            var animals = await recognitionStatistics.GetMostRecognisedAnimalsAsync(userId, MostCommonAnimalCount, cancellationToken);
 
             return animals
                 .Select(animal => new MostCommonAnimal { AnimalName = animal.AnimalName, Count = animal.Count })
                 .ToList();
         }
 
-        public async Task<IReadOnlyList<DailyRecognitionCount>> GetDailyRecognitionCountsAsync(int days, string? timeZoneId, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<DailyRecognitionCount>> GetDailyRecognitionCountsAsync(string userId, int days, string? timeZoneId, CancellationToken cancellationToken)
         {
             var timeZone = FindTimeZone(timeZoneId);
 
@@ -52,7 +49,7 @@
 
             // A day more than asked for, which covers the first day wherever
             // it starts in relation to UTC.
-            var dates = await recognitionStatistics.GetDatesSinceAsync(now.AddDays(-(days + 1)), cancellationToken);
+            var dates = await recognitionStatistics.GetDatesSinceAsync(userId, now.AddDays(-(days + 1)), cancellationToken);
 
             var counts = dates
                 .GroupBy(date => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(date, timeZone)))

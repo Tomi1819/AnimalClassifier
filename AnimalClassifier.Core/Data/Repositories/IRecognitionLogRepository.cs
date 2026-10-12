@@ -7,7 +7,7 @@ namespace AnimalClassifier.Core.Data.Repositories
     /// marked as cleared, so the statistics, which read every recognition,
     /// still count it.
     ///
-    /// Counting them across every user is IRecognitionStatisticsQueries' to
+    /// Counting them for the statistics is IRecognitionStatisticsQueries' to
     /// do, and searching them IRecognitionSearchQueries'.
     /// </summary>
     public interface IRecognitionLogRepository

@@ -12,6 +12,9 @@ namespace AnimalClassifier.Tests.Recognitions
     {
         private const string TokyoTimeZone = "Asia/Tokyo";
 
+        // Whose recognitions the stub answers with, whoever is asked about.
+        private const string UserId = "user";
+
         // 23:30 in UTC, when it is already 08:30 the next morning in Tokyo.
         private static readonly DateTimeOffset LateEvening = new(2026, 3, 1, 23, 30, 0, TimeSpan.Zero);
 
@@ -20,8 +23,8 @@ namespace AnimalClassifier.Tests.Recognitions
         {
             var service = Service([]);
 
-            var utc = await service.GetDailyRecognitionCountsAsync(2, timeZoneId: null, CancellationToken.None);
-            var tokyo = await service.GetDailyRecognitionCountsAsync(2, TokyoTimeZone, CancellationToken.None);
+            var utc = await service.GetDailyRecognitionCountsAsync(UserId, 2, timeZoneId: null, CancellationToken.None);
+            var tokyo = await service.GetDailyRecognitionCountsAsync(UserId, 2, TokyoTimeZone, CancellationToken.None);
 
             Assert.Equal(new DateOnly(2026, 3, 1), utc[^1].Date);
             Assert.Equal(new DateOnly(2026, 3, 2), tokyo[^1].Date);
@@ -33,8 +36,8 @@ namespace AnimalClassifier.Tests.Recognitions
         {
             var service = Service([OnFirstOfMarch(hour: 14), OnFirstOfMarch(hour: 16)]);
 
-            var utc = await service.GetDailyRecognitionCountsAsync(2, timeZoneId: null, CancellationToken.None);
-            var tokyo = await service.GetDailyRecognitionCountsAsync(2, TokyoTimeZone, CancellationToken.None);
+            var utc = await service.GetDailyRecognitionCountsAsync(UserId, 2, timeZoneId: null, CancellationToken.None);
+            var tokyo = await service.GetDailyRecognitionCountsAsync(UserId, 2, TokyoTimeZone, CancellationToken.None);
 
             Assert.Equal([0, 2], utc.Select(day => day.Count).ToArray());
             Assert.Equal([1, 1], tokyo.Select(day => day.Count).ToArray());
@@ -55,16 +58,13 @@ namespace AnimalClassifier.Tests.Recognitions
                 this.dates = dates;
             }
 
-            public Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(DateTime since, CancellationToken cancellationToken) =>
+            public Task<IReadOnlyList<DateTime>> GetDatesSinceAsync(string userId, DateTime since, CancellationToken cancellationToken) =>
                 Task.FromResult<IReadOnlyList<DateTime>>(dates.Where(date => date >= since).ToList());
 
-            public Task<int> CountAsync(CancellationToken cancellationToken) =>
+            public Task<int> CountAsync(string userId, CancellationToken cancellationToken) =>
                 throw new NotSupportedException();
 
-            public Task<int> CountUsersAsync(CancellationToken cancellationToken) =>
-                throw new NotSupportedException();
-
-            public Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(int count, CancellationToken cancellationToken) =>
+            public Task<IReadOnlyList<(string AnimalName, int Count)>> GetMostRecognisedAnimalsAsync(string userId, int count, CancellationToken cancellationToken) =>
                 throw new NotSupportedException();
         }
     }
