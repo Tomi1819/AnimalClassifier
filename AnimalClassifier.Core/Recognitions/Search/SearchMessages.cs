@@ -7,6 +7,6 @@ namespace AnimalClassifier.Core.Recognitions.Search
     public static class SearchMessages
     {
         public const string EnterSearchTerm = "Please enter a search term.";
-        public const string NoMatches = "No animal matches the search yet.";
+        public const string NoMatches = "No animal in your images matches the search yet.";
     }
 }

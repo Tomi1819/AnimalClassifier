@@ -10,7 +10,7 @@
         public string AnimalName { get; set; } = string.Empty;
 
         /// <summary>
-        /// How many images it was recognised in, by every user.
+        /// How many of the user's images it was recognised in.
         /// </summary>
         public int Count { get; set; }
 

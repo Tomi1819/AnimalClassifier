@@ -17,16 +17,18 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
 
         private IQueryable<AnimalRecognitionLog> Logs => context.AnimalRecognitionLogs.AsNoTracking();
 
-        // What a search finds: every user's recognitions but the cleared ones,
+        // What a search finds: the user's recognitions but the cleared ones,
         // of a file whose name ends with one of the extensions. The match is
         // SQL's LIKE, so the column's collation compares; the extensions are
         // MediaFile's, none of which holds a character LIKE treats as a wildcard.
-        private IQueryable<AnimalRecognitionLog> Searchable(IEnumerable<string> extensions) =>
-            Logs.Where(l => !l.IsDeleted && extensions.Any(extension => EF.Functions.Like(l.FileName, "%" + extension)));
+        private IQueryable<AnimalRecognitionLog> Searchable(string userId, IEnumerable<string> extensions) =>
+            Logs.Where(l => l.UserId == userId
+                && !l.IsDeleted
+                && extensions.Any(extension => EF.Functions.Like(l.FileName, "%" + extension)));
 
-        public async Task<IReadOnlyList<(string AnimalName, int Count)>> CountByAnimalNameAsync(string term, IEnumerable<string> extensions, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<(string AnimalName, int Count)>> CountByAnimalNameAsync(string userId, string term, IEnumerable<string> extensions, CancellationToken cancellationToken)
         {
-            var animals = await Searchable(extensions)
+            var animals = await Searchable(userId, extensions)
                 .Where(l => l.AnimalName.Contains(term))
                 .GroupBy(l => l.AnimalName)
                 .Select(g => new { AnimalName = g.Key, Count = g.Count() })
@@ -40,9 +42,9 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
         // EF Core cannot take a few from each group a GroupBy makes, but it
         // can from a query made for each distinct name, which it reads in one
         // go, numbering each animal's recognitions to keep the first few.
-        public async Task<IReadOnlyList<AnimalRecognitionLog>> GetLatestByAnimalsAsync(IEnumerable<string> animalNames, IEnumerable<string> extensions, int countPerAnimal, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<AnimalRecognitionLog>> GetLatestByAnimalsAsync(string userId, IEnumerable<string> animalNames, IEnumerable<string> extensions, int countPerAnimal, CancellationToken cancellationToken)
         {
-            var matching = Searchable(extensions).Where(l => animalNames.Contains(l.AnimalName));
+            var matching = Searchable(userId, extensions).Where(l => animalNames.Contains(l.AnimalName));
 
             return await matching
                 .Select(l => l.AnimalName)

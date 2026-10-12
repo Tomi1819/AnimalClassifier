@@ -27,6 +27,39 @@ namespace AnimalClassifier.Tests.Recognitions
         }
 
         [Fact]
+        public async Task Search_AnimalOnlyAnotherUserRecognised_ReturnsNotFound()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+            var animalName = $"animal{Guid.NewGuid():N}";
+            await AddRecognitionAsync((await RegisterAsync()).UserId, animalName);
+
+            var response = await user.GetAsync($"{SearchPath}?searchTerm={animalName}");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        // Another user's images of the same animal are neither counted nor
+        // linked to.
+        [Fact]
+        public async Task Search_LeavesOutOtherUsersImages()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var animalName = $"animal{Guid.NewGuid():N}";
+            await AddRecognitionAsync(account.UserId, animalName);
+
+            var otherUserId = (await RegisterAsync()).UserId;
+            await AddRecognitionAsync(otherUserId, animalName);
+            await AddRecognitionAsync(otherUserId, animalName);
+
+            var results = await user.GetFromJsonAsync<List<AnimalSearchResult>>($"{SearchPath}?searchTerm={animalName}");
+
+            var result = Assert.Single(results!);
+            Assert.Equal(1, result.Count);
+            Assert.Single(result.ImagePaths);
+        }
+
+        [Fact]
         public async Task Search_IgnoresCase()
         {
             var account = await RegisterAsync();
@@ -65,7 +98,7 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        // Its owner put it away, so it is not shown to everyone else.
+        // Its owner put it away, so it leaves the search with the history.
         [Fact]
         public async Task Search_LeavesOutClearedRecognitions()
         {

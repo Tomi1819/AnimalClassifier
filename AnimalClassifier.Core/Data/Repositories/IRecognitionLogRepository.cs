@@ -49,11 +49,10 @@ namespace AnimalClassifier.Core.Data.Repositories
         Task<int> ClearHistoryAsync(string userId);
 
         /// <summary>
-        /// Removes every recognition one user made, cleared ones included, so
-        /// that they leave the statistics and search pages as well, and the
-        /// feedback given on them with them. Unlike
-        /// clearing, this cannot be undone, and is meant for an account that is
-        /// itself going. Takes effect at once, without a save.
+        /// Removes every recognition one user made, cleared ones included, and
+        /// the feedback given on them with them. Unlike clearing, this cannot
+        /// be undone, and is meant for an account that is itself going. Takes
+        /// effect at once, without a save.
         /// </summary>
         Task DeleteAllForUserAsync(string userId);
     }
