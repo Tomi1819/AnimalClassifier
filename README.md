@@ -247,9 +247,8 @@ few in a while; beyond that it is answered `429 Too Many Requests`.
 so often like any other confirmation of it, and answers `204 No Content`. The account
 goes at once, with nothing to undo, and every session goes with it.
 
-Its recognitions are removed, cleared ones included, so they leave the
-statistics too; the feedback given on them, its uploaded files and its
-passkeys go as well.
+Its recognitions are removed, cleared ones included; the feedback given on
+them, its uploaded files and its passkeys go as well.
 The admin audit log keeps its entries, showing `Deleted user` where the account
 was named, so the log still covers everything that was done.
 
@@ -384,6 +383,22 @@ nearly every animal, so one recognised less than 70% as often as the match
 recognised most is left out. Videos are left out, as the page shows images,
 and so are recognitions cleared from their owner's history. When nothing
 matches, the answer is `404 Not Found`.
+
+### Statistics
+
+The statistics are the signed-in user's own, read from every recognition they
+made, cleared ones included, since clearing the history does not undo a
+recognition. No other user's recognitions change them.
+
+| Endpoint | Answers |
+| -------- | ------- |
+| `GET /api/statistics/total` | How many recognitions the user has made, as a number. |
+| `GET /api/statistics/top-animal` | The 3 animals they recognised most, most first, as `[{ animalName, count }]`. |
+| `GET /api/statistics/activity?days=30&timeZone=Europe/Sofia` | How many they made on each of the last days, up to and including today, as `[{ date, count }]`, oldest first. |
+
+A day of the activity starts and ends as it does in the time zone, which is
+UTC unless given; one the server does not know is answered
+`400 Bad Request`. The days are 30 unless given, and at most 365.
 
 ### Feedback on a recognition
 
@@ -632,10 +647,10 @@ The entities and the repositories' interfaces are Core's, in `Data/`, and
 Infrastructure implements the repositories with Entity Framework Core, so Core
 never depends on Infrastructure. Each table has a repository of its own, and
 `IUnitOfWork` saves what they were given and runs several changes in one
-transaction. What a report counts or searches across every user's rows, such
-as the statistics, is a query of its own in `Data/Queries/` instead, so that a
-repository keeps to storing and finding its table's rows, and a report's
-service depends on nothing but what it reads. A read that serves a request can
+transaction. What a report counts or searches, such as the statistics, is a
+query of its own in `Data/Queries/` instead, so that a repository keeps to
+storing and finding its table's rows, and a report's service depends on
+nothing but what it reads. A read that serves a request can
 take the request's cancellation token, since abandoning one loses nothing; a
 write never does, so that a caller who goes away cannot leave a change half
 made.
