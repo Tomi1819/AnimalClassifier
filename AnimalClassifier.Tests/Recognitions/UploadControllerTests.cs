@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Recognitions;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.History.Models;
@@ -69,16 +70,25 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
+        // A file of each format an image can be uploaded in, by its name and
+        // the content type a browser gives it.
+        public static TheoryData<string, string> UploadableImages => new()
+        {
+            { "cat.jpg", JpegContentType },
+            { "cat.jpeg", JpegContentType },
+            { "cat.png", "image/png" },
+            { "cat.webp", "image/webp" },
+            { "cat.gif", "image/gif" }
+        };
+
         [Theory]
-        [InlineData("cat.jpg", JpegContentType)]
-        [InlineData("cat.png", "image/png")]
+        [MemberData(nameof(UploadableImages))]
         public async Task UploadImage_IsRecognisedAndPointsToItself(string fileName, string contentType)
         {
             var account = await RegisterAsync();
             var user = await SignInAsync(account.Email);
-            var content = fileName.EndsWith(".png", StringComparison.Ordinal) ? Png : Jpeg;
 
-            var response = await user.PostAsync(ImagePath, ImageForm(content, fileName, contentType));
+            var response = await user.PostAsync(ImagePath, ImageForm(ImageNamed(fileName), fileName, contentType));
 
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             var result = (await response.Content.ReadFromJsonAsync<ImageUploadResult>())!;
@@ -88,6 +98,24 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var readBack = await user.GetFromJsonAsync<ImageUploadResult>(response.Headers.Location);
             Assert.Equal(result.ImageId, readBack!.ImageId);
+        }
+
+        // Whatever it came as, so that what is classified, shown and exported
+        // for training is always the one format.
+        [Theory]
+        [MemberData(nameof(UploadableImages))]
+        public async Task UploadImage_IsStoredAsAJpeg(string fileName, string contentType)
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+
+            (await user.PostAsync(ImagePath, ImageForm(ImageNamed(fileName), fileName, contentType))).EnsureSuccessStatusCode();
+
+            var stored = Assert.Single(UploadedFiles(account.UserId));
+            Assert.Equal(MediaFile.StoredImageExtension, Path.GetExtension(stored));
+
+            var content = await File.ReadAllBytesAsync(stored);
+            Assert.Equal<byte>([0xFF, 0xD8, 0xFF], content[..3]);
         }
 
         [Fact]
@@ -134,19 +162,77 @@ namespace AnimalClassifier.Tests.Recognitions
             await AssertRefusedAsync(response, UploadMessages.UnreadableImage);
         }
 
+        // A WebP keeps its size in a header of its own when it is lossy, when
+        // it is lossless, and when it is extended, as one with transparency is.
+        public static TheoryData<byte[]> WebPImages => new()
+        {
+            Image(".webp", width: 64, height: 32, new ImageEncodingParam(ImwriteFlags.WebPQuality, 80)),
+            Image(".webp", width: 64, height: 32),
+            TransparentImage(".webp", width: 64, height: 32, new ImageEncodingParam(ImwriteFlags.WebPQuality, 80))
+        };
+
+        [Theory]
+        [MemberData(nameof(WebPImages))]
+        public async Task UploadImage_AsAnyKindOfWebP_IsStoredWhole(byte[] content)
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+
+            (await user.PostAsync(ImagePath, ImageForm(content, "cat.webp", "image/webp"))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            Assert.Equal(new Size(64, 32), stored.Size());
+        }
+
+        // A single pixel, red and then blue.
+        [Fact]
+        public async Task UploadImage_AsAnAnimatedGif_IsStoredAsItsFirstFrame()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            byte[] animation =
+            [
+                .. "GIF89a"u8, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00,
+                0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF,
+                .. GifFrame(paletteIndex: 0),
+                .. GifFrame(paletteIndex: 1),
+                0x3B
+            ];
+
+            (await user.PostAsync(ImagePath, ImageForm(animation, "cat.gif", "image/gif"))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            var pixel = stored.At<Vec3b>(0, 0);
+            Assert.True(pixel.Item2 > 200 && pixel.Item0 < 50, $"The pixel is {pixel}, rather than red.");
+        }
+
+        // Headers claiming 7,072 pixels by 7,071, a row more than the limit
+        // allows, so that each is shown to be read to the pixel. The JPEG gives
+        // the height first, and the lossless and extended WebP each size less
+        // one.
+        public static TheoryData<string, byte[]> ImagesWithTooManyPixels => new()
+        {
+            { "cat.png", [.. Png[..16], 0x00, 0x00, 0x1B, 0xA0, 0x00, 0x00, 0x1B, 0x9F, .. Png[24..]] },
+            { "cat.jpg", [0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x1B, 0x9F, 0x1B, 0xA0, 0x03] },
+            { "cat.webp", WebP("VP8 "u8, [0x00, 0x00, 0x00, 0x9D, 0x01, 0x2A, 0xA0, 0x1B, 0x9F, 0x1B]) },
+            { "cat.webp", WebP("VP8L"u8, [0x2F, 0x9F, 0x9B, 0xE7, 0x06]) },
+            { "cat.webp", WebP("VP8X"u8, [0x00, 0x00, 0x00, 0x00, 0x9F, 0x1B, 0x00, 0x9E, 0x1B, 0x00]) },
+            { "cat.gif", [.. "GIF89a"u8, 0xA0, 0x1B, 0x9F, 0x1B, 0x00, 0x00, 0x00] },
+
+            // A GIF whose palette spells out a PNG's header, of a single
+            // pixel, where a PNG keeps it.
+            { "cat.gif", [.. "GIF89a"u8, 0xA0, 0x1B, 0x9F, 0x1B, 0x80, 0x00, .. "IHDR"u8, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01] }
+        };
+
         // Decoding takes the memory of every pixel the header claims, which a
         // file of a few bytes can put at billions.
         [Theory]
-        [InlineData("cat.png")]
-        [InlineData("cat.jpg")]
-        public async Task UploadImage_WithTooManyPixels_IsRefused(string fileName)
+        [MemberData(nameof(ImagesWithTooManyPixels))]
+        public async Task UploadImage_WithTooManyPixels_IsRefused(string fileName, byte[] content)
         {
             var user = await SignInAsync((await RegisterAsync()).Email);
-            byte[] header = fileName.EndsWith(".png", StringComparison.Ordinal)
-                ? [.. Png[..16], 0x00, 0x00, 0x27, 0x10, 0x00, 0x00, 0x27, 0x10, .. Png[24..]]
-                : [0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x27, 0x10, 0x27, 0x10, 0x03];
 
-            var response = await user.PostAsync(ImagePath, ImageForm(header, fileName));
+            var response = await user.PostAsync(ImagePath, ImageForm(content, fileName));
 
             await AssertRefusedAsync(response, string.Format(CultureInfo.InvariantCulture, UploadMessages.ImageTooLarge, ImageSanitizer.MaxMegapixels));
         }
@@ -282,6 +368,28 @@ namespace AnimalClassifier.Tests.Recognitions
         }
 
         [Fact]
+        public async Task UploadVideo_AsAnAvi_IsSummedUpFromItsFrames()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.PostAsync(VideoPath, AviForm("AVI "u8));
+
+            Assert.Equal(Factory.FrameSampler.Frames, (await ReadAsync<VideoUploadResult>(response)).FramesProcessed);
+        }
+
+        // A RIFF file can hold sound as well as video, which only the type
+        // after its length tells apart.
+        [Fact]
+        public async Task UploadVideo_ThatIsAnotherKindOfRiffFile_IsRefused()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.PostAsync(VideoPath, AviForm("WAVE"u8));
+
+            await AssertRefusedAsync(response, UploadMessages.UnsupportedVideo);
+        }
+
+        [Fact]
         public async Task UploadVideo_WithoutAClearAnimal_IsRecordedAsUnknown()
         {
             var user = await SignInAsync((await RegisterAsync()).Email);
@@ -393,6 +501,10 @@ namespace AnimalClassifier.Tests.Recognitions
         private static MultipartFormDataContent VideoForm(byte[] content) =>
             Form("videoFile", content, "clip.mp4", Mp4ContentType);
 
+        // A RIFF file of the type given, as an AVI file is one of type AVI.
+        private static MultipartFormDataContent AviForm(ReadOnlySpan<byte> riffType) =>
+            Form("videoFile", [.. "RIFF"u8, 0x04, 0x00, 0x00, 0x00, .. riffType], "clip.avi", "video/x-msvideo");
+
         private static MultipartFormDataContent Form(string field, byte[] content, string fileName, string contentType)
         {
             var file = new ByteArrayContent(content);
@@ -401,12 +513,37 @@ namespace AnimalClassifier.Tests.Recognitions
             return new MultipartFormDataContent { { file, field, fileName } };
         }
 
-        private static byte[] Image(string extension, int width, int height)
+        private static byte[] Image(string extension, int width, int height, params ImageEncodingParam[] parameters)
         {
             using var image = new Mat(height, width, MatType.CV_8UC3, new Scalar(40, 120, 200));
 
-            return image.ToBytes(extension);
+            return image.ToBytes(extension, parameters);
         }
+
+        // Half see-through.
+        private static byte[] TransparentImage(string extension, int width, int height, params ImageEncodingParam[] parameters)
+        {
+            using var image = new Mat(height, width, MatType.CV_8UC4, new Scalar(40, 120, 200, 128));
+
+            return image.ToBytes(extension, parameters);
+        }
+
+        // In the format its name says it is in.
+        private static byte[] ImageNamed(string fileName) =>
+            Image(Path.GetExtension(fileName), width: 64, height: 32);
+
+        // A frame of a single pixel in the colour given, which the LZW codes
+        // for clearing the table, the index and the end name, three bits each.
+        private static byte[] GifFrame(byte paletteIndex) =>
+        [
+            0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+            0x02, 0x02, (byte)(0x44 | (paletteIndex << 3)), 0x01, 0x00
+        ];
+
+        // A WebP file whose first chunk is the one given, as only that one is
+        // read before the image is decoded.
+        private static byte[] WebP(ReadOnlySpan<byte> chunkType, byte[] chunk) =>
+            [.. "RIFF"u8, 0x00, 0x00, 0x00, 0x00, .. "WEBP"u8, .. chunkType, (byte)chunk.Length, 0x00, 0x00, 0x00, .. chunk];
 
         // As an APP1 segment, right after the marker every JPEG starts with.
         private static byte[] WithMetadata(byte[] jpeg)

@@ -20,8 +20,8 @@
         /// encodes it afresh, without what the camera wrote beside the pixels.
         /// </summary>
         /// <exception cref="RequestRefusedException">
-        /// When the file is not a JPEG or PNG image, is too large, has too many
-        /// pixels, or cannot be read; see <see cref="UploadValidator"/>.
+        /// When the file is not an image in a format <see cref="UploadValidator"/>
+        /// accepts, is too large, has too many pixels, or cannot be read.
         /// </exception>
         /// <exception cref="ServiceBusyException">
         /// When too many uploads are waiting for a turn already.

@@ -16,7 +16,6 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
         /// Encodes the image afresh, as <see cref="IImageSanitizer"/> does,
         /// and classifies what it encoded.
         /// </summary>
-        /// <param name="extension">The format to encode it in, such as <c>.jpg</c>.</param>
         /// <returns>The image as encoded afresh, which is what is stored, and the animal in it.</returns>
         /// <exception cref="RequestRefusedException">
         /// When the image has too many pixels, or cannot be decoded.
@@ -24,7 +23,7 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
         /// <exception cref="ServiceBusyException">
         /// When too many uploads are waiting for a turn already.
         /// </exception>
-        Task<(byte[] Image, Prediction Prediction)> ClassifyImageAsync(byte[] upload, string extension, CancellationToken cancellationToken);
+        Task<(byte[] Image, Prediction Prediction)> ClassifyImageAsync(byte[] upload, CancellationToken cancellationToken);
 
         /// <summary>
         /// Classifies the frames sampled from a stored video, one at a time.

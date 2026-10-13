@@ -30,39 +30,48 @@
 
         private const long BytesPerMegabyte = 1024 * 1024;
 
-        private const int MovieTypeBoxOffset = 4;
-        private const int AviTypeOffset = 8;
-        private const int VideoSignatureLength = 12;
+        // Any image is stored as a JPEG, so these are the formats read rather
+        // than those kept; see MediaFile.StoredImageExtension. A video is
+        // stored as it came, so it has the extensions a stored one has.
+        private static readonly IReadOnlySet<string> ImageExtensions =
+            new HashSet<string>([".jpg", ".jpeg", ".png", ".webp", ".gif"], StringComparer.OrdinalIgnoreCase);
 
         private static readonly IReadOnlySet<string> ImageContentTypes =
-            new HashSet<string>(["image/jpeg", "image/png"], StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(["image/jpeg", "image/png", "image/webp", "image/gif"], StringComparer.OrdinalIgnoreCase);
 
         private static readonly IReadOnlySet<string> VideoContentTypes =
             new HashSet<string>(["video/mp4", "video/quicktime", "video/x-msvideo"], StringComparer.OrdinalIgnoreCase);
 
-        // What every JPEG file and every PNG file starts with.
-        private static readonly byte[][] ImageSignatures =
+        // What every JPEG file and every PNG file starts with, a WebP file is a
+        // RIFF file whose type is WEBP, and a GIF file names its version.
+        private static readonly FileSignature[] ImageSignatures =
         [
-            [0xFF, 0xD8, 0xFF],
-            [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+            new((0, [0xFF, 0xD8, 0xFF])),
+            new((0, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])),
+            new((0, "RIFF"u8.ToArray()), (8, "WEBP"u8.ToArray())),
+            new((0, "GIF87a"u8.ToArray())),
+            new((0, "GIF89a"u8.ToArray()))
         ];
 
         // An MP4 or MOV file starts with the box naming its type, after the
         // box's length, and an AVI file is a RIFF file whose type is AVI.
-        private static readonly byte[] MovieTypeBox = "ftyp"u8.ToArray();
-        private static readonly byte[] RiffSignature = "RIFF"u8.ToArray();
-        private static readonly byte[] AviType = "AVI "u8.ToArray();
+        private static readonly FileSignature[] VideoSignatures =
+        [
+            new((4, "ftyp"u8.ToArray())),
+            new((0, "RIFF"u8.ToArray()), (8, "AVI "u8.ToArray()))
+        ];
 
         /// <exception cref="RequestRefusedException">
-        /// When the file is empty, too large, or not a JPEG or PNG image.
+        /// When the file is empty, too large, or not a JPEG, PNG, WebP or GIF
+        /// image. An animation is recognised from its first frame.
         /// </exception>
         public static void ValidateImage(UploadedFile file)
         {
             ValidateSize(file);
 
-            if (!MediaFile.ImageExtensions.Contains(Path.GetExtension(file.FileName))
+            if (!ImageExtensions.Contains(Path.GetExtension(file.FileName))
                 || !ImageContentTypes.Contains(file.ContentType)
-                || !StartsWithImageSignature(file))
+                || !StartsWithAny(file, ImageSignatures))
             {
                 throw new RequestRefusedException(UnsupportedImage);
             }
@@ -78,7 +87,7 @@
 
             if (!MediaFile.VideoExtensions.Contains(Path.GetExtension(file.FileName))
                 || !VideoContentTypes.Contains(file.ContentType)
-                || !StartsWithVideoSignature(file))
+                || !StartsWithAny(file, VideoSignatures))
             {
                 throw new RequestRefusedException(UnsupportedVideo);
             }
@@ -97,20 +106,11 @@
             }
         }
 
-        private static bool StartsWithImageSignature(UploadedFile file)
+        private static bool StartsWithAny(UploadedFile file, FileSignature[] signatures)
         {
-            var start = ReadStart(file, ImageSignatures.Max(signature => signature.Length));
+            var start = ReadStart(file, signatures.Max(signature => signature.Length));
 
-            return ImageSignatures.Any(signature => start.StartsWith(signature));
-        }
-
-        private static bool StartsWithVideoSignature(UploadedFile file)
-        {
-            var start = ReadStart(file, VideoSignatureLength);
-
-            return start.Length == VideoSignatureLength
-                && (start.AsSpan(MovieTypeBoxOffset).StartsWith(MovieTypeBox)
-                    || (start.AsSpan().StartsWith(RiffSignature) && start.AsSpan(AviTypeOffset).StartsWith(AviType)));
+            return signatures.Any(signature => signature.Matches(start));
         }
 
         // As many of the bytes asked for as the file has.
