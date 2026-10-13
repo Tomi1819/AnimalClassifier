@@ -46,6 +46,6 @@ namespace AnimalClassifier.Infrastructure.Imaging
         // Each format is told by its signature, which is also how the decoder
         // is chosen, so the header read is the one that decoder reads.
         private static ImageSize? ReadSize(ReadOnlySpan<byte> image) =>
-            PngHeader.ReadSize(image) ?? JpegHeader.ReadSize(image);
+            PngHeader.ReadSize(image) ?? JpegHeader.ReadSize(image) ?? WebPHeader.ReadSize(image);
     }
 }
