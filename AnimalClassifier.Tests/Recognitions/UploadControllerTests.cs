@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Recognitions;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.History.Models;
@@ -69,16 +70,23 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
+        // A file of each format an image can be uploaded in, by its name and
+        // the content type a browser gives it.
+        public static TheoryData<string, string> UploadableImages => new()
+        {
+            { "cat.jpg", JpegContentType },
+            { "cat.jpeg", JpegContentType },
+            { "cat.png", "image/png" }
+        };
+
         [Theory]
-        [InlineData("cat.jpg", JpegContentType)]
-        [InlineData("cat.png", "image/png")]
+        [MemberData(nameof(UploadableImages))]
         public async Task UploadImage_IsRecognisedAndPointsToItself(string fileName, string contentType)
         {
             var account = await RegisterAsync();
             var user = await SignInAsync(account.Email);
-            var content = fileName.EndsWith(".png", StringComparison.Ordinal) ? Png : Jpeg;
 
-            var response = await user.PostAsync(ImagePath, ImageForm(content, fileName, contentType));
+            var response = await user.PostAsync(ImagePath, ImageForm(ImageNamed(fileName), fileName, contentType));
 
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             var result = (await response.Content.ReadFromJsonAsync<ImageUploadResult>())!;
@@ -88,6 +96,24 @@ namespace AnimalClassifier.Tests.Recognitions
 
             var readBack = await user.GetFromJsonAsync<ImageUploadResult>(response.Headers.Location);
             Assert.Equal(result.ImageId, readBack!.ImageId);
+        }
+
+        // Whatever it came as, so that what is classified, shown and exported
+        // for training is always the one format.
+        [Theory]
+        [MemberData(nameof(UploadableImages))]
+        public async Task UploadImage_IsStoredAsAJpeg(string fileName, string contentType)
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+
+            (await user.PostAsync(ImagePath, ImageForm(ImageNamed(fileName), fileName, contentType))).EnsureSuccessStatusCode();
+
+            var stored = Assert.Single(UploadedFiles(account.UserId));
+            Assert.Equal(MediaFile.StoredImageExtension, Path.GetExtension(stored));
+
+            var content = await File.ReadAllBytesAsync(stored);
+            Assert.Equal<byte>([0xFF, 0xD8, 0xFF], content[..3]);
         }
 
         [Fact]
@@ -433,6 +459,10 @@ namespace AnimalClassifier.Tests.Recognitions
 
             return image.ToBytes(extension);
         }
+
+        // In the format its name says it is in.
+        private static byte[] ImageNamed(string fileName) =>
+            Image(Path.GetExtension(fileName), width: 64, height: 32);
 
         // As an APP1 segment, right after the marker every JPEG starts with.
         private static byte[] WithMetadata(byte[] jpeg)

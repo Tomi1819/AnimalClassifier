@@ -1,6 +1,7 @@
 namespace AnimalClassifier.Infrastructure.Imaging
 {
     using AnimalClassifier.Core.Common.Exceptions;
+    using AnimalClassifier.Core.Recognitions;
     using AnimalClassifier.Core.Recognitions.Uploads;
     using OpenCvSharp;
     using System.Globalization;
@@ -23,7 +24,7 @@ namespace AnimalClassifier.Infrastructure.Imaging
 
         private const int JpegQuality = 95;
 
-        public byte[] Sanitize(byte[] image, string extension)
+        public byte[] Sanitize(byte[] image)
         {
             var size = ReadSize(image) ?? throw new RequestRefusedException(UnreadableImage);
 
@@ -39,7 +40,7 @@ namespace AnimalClassifier.Infrastructure.Imaging
                 throw new RequestRefusedException(UnreadableImage);
             }
 
-            return decoded.ToBytes(extension.ToLowerInvariant(), new ImageEncodingParam(ImwriteFlags.JpegQuality, JpegQuality));
+            return decoded.ToBytes(MediaFile.StoredImageExtension, new ImageEncodingParam(ImwriteFlags.JpegQuality, JpegQuality));
         }
 
         // Each format is told by its signature, which is also how the decoder

@@ -30,6 +30,12 @@
 
         private const long BytesPerMegabyte = 1024 * 1024;
 
+        // Any image is stored as a JPEG, so these are the formats read rather
+        // than those kept; see MediaFile.StoredImageExtension. A video is
+        // stored as it came, so it has the extensions a stored one has.
+        private static readonly IReadOnlySet<string> ImageExtensions =
+            new HashSet<string>([".jpg", ".jpeg", ".png"], StringComparer.OrdinalIgnoreCase);
+
         private static readonly IReadOnlySet<string> ImageContentTypes =
             new HashSet<string>(["image/jpeg", "image/png"], StringComparer.OrdinalIgnoreCase);
 
@@ -58,7 +64,7 @@
         {
             ValidateSize(file);
 
-            if (!MediaFile.ImageExtensions.Contains(Path.GetExtension(file.FileName))
+            if (!ImageExtensions.Contains(Path.GetExtension(file.FileName))
                 || !ImageContentTypes.Contains(file.ContentType)
                 || !StartsWithAny(file, ImageSignatures))
             {

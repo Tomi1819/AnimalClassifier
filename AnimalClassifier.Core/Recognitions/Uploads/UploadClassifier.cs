@@ -21,11 +21,11 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
             this.classificationLimiter = classificationLimiter;
         }
 
-        public async Task<(byte[] Image, Prediction Prediction)> ClassifyImageAsync(byte[] upload, string extension, CancellationToken cancellationToken)
+        public async Task<(byte[] Image, Prediction Prediction)> ClassifyImageAsync(byte[] upload, CancellationToken cancellationToken)
         {
             using var turn = await classificationLimiter.WaitTurnAsync(cancellationToken);
 
-            var image = imageSanitizer.Sanitize(upload, extension);
+            var image = imageSanitizer.Sanitize(upload);
 
             return (image, classifier.Classify(image));
         }
