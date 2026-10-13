@@ -34,21 +34,23 @@
         // than those kept; see MediaFile.StoredImageExtension. A video is
         // stored as it came, so it has the extensions a stored one has.
         private static readonly IReadOnlySet<string> ImageExtensions =
-            new HashSet<string>([".jpg", ".jpeg", ".png", ".webp"], StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>([".jpg", ".jpeg", ".png", ".webp", ".gif"], StringComparer.OrdinalIgnoreCase);
 
         private static readonly IReadOnlySet<string> ImageContentTypes =
-            new HashSet<string>(["image/jpeg", "image/png", "image/webp"], StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(["image/jpeg", "image/png", "image/webp", "image/gif"], StringComparer.OrdinalIgnoreCase);
 
         private static readonly IReadOnlySet<string> VideoContentTypes =
             new HashSet<string>(["video/mp4", "video/quicktime", "video/x-msvideo"], StringComparer.OrdinalIgnoreCase);
 
-        // What every JPEG file and every PNG file starts with, and a WebP file
-        // is a RIFF file whose type is WEBP.
+        // What every JPEG file and every PNG file starts with, a WebP file is a
+        // RIFF file whose type is WEBP, and a GIF file names its version.
         private static readonly FileSignature[] ImageSignatures =
         [
             new((0, [0xFF, 0xD8, 0xFF])),
             new((0, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])),
-            new((0, "RIFF"u8.ToArray()), (8, "WEBP"u8.ToArray()))
+            new((0, "RIFF"u8.ToArray()), (8, "WEBP"u8.ToArray())),
+            new((0, "GIF87a"u8.ToArray())),
+            new((0, "GIF89a"u8.ToArray()))
         ];
 
         // An MP4 or MOV file starts with the box naming its type, after the
@@ -60,7 +62,8 @@
         ];
 
         /// <exception cref="RequestRefusedException">
-        /// When the file is empty, too large, or not a JPEG, PNG or WebP image.
+        /// When the file is empty, too large, or not a JPEG, PNG, WebP or GIF
+        /// image. An animation is recognised from its first frame.
         /// </exception>
         public static void ValidateImage(UploadedFile file)
         {

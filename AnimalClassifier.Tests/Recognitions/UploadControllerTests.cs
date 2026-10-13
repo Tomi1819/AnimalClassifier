@@ -77,7 +77,8 @@ namespace AnimalClassifier.Tests.Recognitions
             { "cat.jpg", JpegContentType },
             { "cat.jpeg", JpegContentType },
             { "cat.png", "image/png" },
-            { "cat.webp", "image/webp" }
+            { "cat.webp", "image/webp" },
+            { "cat.gif", "image/gif" }
         };
 
         [Theory]
@@ -183,6 +184,28 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(new Size(64, 32), stored.Size());
         }
 
+        // A single pixel, red and then blue.
+        [Fact]
+        public async Task UploadImage_AsAnAnimatedGif_IsStoredAsItsFirstFrame()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            byte[] animation =
+            [
+                .. "GIF89a"u8, 0x01, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00,
+                0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF,
+                .. GifFrame(paletteIndex: 0),
+                .. GifFrame(paletteIndex: 1),
+                0x3B
+            ];
+
+            (await user.PostAsync(ImagePath, ImageForm(animation, "cat.gif", "image/gif"))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            var pixel = stored.At<Vec3b>(0, 0);
+            Assert.True(pixel.Item2 > 200 && pixel.Item0 < 50, $"The pixel is {pixel}, rather than red.");
+        }
+
         // Headers claiming 7,072 pixels by 7,071, a row more than the limit
         // allows, so that each is shown to be read to the pixel. The JPEG gives
         // the height first, and the lossless and extended WebP each size less
@@ -193,7 +216,12 @@ namespace AnimalClassifier.Tests.Recognitions
             { "cat.jpg", [0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x1B, 0x9F, 0x1B, 0xA0, 0x03] },
             { "cat.webp", WebP("VP8 "u8, [0x00, 0x00, 0x00, 0x9D, 0x01, 0x2A, 0xA0, 0x1B, 0x9F, 0x1B]) },
             { "cat.webp", WebP("VP8L"u8, [0x2F, 0x9F, 0x9B, 0xE7, 0x06]) },
-            { "cat.webp", WebP("VP8X"u8, [0x00, 0x00, 0x00, 0x00, 0x9F, 0x1B, 0x00, 0x9E, 0x1B, 0x00]) }
+            { "cat.webp", WebP("VP8X"u8, [0x00, 0x00, 0x00, 0x00, 0x9F, 0x1B, 0x00, 0x9E, 0x1B, 0x00]) },
+            { "cat.gif", [.. "GIF89a"u8, 0xA0, 0x1B, 0x9F, 0x1B, 0x00, 0x00, 0x00] },
+
+            // A GIF whose palette spells out a PNG's header, of a single
+            // pixel, where a PNG keeps it.
+            { "cat.gif", [.. "GIF89a"u8, 0xA0, 0x1B, 0x9F, 0x1B, 0x80, 0x00, .. "IHDR"u8, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01] }
         };
 
         // Decoding takes the memory of every pixel the header claims, which a
@@ -503,6 +531,14 @@ namespace AnimalClassifier.Tests.Recognitions
         // In the format its name says it is in.
         private static byte[] ImageNamed(string fileName) =>
             Image(Path.GetExtension(fileName), width: 64, height: 32);
+
+        // A frame of a single pixel in the colour given, which the LZW codes
+        // for clearing the table, the index and the end name, three bits each.
+        private static byte[] GifFrame(byte paletteIndex) =>
+        [
+            0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+            0x02, 0x02, (byte)(0x44 | (paletteIndex << 3)), 0x01, 0x00
+        ];
 
         // A WebP file whose first chunk is the one given, as only that one is
         // read before the image is decoded.
