@@ -11,110 +11,78 @@ namespace AnimalClassifier.Infrastructure.Imaging
     /// </summary>
     internal static class WebPHeader
     {
-        private const int TypeOffset = 8;
+        // The chunk's type, then its length, then its data.
         private const int ChunkTypeOffset = 12;
-        private const int ChunkTypeLength = 4;
-
-        // After the chunk's type and its length.
         private const int ChunkDataOffset = 20;
 
-        // A lossy frame header starts with three bytes of flags and a start
-        // code, followed by the width and the height, 14 bits each, with two
-        // bits of scaling above them.
-        private const int LossyStartCodeOffset = 3;
-        private const int LossyWidthOffset = 6;
-        private const int LossyHeightOffset = 8;
-        private const int LossyHeaderLength = 10;
-        private const ushort LossyDimensionMask = 0x3FFF;
-
-        // A lossless header is a signature byte, then the width and the height
-        // less one, 14 bits each, packed from the lowest bit up.
-        private const byte LosslessSignature = 0x2F;
-        private const int LosslessSizeOffset = 1;
-        private const int LosslessHeaderLength = 5;
-        private const int LosslessDimensionBits = 14;
-        private const uint LosslessDimensionMask = 0x3FFF;
-
-        // An extended header is flags and reserved bytes, then the width and
-        // the height of the canvas less one, 24 bits each.
-        private const int ExtendedWidthOffset = 4;
-        private const int ExtendedHeightOffset = 7;
-        private const int ExtendedHeaderLength = 10;
-
-        private static ReadOnlySpan<byte> RiffSignature => "RIFF"u8;
-
-        private static ReadOnlySpan<byte> WebPType => "WEBP"u8;
-
-        private static ReadOnlySpan<byte> LossyChunkType => "VP8 "u8;
-
-        private static ReadOnlySpan<byte> LosslessChunkType => "VP8L"u8;
-
-        private static ReadOnlySpan<byte> ExtendedChunkType => "VP8X"u8;
+        // A lossy or lossless image gives its width and height in 14 bits each.
+        private const int DimensionBits = 14;
+        private const uint DimensionMask = (1 << DimensionBits) - 1;
 
         private static ReadOnlySpan<byte> LossyStartCode => [0x9D, 0x01, 0x2A];
 
         /// <returns>The size, or null when the image is not a WebP, or its first chunk gives none.</returns>
         public static ImageSize? ReadSize(ReadOnlySpan<byte> image)
         {
-            if (image.Length < ChunkDataOffset
-                || !image.StartsWith(RiffSignature)
-                || !image[TypeOffset..].StartsWith(WebPType))
+            if (image.Length < ChunkDataOffset || !image.StartsWith("RIFF"u8) || !image[8..].StartsWith("WEBP"u8))
             {
                 return null;
             }
 
-            var chunkType = image.Slice(ChunkTypeOffset, ChunkTypeLength);
+            var chunkType = image.Slice(ChunkTypeOffset, 4);
             var chunk = image[ChunkDataOffset..];
 
-            if (chunkType.SequenceEqual(LossyChunkType))
+            if (chunkType.SequenceEqual("VP8 "u8))
             {
                 return ReadLossySize(chunk);
             }
 
-            if (chunkType.SequenceEqual(LosslessChunkType))
+            if (chunkType.SequenceEqual("VP8L"u8))
             {
                 return ReadLosslessSize(chunk);
             }
 
-            return chunkType.SequenceEqual(ExtendedChunkType) ? ReadExtendedSize(chunk) : null;
+            return chunkType.SequenceEqual("VP8X"u8) ? ReadExtendedSize(chunk) : null;
         }
 
+        // Three bytes of flags, a start code, then the width and the height,
+        // each with two bits of scaling above it.
         private static ImageSize? ReadLossySize(ReadOnlySpan<byte> chunk)
         {
-            if (chunk.Length < LossyHeaderLength || !chunk[LossyStartCodeOffset..].StartsWith(LossyStartCode))
+            if (chunk.Length < 10 || !chunk[3..].StartsWith(LossyStartCode))
             {
                 return null;
             }
 
             return new ImageSize(
-                (uint)(BinaryPrimitives.ReadUInt16LittleEndian(chunk[LossyWidthOffset..]) & LossyDimensionMask),
-                (uint)(BinaryPrimitives.ReadUInt16LittleEndian(chunk[LossyHeightOffset..]) & LossyDimensionMask));
+                BinaryPrimitives.ReadUInt16LittleEndian(chunk[6..]) & DimensionMask,
+                BinaryPrimitives.ReadUInt16LittleEndian(chunk[8..]) & DimensionMask);
         }
 
+        // A signature byte, then the width and the height less one, packed
+        // from the lowest bit up.
         private static ImageSize? ReadLosslessSize(ReadOnlySpan<byte> chunk)
         {
-            if (chunk.Length < LosslessHeaderLength || chunk[0] != LosslessSignature)
+            if (chunk.Length < 5 || chunk[0] != 0x2F)
             {
                 return null;
             }
 
-            var bits = BinaryPrimitives.ReadUInt32LittleEndian(chunk[LosslessSizeOffset..]);
+            var bits = BinaryPrimitives.ReadUInt32LittleEndian(chunk[1..]);
 
-            return new ImageSize(
-                (bits & LosslessDimensionMask) + 1,
-                ((bits >> LosslessDimensionBits) & LosslessDimensionMask) + 1);
+            return new ImageSize((bits & DimensionMask) + 1, ((bits >> DimensionBits) & DimensionMask) + 1);
         }
 
+        // Flags and reserved bytes, then the width and the height of the
+        // canvas less one, 24 bits each.
         private static ImageSize? ReadExtendedSize(ReadOnlySpan<byte> chunk)
         {
-            if (chunk.Length < ExtendedHeaderLength)
+            if (chunk.Length < 10)
             {
                 return null;
             }
 
-            return new ImageSize(
-                ReadUInt24LittleEndian(chunk[ExtendedWidthOffset..]) + 1,
-                ReadUInt24LittleEndian(chunk[ExtendedHeightOffset..]) + 1);
+            return new ImageSize(ReadUInt24LittleEndian(chunk[4..]) + 1, ReadUInt24LittleEndian(chunk[7..]) + 1);
         }
 
         private static uint ReadUInt24LittleEndian(ReadOnlySpan<byte> bytes) =>
