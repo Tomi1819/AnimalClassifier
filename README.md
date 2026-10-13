@@ -226,7 +226,7 @@ holds, named after the day it was made, such as
 | ----- | -------- |
 | `account.json` | The name, email and registration date, and each passkey's name and the date it was added |
 | `recognitions.json` | Every recognition, most recent first, with the animal, score, date, frames for a video, the file it was made from, and any feedback given on it |
-| `uploads/` | The images and videos as they were uploaded |
+| `uploads/` | The images as they were stored, and the videos as they were uploaded |
 
 Recognitions cleared from the history are included with `isCleared` set, since
 the statistics still count them. What only serves signing in, such as the
@@ -306,19 +306,22 @@ A link stays valid for an hour, is spent once it is used, and changing a passwor
 
 ### Uploading images and videos
 
-`POST /api/upload/image` takes a JPEG or PNG image in the `formFile` field,
+`POST /api/upload/image` takes a JPEG, PNG, WebP or GIF image in the `formFile` field,
 and `POST /api/upload/video` an MP4, MOV or AVI video in the `videoFile` field,
 each of at most 5 MB. A file's name and content type are whatever its sender
 says they are, so its first bytes are checked as well, and a file that is not
 really one is refused before anything reads it.
 
-An image is then decoded and encoded afresh, which is what is classified,
-stored and shown. Only the pixels make it across: what the camera wrote beside
-them, such as where the photo was taken, is left behind, and the rotation it
-recorded is made to the pixels instead. Decoding takes the memory of every
-pixel the image's header claims, so one of more than 50 megapixels is refused
-before it is decoded, and a video whose frames are larger than 4K before any
-frame is read.
+An image is then decoded and encoded afresh as a JPEG, whatever it came as,
+which is what is classified, stored and shown. Only the pixels make it across:
+what the camera wrote beside them, such as where the photo was taken, is left
+behind, and the rotation it recorded is made to the pixels instead. An
+animated GIF or WebP keeps only its first frame. Images uploaded before every
+one was stored as a JPEG keep the format they came in.
+
+Decoding takes the memory of every pixel the image's header claims, so one of
+more than 50 megapixels is refused before it is decoded, and a video whose
+frames are larger than 4K before any frame is read.
 
 A video is classified a frame at a time, one frame for every second of it. A
 video long enough to give more than 120 frames is sampled further apart, so
@@ -487,7 +490,7 @@ model is trained on the original folder and every accepted image together.
 Every failure is answered with a message for the user, in one shape:
 
 ```json
-{ "message": "Only JPEG and PNG images can be uploaded." }
+{ "message": "Only JPEG, PNG, WebP and GIF images can be uploaded." }
 ```
 
 | Status | When |
