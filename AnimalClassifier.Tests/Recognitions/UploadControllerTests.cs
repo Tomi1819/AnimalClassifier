@@ -282,6 +282,28 @@ namespace AnimalClassifier.Tests.Recognitions
         }
 
         [Fact]
+        public async Task UploadVideo_AsAnAvi_IsSummedUpFromItsFrames()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.PostAsync(VideoPath, AviForm("AVI "u8));
+
+            Assert.Equal(Factory.FrameSampler.Frames, (await ReadAsync<VideoUploadResult>(response)).FramesProcessed);
+        }
+
+        // A RIFF file can hold sound as well as video, which only the type
+        // after its length tells apart.
+        [Fact]
+        public async Task UploadVideo_ThatIsAnotherKindOfRiffFile_IsRefused()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.PostAsync(VideoPath, AviForm("WAVE"u8));
+
+            await AssertRefusedAsync(response, UploadMessages.UnsupportedVideo);
+        }
+
+        [Fact]
         public async Task UploadVideo_WithoutAClearAnimal_IsRecordedAsUnknown()
         {
             var user = await SignInAsync((await RegisterAsync()).Email);
@@ -392,6 +414,10 @@ namespace AnimalClassifier.Tests.Recognitions
 
         private static MultipartFormDataContent VideoForm(byte[] content) =>
             Form("videoFile", content, "clip.mp4", Mp4ContentType);
+
+        // A RIFF file of the type given, as an AVI file is one of type AVI.
+        private static MultipartFormDataContent AviForm(ReadOnlySpan<byte> riffType) =>
+            Form("videoFile", [.. "RIFF"u8, 0x04, 0x00, 0x00, 0x00, .. riffType], "clip.avi", "video/x-msvideo");
 
         private static MultipartFormDataContent Form(string field, byte[] content, string fileName, string contentType)
         {

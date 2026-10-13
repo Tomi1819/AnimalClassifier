@@ -30,10 +30,6 @@
 
         private const long BytesPerMegabyte = 1024 * 1024;
 
-        private const int MovieTypeBoxOffset = 4;
-        private const int AviTypeOffset = 8;
-        private const int VideoSignatureLength = 12;
-
         private static readonly IReadOnlySet<string> ImageContentTypes =
             new HashSet<string>(["image/jpeg", "image/png"], StringComparer.OrdinalIgnoreCase);
 
@@ -41,17 +37,19 @@
             new HashSet<string>(["video/mp4", "video/quicktime", "video/x-msvideo"], StringComparer.OrdinalIgnoreCase);
 
         // What every JPEG file and every PNG file starts with.
-        private static readonly byte[][] ImageSignatures =
+        private static readonly FileSignature[] ImageSignatures =
         [
-            [0xFF, 0xD8, 0xFF],
-            [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+            new((0, [0xFF, 0xD8, 0xFF])),
+            new((0, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
         ];
 
         // An MP4 or MOV file starts with the box naming its type, after the
         // box's length, and an AVI file is a RIFF file whose type is AVI.
-        private static readonly byte[] MovieTypeBox = "ftyp"u8.ToArray();
-        private static readonly byte[] RiffSignature = "RIFF"u8.ToArray();
-        private static readonly byte[] AviType = "AVI "u8.ToArray();
+        private static readonly FileSignature[] VideoSignatures =
+        [
+            new((4, "ftyp"u8.ToArray())),
+            new((0, "RIFF"u8.ToArray()), (8, "AVI "u8.ToArray()))
+        ];
 
         /// <exception cref="RequestRefusedException">
         /// When the file is empty, too large, or not a JPEG or PNG image.
@@ -62,7 +60,7 @@
 
             if (!MediaFile.ImageExtensions.Contains(Path.GetExtension(file.FileName))
                 || !ImageContentTypes.Contains(file.ContentType)
-                || !StartsWithImageSignature(file))
+                || !StartsWithAny(file, ImageSignatures))
             {
                 throw new RequestRefusedException(UnsupportedImage);
             }
@@ -78,7 +76,7 @@
 
             if (!MediaFile.VideoExtensions.Contains(Path.GetExtension(file.FileName))
                 || !VideoContentTypes.Contains(file.ContentType)
-                || !StartsWithVideoSignature(file))
+                || !StartsWithAny(file, VideoSignatures))
             {
                 throw new RequestRefusedException(UnsupportedVideo);
             }
@@ -97,20 +95,11 @@
             }
         }
 
-        private static bool StartsWithImageSignature(UploadedFile file)
+        private static bool StartsWithAny(UploadedFile file, FileSignature[] signatures)
         {
-            var start = ReadStart(file, ImageSignatures.Max(signature => signature.Length));
+            var start = ReadStart(file, signatures.Max(signature => signature.Length));
 
-            return ImageSignatures.Any(signature => start.StartsWith(signature));
-        }
-
-        private static bool StartsWithVideoSignature(UploadedFile file)
-        {
-            var start = ReadStart(file, VideoSignatureLength);
-
-            return start.Length == VideoSignatureLength
-                && (start.AsSpan(MovieTypeBoxOffset).StartsWith(MovieTypeBox)
-                    || (start.AsSpan().StartsWith(RiffSignature) && start.AsSpan(AviTypeOffset).StartsWith(AviType)));
+            return signatures.Any(signature => signature.Matches(start));
         }
 
         // As many of the bytes asked for as the file has.
