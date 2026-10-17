@@ -32,7 +32,8 @@ namespace AnimalClassifier.Core.Recognitions.Collection
 
             var found = classifier.KnownAnimals.Where(recognised.Contains).ToList();
 
-            // Only an image can be shown on a card; a video is left out.
+            // Only an image can be shown on a card; a video is left out. The
+            // database picks one for each animal at most.
             var bestImages = (await recognitionCollection.GetBestByAnimalsAsync(userId, found, MediaFile.ImageExtensions, cancellationToken))
                 .ToLookup(log => log.AnimalName, StringComparer.OrdinalIgnoreCase);
 
@@ -44,7 +45,7 @@ namespace AnimalClassifier.Core.Recognitions.Collection
                     .Select(animalName =>
                     {
                         var counts = recognised[animalName];
-                        var bestImage = bestImages[animalName].MaxBy(log => log.PredictionScore);
+                        var bestImage = bestImages[animalName].FirstOrDefault();
 
                         return new CollectedAnimal
                         {
