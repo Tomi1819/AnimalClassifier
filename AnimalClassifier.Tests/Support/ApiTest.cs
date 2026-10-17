@@ -122,12 +122,16 @@ namespace AnimalClassifier.Tests.Support
         /// The name of the file it was made from, which is one of its own
         /// unless given.
         /// </param>
+        /// <param name="predictionScore">
+        /// How sure the model was, which is not recorded unless given.
+        /// </param>
         protected async Task<AnimalRecognitionLog> AddRecognitionAsync(
             string userId,
             string animalName = "Cat",
             string? fileName = null,
             DateTime? dateRecognized = null,
-            bool isCleared = false)
+            bool isCleared = false,
+            float predictionScore = 0)
         {
             await using var scope = Factory.Services.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<AnimalClassifierDbContext>();
@@ -138,7 +142,8 @@ namespace AnimalClassifier.Tests.Support
                 FileName = fileName ?? $"{Guid.NewGuid():N}.jpg",
                 DateRecognized = dateRecognized ?? DateTime.UtcNow,
                 UserId = userId,
-                IsDeleted = isCleared
+                IsDeleted = isCleared,
+                PredictionScore = predictionScore
             };
 
             context.AnimalRecognitionLogs.Add(log);

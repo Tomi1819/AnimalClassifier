@@ -8,16 +8,17 @@ namespace AnimalClassifier.Tests.Recognitions
     /// direction only; see <see cref="DependencyOrder"/> for what counts.
     /// Uploading runs the classifier, and what reads recognitions back uses
     /// neither. Feedback checks a correction against the animals the
-    /// classifier knows, and the history shows it. Training reviews and
-    /// exports that feedback, and is used by nothing. Each that hands out an
-    /// image or a video links to it.
+    /// classifier knows, and the history shows it. The collection lists the
+    /// animals the classifier knows. Training reviews and exports that
+    /// feedback, and is used by nothing. Each that hands out an image or a
+    /// video links to it.
     /// </summary>
     public class RecognitionsLayoutTests
     {
         private static readonly DependencyOrder Order = new(
             typeof(MediaFile).Assembly,
             typeof(MediaFile).Namespace!,
-            "Media", "Classification", "Uploads", "Feedback", "History", "Search", "Statistics", "Training");
+            "Media", "Classification", "Uploads", "Feedback", "History", "Search", "Statistics", "Collection", "Training");
 
         [Fact]
         public void EveryPartOfRecognitions_IsInTheDependencyOrder() =>
