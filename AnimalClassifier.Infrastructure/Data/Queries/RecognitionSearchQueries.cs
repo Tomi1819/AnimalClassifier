@@ -15,16 +15,10 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
             this.context = context;
         }
 
-        private IQueryable<AnimalRecognitionLog> Logs => context.AnimalRecognitionLogs.AsNoTracking();
-
         // What a search finds: the user's recognitions but the cleared ones,
-        // of a file whose name ends with one of the extensions. The match is
-        // SQL's LIKE, so the column's collation compares; the extensions are
-        // MediaFile's, none of which holds a character LIKE treats as a wildcard.
+        // of a file whose name ends with one of the extensions.
         private IQueryable<AnimalRecognitionLog> Searchable(string userId, IEnumerable<string> extensions) =>
-            Logs.Where(l => l.UserId == userId
-                && !l.IsDeleted
-                && extensions.Any(extension => EF.Functions.Like(l.FileName, "%" + extension)));
+            context.AnimalRecognitionLogs.AsNoTracking().InHistoryOf(userId, extensions);
 
         public async Task<IReadOnlyList<(string AnimalName, int Count)>> CountByAnimalNameAsync(string userId, string term, IEnumerable<string> extensions, CancellationToken cancellationToken)
         {
