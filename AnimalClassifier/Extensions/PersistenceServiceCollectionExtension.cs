@@ -32,6 +32,7 @@ namespace AnimalClassifier.Extensions
 
             services.AddScoped<IRecognitionStatisticsQueries, RecognitionStatisticsQueries>();
             services.AddScoped<IRecognitionSearchQueries, RecognitionSearchQueries>();
+            services.AddScoped<IRecognitionCollectionQueries, RecognitionCollectionQueries>();
             services.AddScoped<IFeedbackSummaryQueries, FeedbackSummaryQueries>();
 
             return services;
