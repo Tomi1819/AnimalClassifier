@@ -14,7 +14,7 @@ namespace AnimalClassifier.Core.Data.Queries
         /// included. Whether case matters is the database's collation's to
         /// say, and SQL Server's default ignores it.
         /// </summary>
-        Task<IReadOnlyList<(string AnimalName, int Count, DateTime FirstRecognized)>> CountByAnimalAsync(string userId, CancellationToken cancellationToken);
+        Task<IReadOnlyList<(string AnimalName, int Count, DateTime FirstRecognized)>> CountByAnimalNameAsync(string userId, CancellationToken cancellationToken);
 
         /// <summary>
         /// For each of the animals, the user's recognition the model was

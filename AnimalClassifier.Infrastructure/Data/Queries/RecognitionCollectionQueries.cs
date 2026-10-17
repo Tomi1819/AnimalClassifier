@@ -17,7 +17,7 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
 
         private IQueryable<AnimalRecognitionLog> Logs => context.AnimalRecognitionLogs.AsNoTracking();
 
-        public async Task<IReadOnlyList<(string AnimalName, int Count, DateTime FirstRecognized)>> CountByAnimalAsync(string userId, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<(string AnimalName, int Count, DateTime FirstRecognized)>> CountByAnimalNameAsync(string userId, CancellationToken cancellationToken)
         {
             var animals = await Logs
                 .Where(l => l.UserId == userId)

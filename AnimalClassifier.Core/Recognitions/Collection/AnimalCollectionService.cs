@@ -27,7 +27,7 @@ namespace AnimalClassifier.Core.Recognitions.Collection
             // Matched to the animals the model knows, as it writes them, the
             // way the database grouped them, whose collation ignores case. A
             // name it does not know, such as a video's Unknown, is left out.
-            var recognised = (await recognitionCollection.CountByAnimalAsync(userId, cancellationToken))
+            var recognised = (await recognitionCollection.CountByAnimalNameAsync(userId, cancellationToken))
                 .ToLookup(animal => animal.AnimalName, StringComparer.OrdinalIgnoreCase);
 
             var found = classifier.KnownAnimals.Where(recognised.Contains).ToList();
