@@ -115,11 +115,13 @@ namespace AnimalClassifier.Tests.Recognitions
         {
             var account = await RegisterAsync();
             var user = await SignInAsync(account.Email);
-            await AddRecognitionAsync(account.UserId, "coyote");
+            var image = await AddImageAsync(account.UserId, "coyote", predictionScore: 0.9f);
 
             var collection = await GetCollectionAsync(user);
 
-            Assert.Equal(1, FindAnimal(collection, "Coyote").Count);
+            var coyote = FindAnimal(collection, "Coyote");
+            Assert.Equal(1, coyote.Count);
+            Assert.Equal(image.FileName, LinkedFileName(coyote.ImagePath));
         }
 
         // The surest image would be the cleared one, and then the video.
@@ -158,8 +160,8 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Single(collection.Animals, animal => animal.AnimalName == animalName);
 
         /// <summary>
-        /// Adds an image's recognition along with its file, which a link is
-        /// made only to while it is there.
+        /// Adds an image's recognition along with its file, without which a
+        /// link to it could not be read back.
         /// </summary>
         private async Task<AnimalRecognitionLog> AddImageAsync(string userId, string animalName, float predictionScore, bool isCleared = false, DateTime? dateRecognized = null)
         {
