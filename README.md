@@ -18,6 +18,7 @@ This application enables users to upload images of animals and receive classific
 - 📦 Exporting an account's data, uploads included
 - 🗑️ Deleting an account, along with everything it uploaded
 - 🕓 History tracking of recognized images
+- 🏆 A collection of every animal the model knows, filled in as each is found
 - 💬 Feedback on each image's recognition, reviewed and exported to retrain the model
 - 🔗 RESTful API for integration with other applications
 
@@ -404,6 +405,37 @@ A day of the activity starts and ends as it does in the time zone, which is
 UTC unless given; one the server does not know is answered
 `400 Bad Request`. The days are 30 unless given, and at most 365.
 
+### Collection
+
+`GET /api/collection` answers every animal the model knows, in alphabetical
+order, as a collection the signed-in user fills in by recognising them:
+
+```json
+{
+  "knownCount": 90,
+  "foundCount": 23,
+  "animals": [
+    { "animalName": "antelope", "count": 0, "dateFirstRecognized": null, "imagePath": null },
+    { "animalName": "badger", "count": 4, "dateFirstRecognized": "2026-10-02T09:15:00Z", "imagePath": "/api/media/..." }
+  ]
+}
+```
+
+An animal is found once the user recognises it, in an image or a video, and
+stays found when the history is cleared, as the statistics count it. Its
+`count` and `dateFirstRecognized` are read from all of their recognitions of
+it, and are none and null while it is not found. No other user's
+recognitions change it.
+
+Its `imagePath` links to the image of it the model was surest of, equal scores
+going to the most recent, among those still in the history, as the search
+shows them. It is null when there is none: for an animal not found yet, or
+found only in videos or in images since cleared.
+
+The animals are read from the model, as the feedback's are, so a model trained
+on more has more to find. A recognition of an animal the model does not know,
+such as a video's `Unknown`, is no part of the collection.
+
 ### Feedback on a recognition
 
 A user can say of each image's recognition whether the model named the right
@@ -608,6 +640,7 @@ AnimalClassifier.Core/             What the app does
     History/                       A user's own recognitions, and clearing them
     Search/                        Finding animals by name
     Statistics/                    The totals, the animals recognised most, and the daily activity
+    Collection/                    Every animal the model knows, and which of them a user has found
     Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
 AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside the app are implemented with
@@ -687,7 +720,7 @@ an area are held to an order of their own in the same way:
 | Area | Order of its parts |
 | ---- | ------------------ |
 | Identity | SecurityAlerts, EmailConfirmation, Authentication, Passwords, Passkeys, Account |
-| Recognitions | Media, Classification, Uploads, Feedback, History, Search, Statistics, Training |
+| Recognitions | Media, Classification, Uploads, Feedback, History, Search, Statistics, Collection, Training |
 
 What an area's parts share sits in the area's own folder and uses none of
 them. `CoreLayoutTests`, `IdentityLayoutTests` and `RecognitionsLayoutTests`
