@@ -4,6 +4,9 @@
        never end up on different versions of the same package. -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- A version listed here also holds for a package that comes in only
+         through another one, so a vulnerable dependency can be lifted here. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup Label="ASP.NET Core and Entity Framework Core">
@@ -32,6 +35,12 @@
 
   <ItemGroup Label="Email">
     <PackageVersion Include="MailKit" Version="4.18.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="Security fixes">
+    <!-- MimeKit and SqlClient ask for 10.0.0, which has high severity
+         advisories. The pin can go once both ask for a fixed version. -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup Label="Code analysis">
