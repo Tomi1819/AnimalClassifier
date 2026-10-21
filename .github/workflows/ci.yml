@@ -1,0 +1,70 @@
+# Builds and tests every pull request, and master after each merge, so that a
+# change is known to build and pass before it is merged rather than after.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+# Reading the code is all this workflow does.
+permissions:
+  contents: read
+
+# A newer push to the same branch makes an older run's result moot.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    # Windows, as the app references OpenCV's Windows runtime alone, and the
+    # tests need LocalDB, which this image has with Visual Studio. Named rather
+    # than windows-latest, so that a new image is a change of its own.
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # The model is kept in Git LFS, whose downloads count against the
+      # account's monthly allowance, so it is fetched once per version of the
+      # model and cached after that.
+      - name: List the LFS files
+        shell: bash
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore the LFS cache
+        uses: actions/cache@v6
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Fetch the LFS files
+        run: git lfs pull
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Start LocalDB
+        run: sqllocaldb start MSSQLLocalDB
+
+      - name: Restore
+        run: dotnet restore
+
+      # Every warning fails the build, so this checks the analyzers as well.
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
