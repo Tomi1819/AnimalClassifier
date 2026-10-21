@@ -46,6 +46,10 @@ platform's OpenCvSharp4 runtime package in its place, in
 need SQL Server LocalDB, which is Windows' alone as well; see
 [Running the tests](#running-the-tests).
 
+`global.json` pins the SDK to 10.0.402, or a later patch of it. A newer SDK
+brings newer analyzers, and as every warning fails the build, moving to one is
+a change of its own rather than whatever a machine happens to have installed.
+
 ### First administrator
 
 Register an account, confirm its email with the link mailed to it, set the email as `Admin:Email`, and restart the backend. On startup that account is made an administrator; sign in again for the role to take effect.
@@ -606,6 +610,22 @@ which a test tells what to see, and the stand-in for the model knows a handful
 of animals of its own. `ImageClassifierTests` alone loads the trained
 model, to show that the app still reads it correctly, and takes a few seconds
 for it.
+
+### Continuous integration
+
+GitHub Actions builds and tests every pull request, and master after each
+merge, with `.github/workflows/ci.yml`. It runs on Windows, for OpenCV and
+LocalDB, and does what a clean clone would:
+
+```bash
+dotnet restore
+dotnet build --no-restore --configuration Release
+dotnet format --verify-no-changes --no-restore
+dotnet test --no-build --configuration Release
+```
+
+A run that fails on formatting alone is fixed by running `dotnet format` and
+committing what it changes.
 
 ## 📁 Project Structure
 
