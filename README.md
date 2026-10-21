@@ -46,6 +46,10 @@ platform's OpenCvSharp4 runtime package in its place, in
 need SQL Server LocalDB, which is Windows' alone as well; see
 [Running the tests](#running-the-tests).
 
+`global.json` pins the SDK to 10.0.402, or a later patch of it. A newer SDK
+brings newer analyzers, and as every warning fails the build, moving to one is
+a change of its own rather than whatever a machine happens to have installed.
+
 ### First administrator
 
 Register an account, confirm its email with the link mailed to it, set the email as `Admin:Email`, and restart the backend. On startup that account is made an administrator; sign in again for the role to take effect.
