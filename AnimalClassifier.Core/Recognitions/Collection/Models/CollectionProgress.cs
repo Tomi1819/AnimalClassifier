@@ -13,7 +13,7 @@ namespace AnimalClassifier.Core.Recognitions.Collection.Models
         public int KnownCount { get; set; }
 
         /// <summary>
-        /// How many of them the user has recognised at least once.
+        /// How many of them the user has found at least once.
         /// </summary>
         public int FoundCount { get; set; }
 

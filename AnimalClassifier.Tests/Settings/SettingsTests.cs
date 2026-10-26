@@ -2,6 +2,7 @@ namespace AnimalClassifier.Tests.Settings
 {
     using AnimalClassifier.Core.Common.Settings;
     using AnimalClassifier.Core.Identity.Authentication;
+    using AnimalClassifier.Core.Recognitions.Collection;
     using AnimalClassifier.Hosting;
     using AnimalClassifier.Infrastructure.Classification;
     using AnimalClassifier.Infrastructure.Storage;
@@ -45,6 +46,10 @@ namespace AnimalClassifier.Tests.Settings
             { ApiFactory.Key<FrontendSettings>(nameof(FrontendSettings.BaseUrl)), "" },
 
             { ApiFactory.Key<MLModelSettings>(nameof(MLModelSettings.Path)), "" },
+
+            // A score is at most 1, so the model alone would find nothing.
+            { ApiFactory.Key<CollectionSettings>(nameof(CollectionSettings.MinimumScore)), "1.5" },
+
             { ApiFactory.Key<RateLimitSettings>(nameof(RateLimitSettings.LoginPermitLimit)), "0" }
         };
 
