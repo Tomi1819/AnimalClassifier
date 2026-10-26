@@ -13,22 +13,24 @@ namespace AnimalClassifier.Core.Recognitions.Collection.Models
         public string AnimalName { get; set; } = string.Empty;
 
         /// <summary>
-        /// How many times the user recognised it, in videos and cleared
-        /// recognitions as well; none for an animal not found yet.
+        /// How many of the user's recognitions found it, videos and cleared
+        /// ones as well; none for an animal not found yet.
         /// </summary>
         public int Count { get; set; }
 
         /// <summary>
-        /// When the user first recognised it; null for an animal not found
-        /// yet.
+        /// When the first of the user's recognitions to find it was made; null
+        /// for an animal not found yet.
         /// </summary>
         public DateTime? DateFirstRecognized { get; set; }
 
         /// <summary>
-        /// A link to the image of it the model was surest of, among those
-        /// still in the user's history, which runs out after an hour; see
-        /// <see cref="IMediaLinkService"/>. Null when there is none, as for an
-        /// animal found only in videos, or in images since cleared.
+        /// A link to the image that shows it best, among those still in the
+        /// user's history that found it: one the user said shows it before one
+        /// only the model was sure of, and then the one the model was surest
+        /// of. It runs out after an hour; see <see cref="IMediaLinkService"/>.
+        /// Null when there is none, as for an animal found only in videos, or
+        /// in images since cleared.
         /// </summary>
         public string? ImagePath { get; set; }
     }

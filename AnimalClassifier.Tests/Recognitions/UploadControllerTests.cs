@@ -334,6 +334,7 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal("0.90", animal.AverageScore);
 
             var item = Assert.Single((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
+            Assert.Equal(result.VideoId, item.Id);
             Assert.True(item.IsVideo);
             Assert.Equal(4, item.FramesProcessed);
         }

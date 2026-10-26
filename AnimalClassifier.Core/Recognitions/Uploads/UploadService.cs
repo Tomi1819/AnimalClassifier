@@ -79,10 +79,11 @@
                 var topAnimals = VideoSummary.TopAnimals(frames);
                 var strongest = topAnimals.FirstOrDefault();
 
-                await RecordAsync(userId, storedFile, strongest?.Animal ?? UnrecognisedAnimal, strongest?.Score ?? 0, frames.Count);
+                var log = await RecordAsync(userId, storedFile, strongest?.Animal ?? UnrecognisedAnimal, strongest?.Score ?? 0, frames.Count);
 
                 return new VideoUploadResult
                 {
+                    VideoId = log.Id,
                     FramesProcessed = frames.Count,
                     TopAnimals = topAnimals.Select(ToAnimalSummary).ToList(),
                     VideoPath = mediaLinks.CreateLink(userId, storedFile.FileName)

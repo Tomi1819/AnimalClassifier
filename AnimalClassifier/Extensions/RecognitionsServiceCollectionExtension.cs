@@ -32,6 +32,7 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IStatisticsService, StatisticsService>();
             services.AddScoped<IAnimalSearchService, AnimalSearchService>();
             services.AddScoped<IAnimalCollectionService, AnimalCollectionService>();
+            services.AddSettings<CollectionSettings>();
             services.AddScoped<IFeedbackReviewService, FeedbackReviewService>();
             services.AddScoped<IFeedbackSummaryService, FeedbackSummaryService>();
             services.AddScoped<ITrainingDataExporter, TrainingDataExporter>();
