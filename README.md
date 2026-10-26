@@ -412,7 +412,7 @@ UTC unless given; one the server does not know is answered
 ### Collection
 
 `GET /api/collection` answers every animal the model knows, in alphabetical
-order, as a collection the signed-in user fills in by recognising them:
+order, as a collection the signed-in user fills in by finding them:
 
 ```json
 {
@@ -425,20 +425,60 @@ order, as a collection the signed-in user fills in by recognising them:
 }
 ```
 
-An animal is found once the user recognises it, in an image or a video, and
-stays found when the history is cleared, as the statistics count it. Its
-`count` and `dateFirstRecognized` are read from all of their recognitions of
-it, and are none and null while it is not found. No other user's
-recognitions change it.
+A recognition finds an animal when the model was sure enough of it, or when
+the user says it shows that animal:
 
-Its `imagePath` links to the image of it the model was surest of, equal scores
-going to the most recent, among those still in the history, as the search
-shows them. It is null when there is none: for an animal not found yet, or
-found only in videos or in images since cleared.
+| What the user said of it | What it finds |
+| ------------------------ | ------------- |
+| Nothing | The animal the model named, when it scored it at `Collection:MinimumScore` or more, and nothing below that |
+| That the model was right | The animal the model named, however low its score |
+| That it is another animal the model knows | That other animal, and not the one the model named |
+| That it is an animal the model does not know | Nothing |
+
+So an animal the model was unsure of joins the collection once the user says
+the model was right, and a mistake the user corrects counts for the animal
+they named. The rule is applied as the collection is read, so a recognition
+made before it, or feedback changed since, counts as the rule says now. An
+administrator's review of the feedback does not change it: the review is of
+what goes into training, and the collection is the user's own.
+
+An animal stays found when the history is cleared, as the statistics count it,
+and a video finds one as an image does, though only an image can be told the
+model was right. Its `count` and `dateFirstRecognized` are read from all of the
+user's recognitions that found it, and are none and null while it is not
+found. No other user's recognitions change it.
+
+Its `imagePath` links to the image that shows it best, among those still in
+the history that found it: one the user said shows it comes before one only the
+model was sure of, then the one the model was surest of, and of those equally
+sure, the most recent. It is null when there is none: for an animal not found
+yet, or found only in videos or in images since cleared.
 
 The animals are read from the model, as the feedback's are, so a model trained
 on more has more to find. A recognition of an animal the model does not know,
 such as a video's `Unknown`, is no part of the collection.
+
+`GET /api/collection/recognitions/{id}` answers what one of the user's
+recognitions did for their collection, which the dashboard shows once an upload
+is recognised, and again once the user says whether the model was right:
+
+```json
+{ "status": "FirstFind", "animalName": "badger", "foundCount": 24, "knownCount": 90 }
+```
+
+| `status` | Meaning |
+| -------- | ------- |
+| `FirstFind` | It is the first of the user's recognitions to find `animalName`. |
+| `AlreadyFound` | An earlier recognition found `animalName`, or, for one the model was not sure enough of, any other did. |
+| `Unconfirmed` | The model was not sure enough of `animalName`, which the user has not found otherwise. Saying the model was right finds it. |
+| `None` | It finds no animal the model knows, and `animalName` is null. |
+
+A recognition that does not exist, or is another user's, is answered
+`404 Not Found`, as the two are not told apart.
+
+| Setting | Meaning |
+| ------- | ------- |
+| `Collection:MinimumScore` | The least score at which the model's word is taken for an animal, from 0 to 1, and 0.5 unless set: where the dashboard starts calling the model not confident. |
 
 ### Feedback on a recognition
 
