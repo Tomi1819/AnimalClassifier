@@ -8,6 +8,11 @@
     public class VideoUploadResult
     {
         /// <summary>
+        /// The recognition's id, as the history lists it.
+        /// </summary>
+        public int VideoId { get; set; }
+
+        /// <summary>
         /// How many of its frames were classified.
         /// </summary>
         public int FramesProcessed { get; set; }
