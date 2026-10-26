@@ -52,6 +52,27 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
             return best.Select(b => (b.AnimalName, b.FileName)).ToList();
         }
 
+        public async Task<(string RecognizedAnimal, string? FoundAnimal, bool HasFeedback, bool IsFirstFind)?> GetFindAsync(string userId, int recognitionId, float minimumScore, CancellationToken cancellationToken)
+        {
+            var finds = Finds(Logs.Where(l => l.UserId == userId), minimumScore);
+
+            var find = await finds
+                .Where(f => f.Id == recognitionId)
+                .Select(f => new
+                {
+                    f.RecognizedAnimal,
+                    f.AnimalName,
+                    f.HasFeedback,
+                    IsFirstFind = f.AnimalName != null && !finds.Any(earlier =>
+                        earlier.AnimalName == f.AnimalName
+                        && (earlier.DateRecognized < f.DateRecognized
+                            || (earlier.DateRecognized == f.DateRecognized && earlier.Id < f.Id)))
+                })
+                .SingleOrDefaultAsync(cancellationToken);
+
+            return find is null ? null : (find.RecognizedAnimal, find.AnimalName, find.HasFeedback, find.IsFirstFind);
+        }
+
         /// <summary>
         /// Each of the recognitions with the animal it finds, by the rule
         /// <see cref="IRecognitionCollectionQueries"/> sets out, which every
@@ -66,6 +87,7 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
                 FileName = l.FileName,
                 DateRecognized = l.DateRecognized,
                 PredictionScore = l.PredictionScore,
+                RecognizedAnimal = l.AnimalName,
                 HasFeedback = l.Feedback != null,
                 AnimalName = l.Feedback == null
                     ? (l.PredictionScore >= minimumScore ? l.AnimalName : null)
@@ -80,6 +102,12 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
             public string FileName { get; init; } = string.Empty;
             public DateTime DateRecognized { get; init; }
             public float PredictionScore { get; init; }
+
+            /// <summary>
+            /// The animal the model named.
+            /// </summary>
+            public string RecognizedAnimal { get; init; } = string.Empty;
+
             public bool HasFeedback { get; init; }
 
             /// <summary>

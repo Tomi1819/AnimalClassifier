@@ -253,8 +253,137 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(confirmed.FileName, LinkedFileName(FindAnimal(collection, "Cat").ImagePath));
         }
 
+        [Fact]
+        public async Task GetFind_WithoutToken_ReturnsUnauthorized()
+        {
+            var response = await Factory.CreateClient().GetAsync($"{CollectionPath}/recognitions/1");
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetFind_OfAnotherUsersRecognition_ReturnsNotFound()
+        {
+            var user = await SignInAsync((await RegisterAsync()).Email);
+            var theirs = await AddRecognitionAsync((await RegisterAsync()).UserId, "Fox", predictionScore: SureScore);
+
+            var response = await user.GetAsync(FindPath(theirs));
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetFind_OfTheFirstRecognitionOfAnAnimal_IsItsFirstFind()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            await AddRecognitionAsync(account.UserId, "Cat", predictionScore: SureScore);
+            var fox = await AddRecognitionAsync(account.UserId, "fox", predictionScore: SureScore);
+
+            var find = await GetFindAsync(user, fox);
+
+            Assert.Equal(FindStatus.FirstFind, find.Status);
+            Assert.Equal("Fox", find.AnimalName);
+            Assert.Equal(2, find.FoundCount);
+            Assert.Equal(Factory.Classifier.KnownAnimals.Count, find.KnownCount);
+        }
+
+        [Fact]
+        public async Task GetFind_OfALaterRecognitionOfAnAnimal_IsAlreadyFound()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            await AddRecognitionAsync(account.UserId, "Fox", dateRecognized: DateTime.UtcNow.AddDays(-1), predictionScore: SureScore);
+            var later = await AddRecognitionAsync(account.UserId, "Fox", predictionScore: SureScore);
+
+            var find = await GetFindAsync(user, later);
+
+            Assert.Equal(FindStatus.AlreadyFound, find.Status);
+            Assert.Equal(1, find.FoundCount);
+        }
+
+        // An earlier recognition the model was not sure enough of found
+        // nothing, so the first that did is the first find.
+        [Fact]
+        public async Task GetFind_AfterOneTheModelWasNotSureEnoughOf_IsTheFirstFind()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var unsure = await AddRecognitionAsync(account.UserId, "Fox", dateRecognized: DateTime.UtcNow.AddDays(-1), predictionScore: UnsureScore);
+            var sure = await AddRecognitionAsync(account.UserId, "Fox", predictionScore: SureScore);
+
+            Assert.Equal(FindStatus.FirstFind, (await GetFindAsync(user, sure)).Status);
+            Assert.Equal(FindStatus.AlreadyFound, (await GetFindAsync(user, unsure)).Status);
+        }
+
+        [Fact]
+        public async Task GetFind_OfOneTheModelWasNotSureEnoughOf_WaitsToBeConfirmed()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var unsure = await AddRecognitionAsync(account.UserId, "Fox", predictionScore: UnsureScore);
+
+            var find = await GetFindAsync(user, unsure);
+
+            Assert.Equal(FindStatus.Unconfirmed, find.Status);
+            Assert.Equal("Fox", find.AnimalName);
+            Assert.Equal(0, find.FoundCount);
+        }
+
+        [Fact]
+        public async Task GetFind_OfOneTheModelWasNotSureEnoughOf_ConfirmedByTheUser_IsTheFirstFind()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var unsure = await AddRecognitionAsync(account.UserId, "Fox", predictionScore: UnsureScore);
+            await GiveFeedbackAsync(user, unsure, new FeedbackRequest { Verdict = FeedbackVerdict.Correct });
+
+            var find = await GetFindAsync(user, unsure);
+
+            Assert.Equal(FindStatus.FirstFind, find.Status);
+            Assert.Equal(1, find.FoundCount);
+        }
+
+        [Fact]
+        public async Task GetFind_OfOneTheUserCorrected_FindsTheAnimalTheyNamed()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var wolf = await AddRecognitionAsync(account.UserId, "Wolf", predictionScore: SureScore);
+            await GiveFeedbackAsync(user, wolf, new FeedbackRequest { Verdict = FeedbackVerdict.WrongAnimal, ActualAnimal = "Dog" });
+
+            var find = await GetFindAsync(user, wolf);
+
+            Assert.Equal(FindStatus.FirstFind, find.Status);
+            Assert.Equal("Dog", find.AnimalName);
+        }
+
+        // Neither waits to be confirmed, as nothing the user could say would
+        // find an animal the model knows.
+        [Fact]
+        public async Task GetFind_OfOneShowingAnAnimalTheModelDoesNotKnow_FindsNone()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var unlisted = await AddRecognitionAsync(account.UserId, "Cat", predictionScore: UnsureScore);
+            await GiveFeedbackAsync(user, unlisted, new FeedbackRequest { Verdict = FeedbackVerdict.UnlistedAnimal, ActualAnimal = "capybara" });
+            var unknown = await AddRecognitionAsync(account.UserId, "Unknown", fileName: "clip.mp4");
+
+            Assert.All([await GetFindAsync(user, unlisted), await GetFindAsync(user, unknown)], find =>
+            {
+                Assert.Equal(FindStatus.None, find.Status);
+                Assert.Null(find.AnimalName);
+            });
+        }
+
         private static async Task<CollectionProgress> GetCollectionAsync(HttpClient client) =>
             (await client.GetFromJsonAsync<CollectionProgress>(CollectionPath))!;
+
+        private static string FindPath(AnimalRecognitionLog recognition) =>
+            $"{CollectionPath}/recognitions/{recognition.Id}";
+
+        private static async Task<CollectionFind> GetFindAsync(HttpClient client, AnimalRecognitionLog recognition) =>
+            (await client.GetFromJsonAsync<CollectionFind>(FindPath(recognition)))!;
 
         private static CollectedAnimal FindAnimal(CollectionProgress collection, string animalName) =>
             Assert.Single(collection.Animals, animal => animal.AnimalName == animalName);

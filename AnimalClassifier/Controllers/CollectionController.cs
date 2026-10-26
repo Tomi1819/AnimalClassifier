@@ -24,5 +24,14 @@ namespace AnimalClassifier.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCollection(CancellationToken cancellationToken) =>
             Ok(await collectionService.GetCollectionAsync(User.RequiredId(), cancellationToken));
+
+        /// <summary>
+        /// What one of the user's recognitions did for their collection, which
+        /// the dashboard tells them once it is made, and again once they say
+        /// whether the model was right.
+        /// </summary>
+        [HttpGet("recognitions/{recognitionId}")]
+        public async Task<IActionResult> GetFind(int recognitionId, CancellationToken cancellationToken) =>
+            Ok(await collectionService.GetFindAsync(User.RequiredId(), recognitionId, cancellationToken));
     }
 }

@@ -30,5 +30,14 @@ namespace AnimalClassifier.Core.Data.Queries
         /// recent. An animal with no such recognition has none.
         /// </summary>
         Task<IReadOnlyList<(string AnimalName, string FileName)>> GetBestFindsAsync(string userId, IEnumerable<string> animalNames, IEnumerable<string> extensions, float minimumScore, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// What one of the user's recognitions found: the animal the model
+        /// named, the animal it found if any, whether the user said anything
+        /// of it, and whether it is the first of their recognitions to find
+        /// that animal, by when each was made and then by the order they were
+        /// recorded in. Null when it does not exist or is another user's.
+        /// </summary>
+        Task<(string RecognizedAnimal, string? FoundAnimal, bool HasFeedback, bool IsFirstFind)?> GetFindAsync(string userId, int recognitionId, float minimumScore, CancellationToken cancellationToken);
     }
 }
