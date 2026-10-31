@@ -44,7 +44,7 @@ project that uses it. On Linux that runtime needs GTK 3, which a desktop has but
 a server or a container may not (`apt-get install libgtk-3-0`). The tests need a
 SQL Server of their own on Linux; see [Running the tests](#running-the-tests).
 
-`global.json` pins the SDK to 10.0.402, or a later patch of it. A newer SDK
+`global.json` pins the SDK to 10.0.403, or a later patch of it. A newer SDK
 brings newer analyzers, and as every warning fails the build, moving to one is
 a change of its own rather than whatever a machine happens to have installed.
 
