@@ -34,19 +34,17 @@ This application enables users to upload images of animals and receive classific
 
 ### Prerequisites
 
-- Windows, 64-bit
+- Windows or Linux, 64-bit
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) or another supported database
 
-The backend builds wherever .NET does, but runs on Windows alone. OpenCV,
-which decodes every uploaded image and video, is referenced by its Windows
-runtime only, so anywhere else each upload fails; running elsewhere takes that
-platform's OpenCvSharp4 runtime package in its place, in
-`AnimalClassifier.Infrastructure`, the one project that uses OpenCV. The tests
-need SQL Server LocalDB, which is Windows' alone as well; see
-[Running the tests](#running-the-tests).
+OpenCV, which decodes every uploaded image and video, is referenced by its
+runtimes for those two platforms, in `AnimalClassifier.Infrastructure`, the one
+project that uses it. On Linux that runtime needs GTK 3, which a desktop has but
+a server or a container may not (`apt-get install libgtk-3-0`). The tests need a
+SQL Server of their own on Linux; see [Running the tests](#running-the-tests).
 
-`global.json` pins the SDK to 10.0.402, or a later patch of it. A newer SDK
+`global.json` pins the SDK to 10.0.403, or a later patch of it. A newer SDK
 brings newer analyzers, and as every warning fails the build, moving to one is
 a change of its own rather than whatever a machine happens to have installed.
 
@@ -637,6 +635,10 @@ table of feedback, whose rows go with their recognition.
 ### Running the tests
 
 The integration tests need [SQL Server LocalDB](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb). Each run creates its own database and drops it afterwards.
+
+LocalDB is Windows' alone. Elsewhere, name a SQL Server in the
+`TEST_SQL_CONNECTION` environment variable, without a database, such as
+`Server=localhost,1433;User Id=sa;Password=...;TrustServerCertificate=True`.
 
 ```bash
 dotnet test
