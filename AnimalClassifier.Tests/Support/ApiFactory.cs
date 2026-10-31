@@ -23,7 +23,7 @@
     using Microsoft.Extensions.Hosting;
 
     /// <summary>
-    /// Runs the API against its own LocalDB database, created from the
+    /// Runs the API against its own database, created from the
     /// migrations and dropped once the tests finish.
     /// </summary>
     public sealed class ApiFactory : WebApplicationFactory<Program>
@@ -46,8 +46,13 @@
         /// </summary>
         public StubVideoFrameSampler FrameSampler { get; } = new();
 
+        // The environment names the server where LocalDB does not run, such as
+        // on Linux, and what it names leaves the database to this class.
+        private const string ServerVariable = "TEST_SQL_CONNECTION";
+        private const string LocalDb = @"Server=(localdb)\MSSQLLocalDB;Trusted_Connection=True;TrustServerCertificate=True";
+
         private readonly string connectionString =
-            $@"Server=(localdb)\MSSQLLocalDB;Database=AnimalClassifierTests_{Guid.NewGuid():N};Trusted_Connection=True;TrustServerCertificate=True;";
+            $"{Environment.GetEnvironmentVariable(ServerVariable) ?? LocalDb};Database=AnimalClassifierTests_{Guid.NewGuid():N};";
 
         // Where the uploads and the keys are kept, apart from the app's own
         // folder, as outside Development they have to be, and removed with
