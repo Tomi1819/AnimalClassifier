@@ -597,10 +597,12 @@ Outside development the app refuses to start until each of these is set:
 | `FileUploadSettings:UploadPath` | A folder outside the app's own, which a new deployment may replace whole, along with anything kept in it. |
 | `DataProtection:KeysPath` | A folder outside the app's own, for the keys that sign and encrypt the emailed links, the passkey ceremonies' state and the media links. |
 
-The keys are encrypted with the machine's own key, so a copy of the folder is
-of no use elsewhere, but the folder should still be readable by the app's
-account alone. It has to be kept for as long as the app runs: losing it stops
-every link and passkey ceremony in flight, though nothing kept for longer.
+On Windows the keys are encrypted with the machine's own key, so a copy of the
+folder is of no use elsewhere. On Linux there is no such key and they are stored
+unencrypted, so a backup of the folder has to be encrypted itself. Either way the
+folder should be readable by the app's account alone. It has to be kept for as
+long as the app runs: losing it stops every link and passkey ceremony in flight,
+though nothing kept for longer.
 
 Beside those:
 
