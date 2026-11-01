@@ -25,7 +25,35 @@ RUN dotnet publish AnimalClassifier/AnimalClassifier.csproj \
     --no-restore --output /publish
 
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.14-noble
+# The tool that brings a database up to date, built only when it is asked for,
+# with `--target migrations`. Building it runs the app's startup code as far as
+# its settings, which asks for a connection string, though this one is never used.
+FROM build AS migrations-build
+RUN dotnet tool install dotnet-ef --version 10.0.14 --tool-path /tools \
+    && ConnectionStrings__DefaultConnection="Server=unused" /tools/dotnet-ef migrations bundle \
+        --project AnimalClassifier.Infrastructure --startup-project AnimalClassifier \
+        --runtime linux-x64 --configuration Release --output /efbundle
+
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.14-noble AS migrations
+WORKDIR /app
+COPY --from=migrations-build /efbundle .
+COPY --from=build /publish/appsettings.json .
+
+# The app's startup code runs here too, and outside Development it would refuse
+# to go on without settings that only serving requests needs, such as the email
+# server's. The tool serves nothing, and needs only its connection string.
+ENV ASPNETCORE_ENVIRONMENT=Development
+
+# The tool unpacks itself on starting, and a non-root user can write here.
+ENV DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/efbundle
+
+USER $APP_UID
+ENTRYPOINT ["./efbundle"]
+
+
+# Last, so that a build naming no target gets the API.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.14-noble AS api
 
 # What OpenCV's native library needs that this image does not already have.
 RUN apt-get update \

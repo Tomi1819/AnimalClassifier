@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 # Runtime file uploads
 AnimalClassifier/App_Data/
+
+# The secrets compose.yaml reads
+.env

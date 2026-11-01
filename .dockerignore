@@ -6,6 +6,9 @@
 TestResults
 Dockerfile
 .dockerignore
+compose.yaml
+.env
+.env.example
 *.md
 AnimalClassifier.Tests
 **/bin
