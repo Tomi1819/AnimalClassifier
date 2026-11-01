@@ -52,9 +52,10 @@ namespace AnimalClassifier.Extensions
             return services;
         }
 
-        // Kept in a folder of their own, and encrypted there with the
-        // machine's own key, so that a copy of the folder is of no use
-        // elsewhere. Development leaves them where it always has.
+        // Kept in a folder of their own. On Windows they are encrypted there
+        // with the machine's own key, so that a copy of the folder is of no use
+        // elsewhere; Linux has no such key, so there they are protected by the
+        // folder's permissions alone. Development leaves them where it always has.
         private static void AddApplicationDataProtection(this IServiceCollection services, IHostEnvironment environment)
         {
             services.AddDataProtection().SetApplicationName(ApplicationName);

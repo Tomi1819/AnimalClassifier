@@ -1,0 +1,16 @@
+# What the image's build never needs, which keeps it fast and keeps anything
+# local out of the image.
+.git
+.github
+.vs
+TestResults
+Dockerfile
+.dockerignore
+compose.yaml
+.env
+.env.example
+*.md
+AnimalClassifier.Tests
+**/bin
+**/obj
+**/appsettings.Development.json
