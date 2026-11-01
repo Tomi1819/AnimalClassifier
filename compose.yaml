@@ -58,6 +58,7 @@ services:
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:?set it in .env}
       FileUploadSettings__UploadPath: /data/uploads
       DataProtection__KeysPath: /data/keys
+      ForwardedHeaders__KnownProxies__0: 172.30.0.10
     volumes:
       - uploads:/data/uploads
       - keys:/data/keys
@@ -68,10 +69,28 @@ services:
     networks:
       - default
       - database
-    # For checking it by hand on this machine, until Caddy stands in front of it.
+    mem_limit: 6g
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+
+  # The website and the way in to the API, from the frontend's repository, which
+  # has to be cloned beside this one. The only service with a published port, and
+  # on this machine alone.
+  web:
+    image: animalclassifier-web:dev
+    build:
+      context: ../AnimalClassifier.Frontend
+    depends_on:
+      - api
+    # A fixed address, as the API believes what the callers' addresses are only
+    # from a proxy it knows by address.
+    networks:
+      default:
+        ipv4_address: 172.30.0.10
     ports:
       - 127.0.0.1:8080:8080
-    mem_limit: 6g
+    mem_limit: 256m
     restart: unless-stopped
     cap_drop:
       - ALL
@@ -82,6 +101,10 @@ volumes:
   keys:
 
 networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
   # Internal, so that the database cannot reach out to the internet at all.
   database:
     internal: true
