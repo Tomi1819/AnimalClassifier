@@ -1,5 +1,6 @@
 # Builds and tests every pull request, and master after each merge, so that a
-# change is known to build and pass before it is merged rather than after.
+# change is known to build and pass before it is merged rather than after. The
+# Docker images the server runs are built as well, though never pushed anywhere.
 name: CI
 
 on:
@@ -68,3 +69,38 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release
+
+  docker:
+    name: Build the images
+    # The images are built from their own recipe, the Dockerfile, which the job
+    # above never reads, so it can break while the tests still pass. Linux, as
+    # that is what the images are. Beside the job above rather than after it, so
+    # that it adds nothing to the time a run takes.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # The Dockerfile stops on finding a pointer in place of the model, so the
+      # model is fetched here too, and cached as in the job above.
+      - name: List the LFS files
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore the LFS cache
+        uses: actions/cache@v6
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Fetch the LFS files
+        run: git lfs pull
+
+      - name: Build the API image
+        run: docker build --target api --tag animalclassifier-api:ci .
+
+      # Reuses the stages the API image has just built, so it adds only the
+      # migrations tool.
+      - name: Build the migrations image
+        run: docker build --target migrations --tag animalclassifier-migrations:ci .
