@@ -95,6 +95,23 @@ services:
     cap_drop:
       - ALL
 
+  # The way in from the internet: a connection out to Cloudflare, so no port is
+  # opened on this machine or the router. Which hostnames reach the website is
+  # set in Cloudflare's dashboard; with none set, it serves nothing.
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.7
+    # The token from the environment, so it is not in the command line that
+    # `docker ps` and the process list show.
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?set it in .env}
+    depends_on:
+      - web
+    mem_limit: 256m
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+
 volumes:
   sql-data:
   uploads:
