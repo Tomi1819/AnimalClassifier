@@ -1,7 +1,8 @@
 # Builds and tests every pull request, so that a change is known to build and
 # pass before it is merged rather than after. The Docker images the server runs
 # are built as well, though never pushed anywhere. Nothing runs after a merge:
-# the pull request's run has already tested the merged result.
+# the pull request's run has already tested the merged result, and the ruleset
+# on master makes a pull request test again whenever master has moved on.
 name: CI
 
 on:
