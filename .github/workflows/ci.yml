@@ -1,12 +1,11 @@
-# Builds and tests every pull request, and master after each merge, so that a
-# change is known to build and pass before it is merged rather than after. The
-# Docker images the server runs are built as well, though never pushed anywhere.
+# Builds and tests every pull request, so that a change is known to build and
+# pass before it is merged rather than after. The Docker images the server runs
+# are built as well, though never pushed anywhere. Nothing runs after a merge:
+# the pull request's run has already tested the merged result.
 name: CI
 
 on:
   pull_request:
-  push:
-    branches: [master]
 
 # Reading the code is all this workflow does.
 permissions:
