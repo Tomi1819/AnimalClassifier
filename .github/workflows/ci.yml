@@ -19,9 +19,9 @@ concurrency:
 jobs:
   build:
     name: Build and test
-    # Windows, as the app references OpenCV's Windows runtime alone, and the
-    # tests need LocalDB, which this image has with Visual Studio. Named rather
-    # than windows-latest, so that a new image is a change of its own.
+    # Windows, as the tests need LocalDB, which this image has with Visual
+    # Studio. Named rather than windows-latest, so that a new image is a change
+    # of its own.
     runs-on: windows-2025
     timeout-minutes: 20
     env:
