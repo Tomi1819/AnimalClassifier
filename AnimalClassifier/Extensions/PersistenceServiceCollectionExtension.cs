@@ -24,6 +24,11 @@ namespace AnimalClassifier.Extensions
             services.AddDbContext<AnimalClassifierDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            // The app can answer nothing useful without its database, so a
+            // deployment is only known to work once the database answers too.
+            services.AddHealthChecks()
+                .AddDbContextCheck<AnimalClassifierDbContext>();
+
             services.AddScoped<IRecognitionLogRepository, RecognitionLogRepository>();
             services.AddScoped<IRecognitionFeedbackRepository, RecognitionFeedbackRepository>();
             services.AddScoped<IAdminAuditLogRepository, AdminAuditLogRepository>();
