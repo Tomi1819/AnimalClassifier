@@ -1,9 +1,10 @@
 # The API and its database on one machine. Secrets and what differs per machine
 # come from a .env file beside this one; see .env.example.
 #
-# The API and its migrations are the images the CD workflow published, from the
-# commit API_TAG names, so that this machine runs exactly what was built there
-# and builds nothing itself. compose.build.yaml builds them from a checkout instead.
+# The API, its migrations and the website are the images the two repositories'
+# CD workflows published, from the commits API_TAG and WEB_TAG name, so that this
+# machine runs exactly what was built there and builds nothing itself.
+# compose.build.yaml builds them from checkouts instead.
 name: animalclassifier
 
 services:
@@ -73,13 +74,11 @@ services:
     cap_drop:
       - ALL
 
-  # The website and the way in to the API, from the frontend's repository, which
-  # has to be cloned beside this one. The only service with a published port, and
-  # on this machine alone.
+  # The website and the way in to the API, published by the frontend's own CD
+  # workflow from the commit WEB_TAG names. The only service with a published
+  # port, and on this machine alone.
   web:
-    image: animalclassifier-web:dev
-    build:
-      context: ../AnimalClassifier.Frontend
+    image: ghcr.io/tomi1819/animalclassifier-web:${WEB_TAG:?set it in .env}
     depends_on:
       - api
     # A fixed address, as the API believes what the callers' addresses are only
