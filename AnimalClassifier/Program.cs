@@ -62,4 +62,9 @@ app.UseRateLimiter();
 
 app.MapControllers();
 
+// What a deployment asks once the new API has started, before calling it done.
+// Under /api, as that is all the reverse proxy passes on to the API, and it
+// says only whether the API is healthy, never why not.
+app.MapHealthChecks("/api/health");
+
 app.Run();
