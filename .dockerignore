@@ -7,6 +7,7 @@ TestResults
 Dockerfile
 .dockerignore
 compose.yaml
+compose.build.yaml
 .env
 .env.example
 *.md

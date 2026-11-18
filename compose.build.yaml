@@ -1,0 +1,20 @@
+# Builds the API and its migrations from this checkout in place of the published
+# images, to try a change to the Dockerfile on a machine before it is merged:
+#
+#   docker compose -f compose.yaml -f compose.build.yaml build
+#   docker compose -f compose.yaml -f compose.build.yaml up -d
+#
+# Named apart from the published images, so that a local build is never taken
+# for one of them.
+services:
+  migrations:
+    image: animalclassifier-migrations:dev
+    build:
+      context: .
+      target: migrations
+
+  api:
+    image: animalclassifier-api:dev
+    build:
+      context: .
+      target: api
