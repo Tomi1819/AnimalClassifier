@@ -1,5 +1,6 @@
-# Builds the API and its migrations from this checkout in place of the published
-# images, to try a change to the Dockerfile on a machine before it is merged:
+# Builds the API and its migrations from this checkout, and the website from the
+# frontend's cloned beside it, in place of the published images, to try a change
+# to a Dockerfile on a machine before it is merged:
 #
 #   docker compose -f compose.yaml -f compose.build.yaml build
 #   docker compose -f compose.yaml -f compose.build.yaml up -d
@@ -18,3 +19,8 @@ services:
     build:
       context: .
       target: api
+
+  web:
+    image: animalclassifier-web:dev
+    build:
+      context: ../AnimalClassifier.Frontend
