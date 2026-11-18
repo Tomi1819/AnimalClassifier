@@ -1,0 +1,108 @@
+# Builds the images the server runs. On a pull request they are only built, so
+# that a change to the Dockerfile is known to work before it is merged. Once a
+# change is on master they are built again from master and published to GitHub's
+# container registry, tagged with the commit they were built from, so that the
+# server runs exactly what was built here, and any earlier commit can be run again.
+name: CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+# A newer push to a pull request's branch makes an older run's result moot. A run
+# on master is never cancelled halfway, as it may be publishing; one that has not
+# started yet gives way to a newer one, as only the newest master matters.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  images:
+    # The name the ruleset on master requires, unchanged since this job moved
+    # here from CI.
+    name: Build the images
+    # Linux, as that is what the images are.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUBLISH: ${{ github.event_name == 'push' }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # The Dockerfile stops on finding a pointer in place of the model, so the
+      # model is fetched first. LFS downloads count against the account's monthly
+      # allowance, so it is fetched once per version of the model and cached.
+      - name: List the LFS files
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore the LFS cache
+        uses: actions/cache@v6
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Fetch the LFS files
+        run: git lfs pull
+
+      # Image names have to be lower case, and the account's name is not.
+      - name: Name the images
+        id: names
+        run: |
+          registry="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+          echo "api=$registry/animalclassifier-api:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          echo "migrations=$registry/animalclassifier-migrations:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+      # The builder that can keep its layers in GitHub's cache between runs.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to the registry
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # From the checked-out folder rather than straight from Git, which would
+      # leave out the model fetched above. Every run reads the layers master's
+      # last run left, and only master's runs leave any, so that pull requests
+      # cannot crowd master's out of the cache. The source label links the
+      # published image to this repository.
+      - name: Build the API image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: api
+          tags: ${{ steps.names.outputs.api }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          push: ${{ env.PUBLISH == 'true' }}
+          cache-from: type=gha,scope=api
+          cache-to: ${{ env.PUBLISH == 'true' && 'type=gha,scope=api,mode=max' || '' }}
+
+      # Reuses the stages the API image has just built, so it adds only the
+      # migrations tool.
+      - name: Build the migrations image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: migrations
+          tags: ${{ steps.names.outputs.migrations }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          push: ${{ env.PUBLISH == 'true' }}
+          cache-from: type=gha,scope=migrations
+          cache-to: ${{ env.PUBLISH == 'true' && 'type=gha,scope=migrations,mode=max' || '' }}
