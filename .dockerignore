@@ -8,6 +8,7 @@ Dockerfile
 .dockerignore
 compose.yaml
 compose.build.yaml
+deploy
 .env
 .env.example
 *.md

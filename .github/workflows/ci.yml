@@ -69,3 +69,18 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release
+
+  deploy-script:
+    name: Check the deploy script
+    # The script runs as root on the server, and a mistake in it shows only
+    # there, so it is checked for the mistakes Bash itself lets through.
+    # ShellCheck comes with this image.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Run ShellCheck
+        run: shellcheck deploy/deploy.sh
