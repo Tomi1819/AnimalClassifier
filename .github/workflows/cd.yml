@@ -3,6 +3,7 @@
 # change is on master they are built again from master and published to GitHub's
 # container registry, tagged with the commit they were built from, so that the
 # server runs exactly what was built here, and any earlier commit can be run again.
+# Then the server is told to run them.
 name: CD
 
 on:
@@ -106,3 +107,49 @@ jobs:
           push: ${{ env.PUBLISH == 'true' }}
           cache-from: type=gha,scope=migrations
           cache-to: ${{ env.PUBLISH == 'true' && 'type=gha,scope=migrations,mode=max' || '' }}
+
+  # The runner joins the tailnet for the length of the job, as a device tagged
+  # tag:ci, which the tailnet's policy lets reach the server's SSH and nothing
+  # else. The key it logs in with can only run the deploy script for the API, so
+  # all it sends is the commit. The script prints what it does, and if the new
+  # version is not healthy it puts the previous one back and fails this job.
+  deploy:
+    name: Deploy
+    needs: images
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    # The script waits up to 15 minutes for a deployment of the website to end.
+    timeout-minutes: 30
+    # Its secrets are only given to runs on master.
+    environment: production
+    permissions: {}
+
+    steps:
+      - name: Join the tailnet
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: ${{ secrets.DEPLOY_HOST }}
+
+      # The known host is the server's own key, so the deploy key is never
+      # offered to anything else. Secrets pasted on Windows may carry carriage
+      # returns, which ssh rejects.
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: >
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes
+          -o StrictHostKeyChecking=yes -o ConnectTimeout=30 -o ServerAliveInterval=30
+          "deploy@$DEPLOY_HOST" "$GITHUB_SHA"
