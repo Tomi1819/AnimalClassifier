@@ -374,6 +374,12 @@ Clearing the history keeps the recognitions, which the statistics still count,
 but takes them out of the history and the search, so no new link is made to
 them. Their files stay, private, in the owner's copy of their data.
 
+`DELETE /api/upload/{id}` deletes one of the signed-in user's recognitions for
+good, image or video, cleared or not, and answers `204 No Content`. Its file
+and any feedback on it go with it, so the statistics, the collection and the
+training export no longer count it. Another user's is answered `404 Not Found`,
+as one that does not exist is.
+
 ### History and search
 
 `GET /api/upload/history?page=1` answers one page of the signed-in user's

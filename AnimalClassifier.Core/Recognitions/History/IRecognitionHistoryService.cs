@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Core.Recognitions.History
 {
+    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Common.Models;
     using AnimalClassifier.Core.Recognitions.History.Models;
 
@@ -21,5 +22,16 @@ namespace AnimalClassifier.Core.Recognitions.History
         /// search, and their files stay in the owner's copy of their data.
         /// </summary>
         Task ClearHistoryAsync(string userId);
+
+        /// <summary>
+        /// Deletes one of a user's recognitions for good, whether or not it was
+        /// cleared: its file, the feedback given on it, and with them its place
+        /// in the statistics and the collection.
+        /// </summary>
+        /// <exception cref="NotFoundException">
+        /// When the user has no such recognition, which is also the answer for
+        /// another user's.
+        /// </exception>
+        Task DeleteRecognitionAsync(string userId, int recognitionId);
     }
 }

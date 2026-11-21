@@ -27,6 +27,13 @@
         void Delete(StoredFile file);
 
         /// <summary>
+        /// Removes one of a user's files by the name it was stored under, such
+        /// as that of a recognition being deleted. A file that is already gone
+        /// is left as it is.
+        /// </summary>
+        void Delete(string userId, string fileName);
+
+        /// <summary>
         /// The physical paths of every file one user has uploaded, or none for
         /// a user who has not uploaded any.
         /// </summary>

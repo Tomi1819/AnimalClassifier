@@ -1,8 +1,10 @@
 namespace AnimalClassifier.Tests.Recognitions
 {
     using AnimalClassifier.Core.Common.Models;
+    using AnimalClassifier.Core.Data.Entities;
     using AnimalClassifier.Core.Recognitions;
     using AnimalClassifier.Core.Recognitions.Classification;
+    using AnimalClassifier.Core.Recognitions.Feedback.Models;
     using AnimalClassifier.Core.Recognitions.History;
     using AnimalClassifier.Core.Recognitions.History.Models;
     using AnimalClassifier.Core.Recognitions.Media;
@@ -34,6 +36,7 @@ namespace AnimalClassifier.Tests.Recognitions
         private const string ImagePath = "/api/upload/image";
         private const string VideoPath = "/api/upload/video";
         private const string HistoryPath = "/api/upload/history";
+        private const string StatisticsTotalPath = "/api/statistics/total";
         private const string JpegContentType = "image/jpeg";
         private const string Mp4ContentType = "video/mp4";
 
@@ -490,6 +493,90 @@ namespace AnimalClassifier.Tests.Recognitions
             Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
             Assert.Empty((await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items);
         }
+
+        [Fact]
+        public async Task DeleteRecognition_WithoutToken_ReturnsUnauthorized()
+        {
+            var recognition = await AddRecognitionAsync((await RegisterAsync()).UserId);
+
+            var response = await Factory.CreateClient().DeleteAsync(RecognitionPath(recognition.Id));
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        // Unlike clearing, which the statistics still count.
+        [Fact]
+        public async Task DeleteRecognition_LeavesTheHistoryAndTheStatistics()
+        {
+            var account = await RegisterAsync();
+            var deleted = await AddRecognitionAsync(account.UserId);
+            var kept = await AddRecognitionAsync(account.UserId);
+            var user = await SignInAsync(account.Email);
+
+            var response = await user.DeleteAsync(RecognitionPath(deleted.Id));
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            var history = (await user.GetFromJsonAsync<PagedResult<RecognitionHistoryItem>>(HistoryPath))!.Items;
+            Assert.Equal(kept.Id, Assert.Single(history).Id);
+            Assert.Equal(1, await user.GetFromJsonAsync<int>(StatisticsTotalPath));
+        }
+
+        [Fact]
+        public async Task DeleteRecognition_ThatWasCleared_IsDeletedToo()
+        {
+            var account = await RegisterAsync();
+            var recognition = await AddRecognitionAsync(account.UserId, isCleared: true);
+            var user = await SignInAsync(account.Email);
+
+            var response = await user.DeleteAsync(RecognitionPath(recognition.Id));
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(0, await user.GetFromJsonAsync<int>(StatisticsTotalPath));
+        }
+
+        [Fact]
+        public async Task DeleteRecognition_RemovesItsFile()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var upload = await ReadAsync<ImageUploadResult>(await user.PostAsync(ImagePath, ImageForm(Jpeg)));
+
+            (await user.DeleteAsync(RecognitionPath(upload.ImageId))).EnsureSuccessStatusCode();
+
+            Assert.Empty(UploadedFiles(account.UserId));
+        }
+
+        [Fact]
+        public async Task DeleteRecognition_RemovesTheFeedbackOnIt()
+        {
+            var account = await RegisterAsync();
+            var recognition = await AddRecognitionAsync(account.UserId);
+            var user = await SignInAsync(account.Email);
+            var feedback = new FeedbackRequest { Verdict = FeedbackVerdict.Correct, AllowsTraining = true };
+            (await user.PutAsJsonAsync($"/api/feedback/{recognition.Id}", feedback)).EnsureSuccessStatusCode();
+
+            (await user.DeleteAsync(RecognitionPath(recognition.Id))).EnsureSuccessStatusCode();
+
+            Assert.Empty((await user.GetFromJsonAsync<PagedResult<FeedbackItem>>("/api/feedback"))!.Items);
+        }
+
+        // Told apart from one that does not exist by nothing, as reading one is.
+        [Fact]
+        public async Task DeleteRecognition_AnotherUsers_ReturnsNotFoundAndKeepsIt()
+        {
+            var other = await RegisterAsync();
+            var recognition = await AddRecognitionAsync(other.UserId);
+            var user = await SignInAsync((await RegisterAsync()).Email);
+
+            var response = await user.DeleteAsync(RecognitionPath(recognition.Id));
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal(HistoryMessages.RecognitionNotFound, (await response.Content.ReadFromJsonAsync<MessageResponse>())!.Message);
+            var owner = await SignInAsync(other.Email);
+            Assert.Equal(1, await owner.GetFromJsonAsync<int>(StatisticsTotalPath));
+        }
+
+        private static string RecognitionPath(int id) => $"/api/upload/{id}";
 
         private static MultipartFormDataContent ImageForm(byte[] content, string fileName = "cat.jpg", string contentType = JpegContentType) =>
             Form("formFile", content, fileName, contentType);

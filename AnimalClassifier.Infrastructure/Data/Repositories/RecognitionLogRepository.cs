@@ -54,6 +54,11 @@ namespace AnimalClassifier.Infrastructure.Data.Repositories
                 .Where(l => l.UserId == userId && !l.IsDeleted)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(l => l.IsDeleted, true));
 
+        public Task DeleteAsync(int id) =>
+            context.AnimalRecognitionLogs
+                .Where(l => l.Id == id)
+                .ExecuteDeleteAsync();
+
         public Task DeleteAllForUserAsync(string userId) =>
             context.AnimalRecognitionLogs
                 .Where(l => l.UserId == userId)

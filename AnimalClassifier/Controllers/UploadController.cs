@@ -75,5 +75,18 @@
         [HttpGet("{id}")]
         public async Task<IActionResult> GetImageUpload(int id, CancellationToken cancellationToken) =>
             Ok(await uploadService.GetImageUploadAsync(User.RequiredId(), id, cancellationToken));
+
+        /// <summary>
+        /// Deletes one of the signed-in user's recognitions, image or video,
+        /// for good: its file and any feedback on it go too, and the
+        /// statistics and the collection no longer count it.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRecognition(int id)
+        {
+            await historyService.DeleteRecognitionAsync(User.RequiredId(), id);
+
+            return NoContent();
+        }
     }
 }
