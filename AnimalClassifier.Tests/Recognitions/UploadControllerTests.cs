@@ -168,7 +168,7 @@ namespace AnimalClassifier.Tests.Recognitions
         {
             Image(".webp", width: 64, height: 32, new ImageEncodingParam(ImwriteFlags.WebPQuality, 80)),
             Image(".webp", width: 64, height: 32),
-            TransparentImage(".webp", width: 64, height: 32, new ImageEncodingParam(ImwriteFlags.WebPQuality, 80))
+            TransparentImage(".webp", new Scalar(40, 120, 200, 128), new ImageEncodingParam(ImwriteFlags.WebPQuality, 80))
         };
 
         [Theory]
@@ -204,6 +204,60 @@ namespace AnimalClassifier.Tests.Recognitions
             using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
             var pixel = stored.At<Vec3b>(0, 0);
             Assert.True(pixel.Item2 > 200 && pixel.Item0 < 50, $"The pixel is {pixel}, rather than red.");
+        }
+
+        // Each format that can be see-through, as one whose pixels are black
+        // underneath and not there at all.
+        public static TheoryData<string, string> SeeThroughImages => new()
+        {
+            { "cat.png", "image/png" },
+            { "cat.webp", "image/webp" },
+            { "cat.gif", "image/gif" }
+        };
+
+        [Theory]
+        [MemberData(nameof(SeeThroughImages))]
+        public async Task UploadImage_ThatIsSeeThrough_IsStoredOverWhite(string fileName, string contentType)
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var image = TransparentImage(Path.GetExtension(fileName), new Scalar(0, 0, 0, 0));
+
+            (await user.PostAsync(ImagePath, ImageForm(image, fileName, contentType))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            var pixel = stored.At<Vec3b>(16, 32);
+            Assert.True(pixel.Item0 > 245 && pixel.Item1 > 245 && pixel.Item2 > 245, $"The pixel is {pixel}, rather than white.");
+        }
+
+        // Black, half see-through, which shows as the grey between it and white.
+        [Fact]
+        public async Task UploadImage_ThatIsPartlySeeThrough_IsBlendedWithWhite()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            var image = TransparentImage(".png", new Scalar(0, 0, 0, 128));
+
+            (await user.PostAsync(ImagePath, ImageForm(image, "cat.png", "image/png"))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            var pixel = stored.At<Vec3b>(16, 32);
+            Assert.True(pixel.Item0 is > 117 and < 137, $"The pixel is {pixel}, rather than grey.");
+        }
+
+        // A PNG can keep 16 bits a channel, which is more than a JPEG holds.
+        [Fact]
+        public async Task UploadImage_ThatIsSeeThroughInSixteenBits_IsStoredOverWhite()
+        {
+            var account = await RegisterAsync();
+            var user = await SignInAsync(account.Email);
+            using var deep = new Mat(32, 64, MatType.CV_16UC4, new Scalar(0, 0, 0, 0));
+
+            (await user.PostAsync(ImagePath, ImageForm(deep.ToBytes(".png"), "cat.png", "image/png"))).EnsureSuccessStatusCode();
+
+            using var stored = Cv2.ImRead(Assert.Single(UploadedFiles(account.UserId)));
+            var pixel = stored.At<Vec3b>(16, 32);
+            Assert.True(pixel.Item0 > 245, $"The pixel is {pixel}, rather than white.");
         }
 
         // Headers claiming 7,072 pixels by 7,071, a row more than the limit
@@ -521,10 +575,10 @@ namespace AnimalClassifier.Tests.Recognitions
             return image.ToBytes(extension, parameters);
         }
 
-        // Half see-through.
-        private static byte[] TransparentImage(string extension, int width, int height, params ImageEncodingParam[] parameters)
+        // Of the colour given, whose last part is how opaque it is.
+        private static byte[] TransparentImage(string extension, Scalar colour, params ImageEncodingParam[] parameters)
         {
-            using var image = new Mat(height, width, MatType.CV_8UC4, new Scalar(40, 120, 200, 128));
+            using var image = new Mat(32, 64, MatType.CV_8UC4, colour);
 
             return image.ToBytes(extension, parameters);
         }
