@@ -51,6 +51,14 @@
 
         public void Delete(StoredFile file) => File.Delete(file.PhysicalPath);
 
+        public void Delete(string userId, string fileName)
+        {
+            if (FindPath(userId, fileName) is { } path)
+            {
+                File.Delete(path);
+            }
+        }
+
         public IEnumerable<string> GetUserFiles(string userId)
         {
             var userDirectory = GetUserDirectory(userId);
