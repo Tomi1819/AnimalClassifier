@@ -7,7 +7,8 @@ namespace AnimalClassifier.Core.Recognitions.Uploads
     /// then what is classified, stored and shown. Only the pixels make it
     /// across. What a camera writes beside them, such as where the photo was
     /// taken, is left behind, and the rotation it records is applied to the
-    /// pixels instead.
+    /// pixels instead. A JPEG has no transparency, so an image that has some
+    /// is laid over white.
     /// </summary>
     public interface IImageSanitizer
     {
