@@ -29,7 +29,14 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
                     ? (l.PredictionScore >= minimumScore ? l.AnimalName : null)
                     : l.Feedback.Verdict == FeedbackVerdict.Correct ? l.AnimalName
                     : l.Feedback.Verdict == FeedbackVerdict.WrongAnimal ? l.Feedback.ActualAnimal
-                    : null
+                    : null,
+                Verdict = l.Feedback != null ? l.Feedback.Verdict : null,
+                DateFeedbackSubmitted = l.Feedback != null ? l.Feedback.DateSubmitted : null,
+                DateAcceptedForTraining = l.Feedback != null
+                    && l.Feedback.AllowsTraining
+                    && l.Feedback.ReviewStatus == FeedbackReviewStatus.Accepted
+                        ? l.Feedback.DateReviewed
+                        : null
             });
     }
 }
