@@ -19,6 +19,7 @@ This application enables users to upload images of animals and receive classific
 - 🗑️ Deleting an account, along with everything it uploaded
 - 🕓 History tracking of recognized images
 - 🏆 A collection of every animal the model knows, filled in as each is found
+- 🎖️ Levels and badges, earned by finding animals and helping the model learn
 - 💬 Feedback on each image's recognition, reviewed and exported to retrain the model
 - 🔗 RESTful API for integration with other applications
 
@@ -376,9 +377,9 @@ them. Their files stay, private, in the owner's copy of their data.
 
 `DELETE /api/upload/{id}` deletes one of the signed-in user's recognitions for
 good, image or video, cleared or not, and answers `204 No Content`. Its file
-and any feedback on it go with it, so the statistics, the collection and the
-training export no longer count it. Another user's is answered `404 Not Found`,
-as one that does not exist is.
+and any feedback on it go with it, so the statistics, the collection, the
+achievements and the training export no longer count it. Another user's is
+answered `404 Not Found`, as one that does not exist is.
 
 ### History and search
 
@@ -483,6 +484,76 @@ A recognition that does not exist, or is another user's, is answered
 | Setting | Meaning |
 | ------- | ------- |
 | `Collection:MinimumScore` | The least score at which the model's word is taken for an animal, from 0 to 1, and 0.5 unless set: where the dashboard starts calling the model not confident. |
+
+### Achievements
+
+`GET /api/achievements?timeZone=Europe/Sofia` answers the signed-in user's
+level, and every badge with how far they are towards it:
+
+```json
+{
+  "foundCount": 23,
+  "knownCount": 90,
+  "level": { "number": 4, "name": "Tracker", "animalsNeeded": 20, "isReached": true, "dateReached": "2026-10-02T09:15:00Z" },
+  "nextLevel": { "number": 5, "name": "Ranger", "animalsNeeded": 35, "isReached": false, "dateReached": null },
+  "levels": [ ... ],
+  "badges": [
+    { "id": "teacher", "name": "Teacher", "description": "Tell us whether the model was right 10 times.", "goal": 10, "progress": 4, "isEarned": false, "dateEarned": null }
+  ]
+}
+```
+
+The levels count the animals found, as the collection counts them, so a level
+is reached when the last animal it needs is first found:
+
+| Level | Animals found |
+| ----- | ------------- |
+| Newcomer | 0 |
+| Spotter | 3 |
+| Explorer | 10 |
+| Tracker | 20 |
+| Ranger | 35 |
+| Naturalist | 50 |
+| Zoologist | 70 |
+| Master of the Wild | Every animal the model knows |
+
+A level that would need as many animals as the model knows, or more, is left
+out, so a model that knows fewer animals has fewer levels.
+
+| Badge | Earned by |
+| ----- | --------- |
+| `first-find` | Finding an animal |
+| `sharp-eye` | A find of the animal the model named, which it scored at 0.95 or more |
+| `film-maker` | Finding an animal in a video |
+| `teacher` | Feedback on 10 recognitions |
+| `corrector` | Naming another animal the model knows, 5 times |
+| `discoverer` | Naming an animal the model does not know |
+| `helping-hand` | Feedback shared for training, and accepted by an administrator |
+| `on-a-roll` | Recognitions on 7 days in a row |
+
+The days in a row are counted in the time zone, which is UTC unless given; one
+the server does not know is answered `400 Bad Request`. The progress towards
+them is the longest run so far, which does not depend on what day it is.
+
+Nothing of it is stored. It is worked out from the user's recognitions each
+time it is read, cleared ones and videos included, so recognitions made before
+the achievements existed count too, feedback changed since counts as it is
+now, and deleting a recognition takes back what only it earned. A badge's
+`dateEarned` is when its goal was reached, as the recognitions and their
+feedback date it. No other user's recognitions change it.
+
+`GET /api/achievements/recognitions/{id}?timeZone=Europe/Sofia` answers what
+one of the user's recognitions earned them, which the dashboard shows once an
+upload is recognised, and again once the user says whether the model was right:
+
+```json
+{ "newLevel": { "number": 2, "name": "Spotter", ... }, "newBadges": [ { "id": "first-find", ... } ] }
+```
+
+What it earned is what the user has with it and would not have without it, so
+`newLevel` is null and `newBadges` empty when it earned nothing. A recognition
+that does not exist, or is another user's, is answered `404 Not Found`, as the
+two are not told apart.
 
 ### Feedback on a recognition
 
@@ -711,6 +782,7 @@ AnimalClassifier.Core/             What the app does
     Search/                        Finding animals by name
     Statistics/                    The totals, the animals recognised most, and the daily activity
     Collection/                    Every animal the model knows, and which of them a user has found
+    Achievements/                  The levels and badges a user earns, worked out from their recognitions
     Training/                      Reviewing the feedback, summing it up, and exporting it to retrain the model on
   Admin/                           Locking users, granting the administrator role, and the audit log
 AnimalClassifier.Infrastructure/   What Core's interfaces to the world outside the app are implemented with
@@ -790,7 +862,7 @@ an area are held to an order of their own in the same way:
 | Area | Order of its parts |
 | ---- | ------------------ |
 | Identity | SecurityAlerts, EmailConfirmation, Authentication, Passwords, Passkeys, Account |
-| Recognitions | Media, Classification, Uploads, Feedback, History, Search, Statistics, Collection, Training |
+| Recognitions | Media, Classification, Uploads, Feedback, History, Search, Statistics, Collection, Achievements, Training |
 
 What an area's parts share sits in the area's own folder and uses none of
 them. `CoreLayoutTests`, `IdentityLayoutTests` and `RecognitionsLayoutTests`
