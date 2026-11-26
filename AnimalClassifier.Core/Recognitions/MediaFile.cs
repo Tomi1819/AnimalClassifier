@@ -25,5 +25,7 @@ namespace AnimalClassifier.Core.Recognitions
             new HashSet<string>([".mp4", ".mov", ".avi"], StringComparer.OrdinalIgnoreCase);
 
         public static bool IsImage(string path) => ImageExtensions.Contains(Path.GetExtension(path));
+
+        public static bool IsVideo(string path) => VideoExtensions.Contains(Path.GetExtension(path));
     }
 }

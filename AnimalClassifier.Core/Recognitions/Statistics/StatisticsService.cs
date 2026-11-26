@@ -1,9 +1,7 @@
 ﻿namespace AnimalClassifier.Core.Recognitions.Statistics
 {
-    using AnimalClassifier.Core.Common.Exceptions;
     using AnimalClassifier.Core.Data.Queries;
     using AnimalClassifier.Core.Recognitions.Statistics.Models;
-    using static AnimalClassifier.Core.Recognitions.Statistics.StatisticsMessages;
 
     // Everything is counted by the database, so that the work and what is
     // read do not grow with every recognition the user made. Only the dates
@@ -39,7 +37,7 @@
 
         public async Task<IReadOnlyList<DailyRecognitionCount>> GetDailyRecognitionCountsAsync(string userId, int days, string? timeZoneId, CancellationToken cancellationToken)
         {
-            var timeZone = FindTimeZone(timeZoneId);
+            var timeZone = UserTimeZone.Find(timeZoneId);
 
             // Read once, so that today and the days read are the same
             // whenever the request runs across midnight.
@@ -63,18 +61,6 @@
                     Count = counts.GetValueOrDefault(day)
                 })
                 .ToList();
-        }
-
-        private static TimeZoneInfo FindTimeZone(string? timeZoneId)
-        {
-            if (timeZoneId is null)
-            {
-                return TimeZoneInfo.Utc;
-            }
-
-            return TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId, out var timeZone)
-                ? timeZone
-                : throw new RequestRefusedException(UnknownTimeZone);
         }
     }
 }

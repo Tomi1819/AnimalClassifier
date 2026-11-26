@@ -1,5 +1,6 @@
 namespace AnimalClassifier.Extensions
 {
+    using AnimalClassifier.Core.Recognitions.Achievements;
     using AnimalClassifier.Core.Recognitions.Classification;
     using AnimalClassifier.Core.Recognitions.Collection;
     using AnimalClassifier.Core.Recognitions.Feedback;
@@ -17,8 +18,8 @@ namespace AnimalClassifier.Extensions
     /// <summary>
     /// Recognising animals in what users upload, and everything read back from
     /// those recognitions: a user's history, the feedback they give on it, the
-    /// search, the statistics and the collection, and the review of that
-    /// feedback for training.
+    /// search, the statistics, the collection and the achievements, and the
+    /// review of that feedback for training.
     /// </summary>
     public static class RecognitionsServiceCollectionExtension
     {
@@ -33,6 +34,7 @@ namespace AnimalClassifier.Extensions
             services.AddScoped<IAnimalSearchService, AnimalSearchService>();
             services.AddScoped<IAnimalCollectionService, AnimalCollectionService>();
             services.AddSettings<CollectionSettings>();
+            services.AddScoped<IAchievementService, AchievementService>();
             services.AddScoped<IFeedbackReviewService, FeedbackReviewService>();
             services.AddScoped<IFeedbackSummaryService, FeedbackSummaryService>();
             services.AddScoped<ITrainingDataExporter, TrainingDataExporter>();

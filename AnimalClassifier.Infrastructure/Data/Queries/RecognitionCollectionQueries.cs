@@ -19,7 +19,7 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
 
         public async Task<IReadOnlyList<(string AnimalName, int Count, DateTime FirstFound)>> CountFindsByAnimalAsync(string userId, float minimumScore, CancellationToken cancellationToken)
         {
-            var animals = await Finds(Logs.Where(l => l.UserId == userId), minimumScore)
+            var animals = await Logs.Where(l => l.UserId == userId).SelectFinds(minimumScore)
                 .Where(f => f.AnimalName != null)
                 .GroupBy(f => f.AnimalName!)
                 .Select(g => new { AnimalName = g.Key, Count = g.Count(), FirstFound = g.Min(f => f.DateRecognized) })
@@ -33,7 +33,7 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
         // go, as the search does.
         public async Task<IReadOnlyList<(string AnimalName, string FileName)>> GetBestFindsAsync(string userId, IEnumerable<string> animalNames, IEnumerable<string> extensions, float minimumScore, CancellationToken cancellationToken)
         {
-            var matching = Finds(Logs.InHistoryOf(userId, extensions), minimumScore)
+            var matching = Logs.InHistoryOf(userId, extensions).SelectFinds(minimumScore)
                 .Where(f => f.AnimalName != null && animalNames.Contains(f.AnimalName));
 
             var best = await matching
@@ -54,7 +54,7 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
 
         public async Task<(string RecognizedAnimal, string? FoundAnimal, bool HasFeedback, bool IsFirstFind)?> GetFindAsync(string userId, int recognitionId, float minimumScore, CancellationToken cancellationToken)
         {
-            var finds = Finds(Logs.Where(l => l.UserId == userId), minimumScore);
+            var finds = Logs.Where(l => l.UserId == userId).SelectFinds(minimumScore);
 
             var find = await finds
                 .Where(f => f.Id == recognitionId)
@@ -71,50 +71,6 @@ namespace AnimalClassifier.Infrastructure.Data.Queries
                 .SingleOrDefaultAsync(cancellationToken);
 
             return find is null ? null : (find.RecognizedAnimal, find.AnimalName, find.HasFeedback, find.IsFirstFind);
-        }
-
-        /// <summary>
-        /// Each of the recognitions with the animal it finds, by the rule
-        /// <see cref="IRecognitionCollectionQueries"/> sets out, which every
-        /// query here reads through so that none can count by another. Among
-        /// those that find an animal, one with feedback is one whose user said
-        /// it shows that animal.
-        /// </summary>
-        private static IQueryable<Find> Finds(IQueryable<AnimalRecognitionLog> logs, float minimumScore) =>
-            logs.Select(l => new Find
-            {
-                Id = l.Id,
-                FileName = l.FileName,
-                DateRecognized = l.DateRecognized,
-                PredictionScore = l.PredictionScore,
-                RecognizedAnimal = l.AnimalName,
-                HasFeedback = l.Feedback != null,
-                AnimalName = l.Feedback == null
-                    ? (l.PredictionScore >= minimumScore ? l.AnimalName : null)
-                    : l.Feedback.Verdict == FeedbackVerdict.Correct ? l.AnimalName
-                    : l.Feedback.Verdict == FeedbackVerdict.WrongAnimal ? l.Feedback.ActualAnimal
-                    : null
-            });
-
-        private sealed class Find
-        {
-            public int Id { get; init; }
-            public string FileName { get; init; } = string.Empty;
-            public DateTime DateRecognized { get; init; }
-            public float PredictionScore { get; init; }
-
-            /// <summary>
-            /// The animal the model named.
-            /// </summary>
-            public string RecognizedAnimal { get; init; } = string.Empty;
-
-            public bool HasFeedback { get; init; }
-
-            /// <summary>
-            /// The animal it finds, as the recognition or its feedback names
-            /// it; null when it finds none.
-            /// </summary>
-            public string? AnimalName { get; init; }
         }
     }
 }
